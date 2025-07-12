@@ -27,11 +27,11 @@ const SignupForm = () => {
     // Simulate form submission
     setIsSubmitted(true);
     toast({
-      title: "Welcome to the pilot program!",
+      title: "Welcome to Alara!",
       description: "We'll be in touch within 24 hours to schedule your first call.",
     });
 
-    console.log("Pilot signup:", { email, phone });
+    console.log("Alara signup:", { email, phone });
   };
 
   if (isSubmitted) {
@@ -41,7 +41,7 @@ const SignupForm = () => {
           <div className="bg-white rounded-lg p-8 shadow-xl">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
             <h3 className="text-2xl font-bold text-gray-900 mb-4">
-              You're In! Welcome to the Pilot
+              You're In! Welcome to Alara
             </h3>
             <p className="text-gray-600 mb-6">
               We'll reach out within 24 hours to schedule your first accountability call. 
@@ -64,10 +64,10 @@ const SignupForm = () => {
         <Card className="shadow-2xl">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold text-gray-900">
-              Join the Pilot Program
+              Join the Alara Program
             </CardTitle>
             <CardDescription className="text-lg">
-              Free 15‑day trial, no credit card required. Help us build something that actually works for real people.
+              Just $9/month. Help us build something that actually works for real people like you.
             </CardDescription>
           </CardHeader>
           
@@ -108,7 +108,7 @@ const SignupForm = () => {
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  We'll use this for your accountability calls (US numbers only for pilot)
+                  We'll use this for your accountability calls (US numbers only during pilot)
                 </p>
               </div>
 
@@ -116,12 +116,12 @@ const SignupForm = () => {
                 type="submit" 
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 text-lg font-semibold"
               >
-                Start My Free 15‑Day Pilot
+                Start with Alara – $9/month
               </Button>
 
               <div className="text-center space-y-2">
                 <p className="text-xs text-gray-500">
-                  No spam, no credit card, no commitment beyond curiosity.
+                  No long-term commitment. Cancel anytime.
                 </p>
                 <p className="text-sm text-indigo-600 font-medium">
                   Built with pilot users like you.
@@ -130,7 +130,7 @@ const SignupForm = () => {
             </form>
 
             <div className="mt-8 pt-6 border-t border-gray-200">
-              <h4 className="font-semibold text-gray-900 mb-3">What pilot users get:</h4>
+              <h4 className="font-semibold text-gray-900 mb-3">What early adopters get:</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
@@ -142,7 +142,7 @@ const SignupForm = () => {
                 </li>
                 <li className="flex items-center">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                  Lifetime discount when we launch publicly
+                  Lock in early adopter pricing forever
                 </li>
               </ul>
             </div>
