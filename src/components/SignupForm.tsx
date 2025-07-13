@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Mail, Phone, Star, ArrowRight, Shield } from "lucide-react";
+import { CheckCircle, Mail, Phone } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const SignupForm = () => {
@@ -36,35 +36,21 @@ const SignupForm = () => {
 
   if (isSubmitted) {
     return (
-      <section className="py-20 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700">
+      <section className="py-20 bg-indigo-600">
         <div className="max-w-2xl mx-auto px-4 text-center">
-          <div className="bg-white rounded-2xl p-8 shadow-2xl">
-            <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-10 h-10 text-green-600" />
-            </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              Welcome to the Journey! ✨
+          <div className="bg-white rounded-lg p-8 shadow-xl">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              You're In! Welcome to Alara
             </h3>
-            <p className="text-gray-600 mb-8 text-lg">
-              You're officially part of our early adopter community. We'll reach out within 24 hours 
-              to schedule your first accountability call and get you started.
+            <p className="text-gray-600 mb-6">
+              We'll reach out within 24 hours to schedule your first accountability call. 
+              Get ready to transform how you start your days!
             </p>
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl">
-              <h4 className="font-semibold text-gray-900 mb-3">What happens next:</h4>
-              <div className="space-y-2 text-sm text-gray-700">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
-                  <span>Check your email for welcome details</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
-                  <span>Expect a text to confirm your preferred call times</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
-                  <span>Your first call will be scheduled within 48 hours</span>
-                </div>
-              </div>
+            <div className="bg-indigo-50 p-4 rounded-lg">
+              <p className="text-sm text-indigo-700">
+                <strong>What's next:</strong> Check your email for welcome details and expect a text to confirm your preferred call times.
+              </p>
             </div>
           </div>
         </div>
@@ -73,142 +59,95 @@ const SignupForm = () => {
   }
 
   return (
-    <section className="py-20 bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-700 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.1\"%3E%3Ccircle cx=\"7\" cy=\"7\" r=\"1\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
-      
-      <div className="max-w-4xl mx-auto px-4 relative">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-white/90 text-sm font-medium mb-6">
-            <Star className="w-4 h-4 mr-2" />
-            Early Adopter Program • Limited Spots
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Ready to Transform Your Days?
-          </h2>
-          <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
-            Join the pilot program and help shape the future of voice-first productivity
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left side - Benefits */}
-          <div className="space-y-8">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <h3 className="text-2xl font-bold text-white mb-6">What You Get:</h3>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-white font-medium">Daily Voice Calls</p>
-                    <p className="text-indigo-200 text-sm">5-minute morning clarity & afternoon check-ins</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-white font-medium">Direct Founder Access</p>
-                    <p className="text-indigo-200 text-sm">Shape the product with weekly feedback sessions</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-white font-medium">Lifetime Early Pricing</p>
-                    <p className="text-indigo-200 text-sm">Lock in $9/month forever as our thank you</p>
-                  </div>
+    <section className="py-20 bg-indigo-600">
+      <div className="max-w-2xl mx-auto px-4">
+        <Card className="shadow-2xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold text-gray-900">
+              Join the Alara Program
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Just $9/month. Help us build something that actually works for real people like you.
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email Address
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center space-x-4 text-indigo-200">
-              <Shield className="w-5 h-5" />
-              <span className="text-sm">No long-term commitment • Cancel anytime</span>
-            </div>
-          </div>
-
-          {/* Right side - Form */}
-          <div>
-            <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
-              <CardHeader className="text-center pb-6">
-                <div className="flex justify-center mb-4">
-                  <div className="bg-indigo-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
-                    Just $9/month
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                  Phone Number
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
                 </div>
-                <CardTitle className="text-3xl font-bold text-gray-900">
-                  Start Your Journey
-                </CardTitle>
-                <CardDescription className="text-lg text-gray-600">
-                  Join 100+ early adopters building something amazing
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                      Email Address
-                    </Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10 h-12 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
-                        required
-                      />
-                    </div>
-                  </div>
+                <p className="text-xs text-gray-500">
+                  We'll use this for your accountability calls (US numbers only during pilot)
+                </p>
+              </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
-                      Phone Number
-                    </Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="(555) 123-4567"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="pl-10 h-12 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
-                        required
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      For your daily accountability calls (US numbers only during pilot)
-                    </p>
-                  </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 text-lg font-semibold"
+              >
+                Start with Alara – $9/month
+              </Button>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 text-lg font-semibold h-14 group"
-                  >
-                    Join Alara Now
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+              <div className="text-center space-y-2">
+                <p className="text-xs text-gray-500">
+                  No long-term commitment. Cancel anytime.
+                </p>
+                <p className="text-sm text-indigo-600 font-medium">
+                  Built with pilot users like you.
+                </p>
+              </div>
+            </form>
 
-                  <div className="text-center">
-                    <p className="text-xs text-gray-500 mb-2">
-                      Trusted by early adopters who believe in building together
-                    </p>
-                    <div className="flex justify-center items-center space-x-1">
-                      {[1,2,3,4,5].map((star) => (
-                        <Star key={star} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      ))}
-                      <span className="text-sm text-gray-600 ml-2">Built with pilot users</span>
-                    </div>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <h4 className="font-semibold text-gray-900 mb-3">What early adopters get:</h4>
+              <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                  Direct line to the founders for feedback
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                  Influence on product direction and features
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                  Lock in early adopter pricing forever
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   );
