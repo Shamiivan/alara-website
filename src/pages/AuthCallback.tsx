@@ -10,20 +10,36 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the URL hash and handle the OAuth callback
-        const { data, error } = await supabase.auth.getSession();
+        // First, let Supabase handle the OAuth callback from URL hash
+        const { data, error } = await supabase.auth.getUser();
 
         if (error) {
+          console.error("Auth error:", error);
           setError(error.message);
           return;
         }
 
-        if (data?.session) {
+        if (data?.user) {
           // Successfully authenticated
+          console.log("User authenticated:", data.user.email);
           navigate("/dashboard");
         } else {
-          // No session found, redirect to login
-          navigate("/auth/login");
+          // Check if we have tokens in the URL hash
+          const hashParams = window.location.hash;
+          if (hashParams.includes('access_token')) {
+            // Give Supabase a moment to process the tokens
+            setTimeout(async () => {
+              const { data: userData } = await supabase.auth.getUser();
+              if (userData?.user) {
+                navigate("/dashboard");
+              } else {
+                setError("Failed to authenticate. Please try again.");
+              }
+            }, 2000);
+          } else {
+            // No tokens found, redirect to login
+            navigate("/auth/login");
+          }
         }
       } catch (err) {
         console.error("Error handling auth callback:", err);
@@ -32,6 +48,18 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
+  }, [navigate]);
+
+  // Also listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        console.log("Auth state changed: signed in");
+        navigate("/dashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   if (error) {
