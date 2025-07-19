@@ -42,7 +42,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 const SignupForm = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  // const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -62,39 +62,39 @@ const SignupForm = () => {
     },
   });
 
-  const onSubmit = async (data: SignupFormValues) => {
-    try {
-      setIsLoading(true);
+  // const onSubmit = async (data: SignupFormValues) => {
+  //   try {
+  //     setIsLoading(true);
 
-      // Sign up with email and password
-      const { error, user } = await signUp(data.email, data.password, {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      });
+  //     // Sign up with email and password
+  //     // const { error, user } = await signUp(data.email, data.password, {
+  //     //   redirectTo: `${window.location.origin}/auth/callback`,
+  //     // });
 
-      if (!error && user) {
-        // Update user metadata with full name
-        await supabase.auth.updateUser({
-          data: {
-            full_name: data.fullName,
-          },
-        });
+  //     if (!error && user) {
+  //       // Update user metadata with full name
+  //       await supabase.auth.updateUser({
+  //         data: {
+  //           full_name: data.fullName,
+  //         },
+  //       });
 
-        // Update profile with phone number if provided
-        if (data.phone) {
-          await supabase
-            .from('profiles')
-            .update({ phone: data.phone })
-            .eq('id', user.id);
-        }
+  //       // Update profile with phone number if provided
+  //       if (data.phone) {
+  //         await supabase
+  //           .from('profiles')
+  //           .update({ phone: data.phone })
+  //           .eq('id', user.id);
+  //       }
 
-        navigate("/auth/verify-email");
-      }
-    } catch (error) {
-      console.error("Signup error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //       navigate("/auth/verify-email");
+  //     }
+  //   } catch (error) {
+  //     console.error("Signup error:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -105,124 +105,6 @@ const SignupForm = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Full Name</Label>
-            <Input
-              id="fullName"
-              placeholder="John Doe"
-              {...register("fullName")}
-              disabled={isLoading}
-            />
-            {errors.fullName && (
-              <p className="text-sm text-red-500">{errors.fullName.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              {...register("email")}
-              disabled={isLoading}
-            />
-            {errors.email && (
-              <p className="text-sm text-red-500">{errors.email.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number (Optional)</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="(555) 123-4567"
-              {...register("phone")}
-              disabled={isLoading}
-            />
-            {errors.phone && (
-              <p className="text-sm text-red-500">{errors.phone.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                {...register("password")}
-                disabled={isLoading}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-red-500">{errors.password.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <div className="relative">
-              <Input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="••••••••"
-                {...register("confirmPassword")}
-                disabled={isLoading}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-sm text-red-500">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating account...
-              </>
-            ) : (
-              "Create Account"
-            )}
-          </Button>
-        </form>
-
         <SocialLogin className="mt-6" />
       </CardContent>
       <CardFooter className="flex justify-center">

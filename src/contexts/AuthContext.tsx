@@ -1,8 +1,11 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+
 import supabase from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
+
 import { AuthContextType, AuthProviderProps, AuthState } from '@/types/auth';
 import { Profile } from '@/types/supabase';
 
@@ -15,10 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   isAuthenticated: false,
   isAdmin: false,
-  signUp: async () => ({ error: null, user: null }),
-  signIn: async () => ({ error: null, user: null }),
   signInWithGoogle: async () => { },
-  signInWithGithub: async () => { },
   signOut: async () => { },
   resetPassword: async () => ({ error: null }),
   updatePassword: async () => ({ error: null }),
@@ -285,40 +285,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Sign in with GitHub
-  const signInWithGithub = async () => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true }));
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-
-      if (error) {
-        toast({
-          title: 'GitHub sign in failed',
-          description: error.message,
-          variant: 'destructive',
-        });
-        setState((prev) => ({ ...prev, isLoading: false, error }));
-      }
-    } catch (error) {
-      const authError = error as AuthError;
-      toast({
-        title: 'GitHub sign in failed',
-        description: authError.message || 'An unknown error occurred',
-        variant: 'destructive',
-      });
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: authError,
-      }));
-    }
-  };
 
   // Sign out
   const signOut = async () => {
@@ -453,10 +419,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     ...state,
     isAuthenticated,
     isAdmin,
-    signUp,
-    signIn,
     signInWithGoogle,
-    signInWithGithub,
     signOut,
     resetPassword,
     updatePassword,

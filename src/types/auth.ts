@@ -16,16 +16,7 @@ export interface AuthState {
  * Authentication context interface
  */
 export interface AuthContextType extends AuthState {
-  signUp: (email: string, password: string, options?: { redirectTo?: string }) => Promise<{
-    error: Error | null;
-    user: User | null;
-  }>;
-  signIn: (email: string, password: string) => Promise<{
-    error: Error | null;
-    user: User | null;
-  }>;
   signInWithGoogle: () => Promise<void>;
-  signInWithGithub: () => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{
     error: Error | null;

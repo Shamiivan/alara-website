@@ -8,13 +8,11 @@ interface SocialLoginProps {
 }
 
 const SocialLogin = ({ className = "" }: SocialLoginProps) => {
-  const { signInWithGoogle, signInWithGithub } = useAuth();
+  const { signInWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState<{
     google: boolean;
-    github: boolean;
   }>({
     google: false,
-    github: false,
   });
 
   const handleGoogleSignIn = async () => {
@@ -25,17 +23,6 @@ const SocialLogin = ({ className = "" }: SocialLoginProps) => {
       console.error("Google sign in error:", error);
     } finally {
       setIsLoading((prev) => ({ ...prev, google: false }));
-    }
-  };
-
-  const handleGithubSignIn = async () => {
-    try {
-      setIsLoading((prev) => ({ ...prev, github: true }));
-      await signInWithGithub();
-    } catch (error) {
-      console.error("GitHub sign in error:", error);
-    } finally {
-      setIsLoading((prev) => ({ ...prev, github: false }));
     }
   };
 
@@ -71,17 +58,6 @@ const SocialLogin = ({ className = "" }: SocialLoginProps) => {
           />
         </svg>
         Continue with Google
-      </Button>
-
-      <Button
-        type="button"
-        variant="outline"
-        onClick={handleGithubSignIn}
-        disabled={isLoading.github}
-        className="flex items-center justify-center"
-      >
-        <Github className="w-5 h-5 mr-2" />
-        Continue with GitHub
       </Button>
 
       <div className="relative">
