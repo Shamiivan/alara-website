@@ -70,9 +70,16 @@ const AuthCallback = () => {
           <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate("/auth/login")}
-            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors"
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors mr-2"
           >
             Back to Login
+          </button>
+
+          <button
+            onClick={() => navigate("/auth/signup")}
+            className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors ml-2"
+          >
+            Back to Signup
           </button>
         </div>
       </div>
