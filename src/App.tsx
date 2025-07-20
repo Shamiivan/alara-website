@@ -38,7 +38,6 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
-            <Route path="/onboarding" element={<Onboarding />} />
 
 
             {/* Auth routes */}
@@ -74,6 +73,13 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+
+            <Route path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              } />
 
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
