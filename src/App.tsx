@@ -16,6 +16,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 import Profile from "./pages/Profile";
 import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -37,6 +38,8 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+
 
             {/* Auth routes */}
             <Route path="/auth/login" element={<Login />} />
