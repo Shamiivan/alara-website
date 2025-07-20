@@ -26,11 +26,9 @@ export const OptionButton: React.FC<OptionButtonProps> = ({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'w-full justify-start text-left p-6 h-auto transition-all duration-200',
-        'hover:shadow-soft hover:scale-[1.02]',
-        selected && 'bg-gradient-primary shadow-glow border-primary-glow',
-        !selected && 'hover:bg-muted/50 hover:border-primary/30',
-        className
+        'w-full justify-start text-left p-6 h-auto',
+        'transition-colors transition-shadow transition-transform duration-200',
+        'hover:scale-[1.02]',
       )}
     >
       <div className="flex items-center gap-4 w-full">
@@ -47,3 +45,4 @@ export const OptionButton: React.FC<OptionButtonProps> = ({
     </Button>
   );
 };
+

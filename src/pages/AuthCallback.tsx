@@ -22,7 +22,7 @@ const AuthCallback = () => {
         if (data?.user) {
           // Successfully authenticated
           console.log("User authenticated:", data.user.email);
-          navigate("/dashboard");
+          navigate("/onboarding");
         } else {
           // Check if we have tokens in the URL hash
           const hashParams = window.location.hash;

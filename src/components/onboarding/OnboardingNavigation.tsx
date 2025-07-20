@@ -51,8 +51,8 @@ export const OnboardingNavigation: React.FC<OnboardingNavigationProps> = ({
         size="lg"
         className={cn(
           'flex items-center gap-2 px-6',
-          canGoNext && !isLastStep && 'bg-gradient-primary hover:shadow-glow',
-          canGoNext && isLastStep && 'bg-gradient-warm hover:shadow-glow'
+          canGoNext && !isLastStep && 'hover:shadow-glow',
+          canGoNext && isLastStep && 'hover:shadow-glow'
         )}
       >
         {nextLabel}
