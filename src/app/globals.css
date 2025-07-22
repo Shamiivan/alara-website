@@ -263,10 +263,10 @@
 
   /* Conversation bubbles */
   .bubble-user {
-    @apply bg-[hsl(var(--voice-user)/0.15)] text-foreground rounded-2xl rounded-br-sm px-4 py-3 max-w-[85%] ml-auto;
+    @apply bg-[hsl(var(--voice-user)/0.15)] text-foreground rounded-2xl rounded-br-sm px-3 sm:px-4 py-2 sm:py-3 max-w-[85%] ml-auto text-sm sm:text-base shadow-sm;
   }
 
   .bubble-ai {
-    @apply bg-[hsl(var(--voice-ai)/0.15)] text-foreground rounded-2xl rounded-bl-sm px-4 py-3 max-w-[85%] mr-auto;
+    @apply bg-[hsl(var(--voice-ai)/0.15)] text-foreground rounded-2xl rounded-bl-sm px-3 sm:px-4 py-2 sm:py-3 max-w-[85%] mr-auto text-sm sm:text-base shadow-sm;
   }
 }

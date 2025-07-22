@@ -14,8 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Alara",
-  description: "Productivity app that integrates with your daily life",
+  title: "Alara | Productivity",
+  description: "A voice-first productivity platform that acts as your trusted thinking partner, helping you navigate daily challenges through conversation rather than complexity.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 };
 
 export default function RootLayout({
