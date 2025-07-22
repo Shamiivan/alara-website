@@ -17,8 +17,8 @@ export default function Home() {
         <Hero />
         <Vision />
         <Features />
+        <DemoSection />
         <WhoThisIsFor />
-
       </main>
     </div>
   );
