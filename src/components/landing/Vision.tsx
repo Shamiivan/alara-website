@@ -70,11 +70,11 @@ const Vision = () => {
             {/* Conversation example */}
             <div className="flex flex-col gap-3 sm:gap-4 mb-6 sm:mb-8 px-1 sm:px-0">
               <div className="bubble-ai max-w-[85%] sm:max-w-md">
-                <p>What's been your biggest challenge with productivity apps?</p>
+                <p>What&apos;s been your biggest challenge with productivity apps?</p>
               </div>
 
               <div className="bubble-user max-w-[85%] sm:max-w-md">
-                <p>They're too rigid. I spend more time managing the app than doing actual work.</p>
+                <p>They&apos;re too rigid. I spend more time managing the app than doing actual work.</p>
               </div>
             </div>
 
@@ -83,13 +83,13 @@ const Vision = () => {
                 Beyond To-Do Lists and Color-Coded Calendars
               </h3>
               <p className="text-sm sm:text-base md:text-lg text-foreground/80 mb-4 sm:mb-6 leading-relaxed">
-                We've tried them all – the apps, the systems, the productivity hacks.
-                But real progress isn't about managing tasks; it's about managing yourself.
+                We&apos;ve tried them all – the apps, the systems, the productivity hacks.
+                But real progress isn&apos;t about managing tasks; it&apos;s about managing yourself.
                 Your emotions, your energy, your inner dialogue.
               </p>
               <p className="text-sm sm:text-base md:text-lg text-foreground/80 leading-relaxed">
-                Alara meets you where you are, helping you understand what's working,
-                what isn't, and most importantly – why. Through simple daily conversations
+                Alara meets you where you are, helping you understand what&apos;s working,
+                what isn&apos;t, and most importantly – why. Through simple daily conversations
                 that feel more like therapy than task management.
               </p>
             </div>
