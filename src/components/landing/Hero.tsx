@@ -52,15 +52,15 @@ const Hero = () => {
           {/* Conversation visualization - more compact on mobile */}
           <div className="flex flex-col gap-3 sm:gap-4 w-full max-w-md sm:max-w-xl mx-auto mb-6 sm:mb-8 px-2">
             <div className="bubble-ai max-w-[85%] sm:max-w-[75%]">
-              <p className="text-base sm:text-lg">What's your most important goal for today?</p>
+              <p className="text-base sm:text-lg">What&apos;s your most important goal for today?</p>
             </div>
 
             <div className="bubble-user max-w-[85%] sm:max-w-[75%]">
-              <p className="text-base sm:text-lg">I need to finish the presentation for tomorrow's meeting.</p>
+              <p className="text-base sm:text-lg">I need to finish the presentation for tomorrow&apos;s meeting.</p>
             </div>
 
             <div className="bubble-ai max-w-[85%] sm:max-w-[75%]">
-              <p className="text-base sm:text-lg">Let's break that down into manageable steps. When will you start?</p>
+              <p className="text-base sm:text-lg">Let&apos;s break that down into manageable steps. When will you start?</p>
             </div>
 
             {/* Voice wave visualization */}

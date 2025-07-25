@@ -27,7 +27,7 @@ const WhoThisIsFor = () => {
                 <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--primary))]" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">You're Overwhelmed But Motivated</h3>
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">You&apos;re Overwhelmed But Motivated</h3>
                 <p className="text-muted-foreground text-xs sm:text-sm md:text-base">You have goals and dreams but struggle with daily execution. You know what you want to do but need gentle accountability to make it happen.</p>
               </div>
             </div>
@@ -37,8 +37,8 @@ const WhoThisIsFor = () => {
                 <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5 text-[hsl(var(--primary))]" />
               </div>
               <div>
-                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">You're an Early Adopter</h3>
-                <p className="text-muted-foreground text-xs sm:text-sm md:text-base">You love being part of something new and meaningful. You understand that pilot products aren't perfect, but you see the potential.</p>
+                <h3 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">You&apos;re an Early Adopter</h3>
+                <p className="text-muted-foreground text-xs sm:text-sm md:text-base">You love being part of something new and meaningful. You understand that pilot products aren&apos;t perfect, but you see the potential.</p>
               </div>
             </div>
           </div>
@@ -50,7 +50,7 @@ const WhoThisIsFor = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground text-sm sm:text-base mb-1 sm:mb-2">You Want to Co-Create</h3>
-                <p className="text-muted-foreground text-xs sm:text-sm md:text-base">You don't just want to use a product—you want to help build it. Your feedback and insights will directly shape how Alara evolves.</p>
+                <p className="text-muted-foreground text-xs sm:text-sm md:text-base">You don&apos;t just want to use a product—you want to help build it. Your feedback and insights will directly shape how Alara evolves.</p>
               </div>
             </div>
 
@@ -69,10 +69,10 @@ const WhoThisIsFor = () => {
         <div className="bg-card p-5 sm:p-6 md:p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
           <div className="text-center mb-4 sm:mb-6">
             <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground mb-3 sm:mb-4 tracking-tight">
-              Your Voice Shapes Alara's Future
+              Your Voice Shapes Alara&apos;s Future
             </h3>
             <p className="text-muted-foreground text-xs sm:text-sm md:text-base mb-4 sm:mb-6 max-w-2xl mx-auto">
-              As an early adopter, you're not just getting accountability support—you're helping create the tool that will serve thousands of people like you. Your feedback, suggestions, and real-world usage will guide every feature we build.
+              As an early adopter, you&apos;re not just getting accountability support—you&apos;re helping create the tool that will serve thousands of people like you. Your feedback, suggestions, and real-world usage will guide every feature we build.
             </p>
           </div>
 
