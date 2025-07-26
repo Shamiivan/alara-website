@@ -40,7 +40,6 @@ export const createUser = mutation({
       email: identity.email!,
       name: identity.name,
       isOnboarded: false,
-      createdAt: Date.now(),
       updatedAt: Date.now(),
     });
 

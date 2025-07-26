@@ -17,7 +17,6 @@ const schema = defineSchema({
 
 
     // created and delete 
-    createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_token", ["tokenIdentifier"])
