@@ -1,25 +1,136 @@
 import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
-import { NextRequest } from "next/server";
-import path from "path";
+import { NextRequest, NextResponse } from "next/server";
 
-// defining multiple routs 
+// defining multiple routes 
 const publicRoutes = [
   "/",
-  "auth/login"
+  "/auth/login" // Fixed: added leading slash
 ];
 
 // define routes that dont require onboarding 
 const onboardingExemptRoutes = [
   "/onboarding",
-]
+  "/auth/login",
+  "/"
+];
+
 export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexAuth }) => {
   const { pathname } = request.nextUrl;
-  const isStaticFile = pathname.startsWith("/_next/")
+
+  // Check for static files first
+  const isStaticFile = pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.includes(".");
 
   if (isStaticFile) {
-    console.log("routes should be statid")
+    return NextResponse.next();
+  }
+
+  // if its a public route, continue
+  if (publicRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  try {
+    // Add more detailed error handling around isAuthenticated
+    let isAuthenticated = false;
+
+    try {
+      isAuthenticated = await convexAuth.isAuthenticated();
+    } catch (authError) {
+      console.error("Error checking authentication:", authError);
+      // If we can't check auth status, redirect to login for safety
+      const loginUrl = new URL("/auth/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // if the user is not authenticated and its not a public route, redirect to login
+    if (!isAuthenticated) {
+      const loginUrl = new URL("/auth/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // if the user is authenticated, but not onboarded and its onboard exempt route, continue
+    if (onboardingExemptRoutes.includes(pathname)) {
+      return NextResponse.next();
+    }
+
+    // Check onboarding status
+    let token;
+    try {
+      token = await convexAuth.getToken();
+    } catch (tokenError) {
+      console.error("Error getting token:", tokenError);
+      // If we can't get token, redirect to login
+      const loginUrl = new URL("/auth/login", request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Fixed: removed unnecessary await from the condition
+    const userOnboarded = await isUserOnboarded(token);
+
+    // if the user is auth, not onboarded and its an onboard needed route, redirect
+    if (!userOnboarded) {
+      const onboardingUrl = new URL("/onboarding", request.url);
+      return NextResponse.redirect(onboardingUrl);
+    }
+
+    // user is authenticated and onboarded 
+    return NextResponse.next();
+
+  } catch (error) {
+    console.error("Middleware error:", error);
+    // On any error, redirect to login for safety
+    const loginUrl = new URL("/auth/login", request.url);
+    return NextResponse.redirect(loginUrl);
   }
 });
+
+async function isUserOnboarded(token?: string): Promise<boolean> {
+  if (!token) return false;
+
+  try {
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+
+    if (!convexUrl) {
+      console.error("NEXT_PUBLIC_CONVEX_URL not found");
+      return false; // Assume needs onboarding 
+    }
+
+    // Make request to Convex HTTP API
+    const response = await fetch(`${convexUrl}/api/query`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        path: "users:isUserOnboarded",
+        args: {},
+        format: "json",
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to check onboarding status:", response.status);
+      return false; // Changed: assume needs onboarding if request fails
+    }
+
+    const result = await response.json();
+
+    // Handle the response format from your query
+    if (result.status === "success") {
+      const { isUserOnboarded } = result.value;
+      return Boolean(isUserOnboarded); // Ensure boolean return
+    }
+
+    // If we get an error or unexpected response, assume the user needs onboarding 
+    return false;
+  } catch (error) {
+    console.error("[Middleware Call to the backend]", error);
+    return false;
+  }
+}
 
 export const config = {
   // The following matcher runs middleware on all routes

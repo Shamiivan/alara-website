@@ -6,21 +6,22 @@ const schema = defineSchema({
   ...authTables,
 
   users: defineTable({
-    tokenIdentifier: v.string(),
+    // Auth library fields
+    tokenIdentifier: v.optional(v.string()),
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    phone: v.optional(v.string()),
-    isOnboarded: v.boolean(),
+    emailVerificationTime: v.optional(v.number()),
+    image: v.optional(v.string()),
 
+    // Your custom fields
+    phone: v.optional(v.string()),
+    isOnboarded: v.optional(v.boolean()),
     callTime: v.optional(v.string()),
     wantsCallReminders: v.optional(v.boolean()),
-
-
-    // created and delete 
-    updatedAt: v.number(),
+    updatedAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
-    .index("by_email", ["email"])
+    .index("email", ["email"])
 });
 
 export default schema;

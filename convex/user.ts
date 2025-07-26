@@ -12,7 +12,7 @@ export const getCurrentUser = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_token")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
     return user;
   },
@@ -28,7 +28,7 @@ export const createUser = mutation({
 
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_token")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique();
 
     if (existingUser) {
@@ -62,6 +62,10 @@ export const completeOnboarding = mutation({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique()
     if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isOnboarded) {
       throw new Error("User is already onboarded");
     }
 
@@ -70,7 +74,6 @@ export const completeOnboarding = mutation({
     if (!timeRegex.test(args.callTime)) {
       throw new Error("Invalid time format. Use HH:MM format (e.g., '09:00', '14:30')");
     }
-
 
     await ctx.db.patch(user._id, {
       callTime: args.callTime,
@@ -81,7 +84,6 @@ export const completeOnboarding = mutation({
     return { success: true }
   }
 });
-
 
 export const updateUser = mutation({
   args: {},
@@ -100,7 +102,56 @@ export const isUserOnboarded = query({
     const user = await ctx.db.query("users")
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique()
-    return { isAuthenticated: true, isUserOnboarded: user?.isOnboarded ?? false, }
+    return {
+      isAuthenticated: true,
+      isUserOnboarded: user?.isOnboarded ?? false,
+    }
   },
+});
 
+// New function to ensure user record exists with proper fields after auth
+export const ensureUserRecord = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // First try to find by tokenIdentifier
+    let user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .unique();
+
+    if (!user) {
+      // If not found by token, try to find by email and update
+      user = await ctx.db
+        .query("users")
+        .withIndex("email", (q) => q.eq("email", identity.email))
+        .unique();
+
+      if (user) {
+        // Update existing user with tokenIdentifier
+        await ctx.db.patch(user._id, {
+          tokenIdentifier: identity.tokenIdentifier,
+          name: identity.name || user.name,
+          isOnboarded: user.isOnboarded ?? false,
+          updatedAt: Date.now(),
+        });
+      } else {
+        // Create new user record
+        const userId = await ctx.db.insert("users", {
+          tokenIdentifier: identity.tokenIdentifier,
+          email: identity.email!,
+          name: identity.name,
+          isOnboarded: false,
+          updatedAt: Date.now(),
+        });
+        user = await ctx.db.get(userId);
+      }
+    }
+
+    return user;
+  }
 });
