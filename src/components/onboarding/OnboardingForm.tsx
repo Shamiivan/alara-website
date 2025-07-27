@@ -6,21 +6,30 @@ import PhoneStep from "./steps/PhoneStep";
 import CallTimeStep from "./steps/CallTimeStep";
 import RemindersStep from "./steps/RemindersStep";
 import SummaryStep from "./steps/SummaryStep";
+import ClarityCalls from "./steps/ClarityCallsStep";
+
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+
 
 // Define the steps of the onboarding process
 enum OnboardingStep {
   PHONE = 0,
-  CALL_TIME = 1,
-  REMINDERS = 2,
-  SUMMARY = 3,
-  COMPLETED = 4,
+  WANTS_CLARITY_CALLS = 1,
+  CALL_TIME = 2,
+  REMINDERS = 3,
+  SUMMARY = 4,
+  COMPLETED = 5,
 }
 
 export default function OnboardingForm() {
+  const completeOnboarding = useMutation(api.user.completeOnboarding);
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(OnboardingStep.PHONE);
   const [formData, setFormData] = useState({
+    name: "",
     phone: "",
+    wantsClarityCalls: false,
     callTime: "",
     wantsCallReminders: false,
   });
@@ -42,19 +51,29 @@ export default function OnboardingForm() {
   // Handle completing the onboarding process
   const handleComplete = () => {
     // Redirect to the dashboard or home page
-    router.push("/");
+    // router.push("/");
   };
 
   // Render the current step
   const renderStep = () => {
+    console.log(currentStep);
     switch (currentStep) {
       case OnboardingStep.PHONE:
         return (
           <PhoneStep
             initialValue={formData.phone}
-            onNext={(phone) => handleNext(OnboardingStep.CALL_TIME, { phone })}
+            onNext={(phone) => handleNext(OnboardingStep.WANTS_CLARITY_CALLS, { phone })}
           />
         );
+
+      case OnboardingStep.WANTS_CLARITY_CALLS:
+        return (
+          <ClarityCalls
+            initialValue={formData.wantsClarityCalls}
+            onNext={(wantsClarityCalls) => handleNext(OnboardingStep.CALL_TIME, { wantsClarityCalls })}
+            onBack={() => handleBack(OnboardingStep.PHONE)}
+          />
+        )
       case OnboardingStep.CALL_TIME:
         return (
           <CallTimeStep
@@ -99,6 +118,7 @@ export default function OnboardingForm() {
         <div className="flex justify-between items-center">
           {[
             "Contact",
+            "Clarity Calls",
             "Call Time",
             "Reminders",
             "Summary",
@@ -106,8 +126,8 @@ export default function OnboardingForm() {
             <div key={index} className="flex flex-col items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${index <= currentStep
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-500"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-gray-500"
                   }`}
               >
                 {index + 1}

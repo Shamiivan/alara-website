@@ -13,17 +13,16 @@ const schema = defineSchema({
     emailVerificationTime: v.optional(v.number()),
     image: v.optional(v.string()),
 
-    // Your custom fields
     phone: v.optional(v.string()),
     isOnboarded: v.optional(v.boolean()),
     callTime: v.optional(v.string()),
     wantsCallReminders: v.optional(v.boolean()),
+    wantsClarityCalls: v.optional(v.boolean()),
     updatedAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
     .index("email", ["email"]),
 
-  // ADD THIS NEW TABLE
   calls: defineTable({
     userId: v.id("users"),
     toNumber: v.string(),

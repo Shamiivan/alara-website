@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { phoneNumbers } from "@elevenlabs/elevenlabs-js/api/resources/conversationalAi";
 
 /**
  * Hook to get the current user
@@ -33,11 +34,11 @@ export function useCompleteOnboarding() {
    */
   const handleCompleteOnboarding = async (data: {
     phone: string;
+    wantsClarityCalls: boolean;
     callTime: string;
     wantsCallReminders: boolean;
   }) => {
     try {
-      // Map the data to the existing schema fields
       return await completeOnboarding({
         phoneNumber: data.phone, // Map phone to phoneNumber for the API
         callTime: data.callTime,

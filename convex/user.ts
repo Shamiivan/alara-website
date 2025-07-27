@@ -22,9 +22,9 @@ export const createUser = mutation({
   args: {},
   handler: async (ctx, args_0) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not Authenticated");
-    }
+    console.log(identity);
+
+    if (!identity) throw new Error("Not Authenticated");
 
     const existingUser = await ctx.db
       .query("users")
@@ -51,40 +51,28 @@ export const createUser = mutation({
 export const completeOnboarding = mutation({
   args: {
     phoneNumber: v.optional(v.string()),
+    wantsClarityCalls: v.optional(v.boolean()),
     callTime: v.string(),
     wantsCallReminders: v.boolean(),
-    // Optional fields from the validator
-    biggestChallenge: v.optional(v.string()),
-    callFrequency: v.optional(v.string()),
-    feedbackParticipation: v.optional(v.boolean()),
-    purpose: v.optional(v.string()),
-    supportType: v.optional(v.array(v.string())),
-    timeOfDay: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
+    // console.log(identity);
+    if (!identity) throw new Error("Not authenticated");
     const user = await ctx.db.query("users")
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
       .unique()
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
 
-    if (user.isOnboarded) {
-      throw new Error("User is already onboarded");
-    }
-
-    // Validate time format (basic validation for HH:MM format)
+    // Validate time format(basic validation for HH:MM format)
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(args.callTime)) {
       throw new Error("Invalid time format. Use HH:MM format (e.g., '09:00', '14:30')");
     }
-
+    console.log(user);
     await ctx.db.patch(user._id, {
-      phone: args.phoneNumber, // Map phoneNumber to phone in the database
+      name: identity.name,
+      phone: args.phoneNumber,
       callTime: args.callTime,
       wantsCallReminders: args.wantsCallReminders,
       isOnboarded: true,

@@ -8,6 +8,7 @@ interface SummaryStepProps {
   onComplete: () => void;
   data: {
     phone: string;
+    wantsClarityCalls: boolean;
     callTime: string;
     wantsCallReminders: boolean;
   };
@@ -30,13 +31,14 @@ export default function SummaryStep({ onBack, onComplete, data }: SummaryStepPro
 
       // Then call the completeOnboarding function with the collected data
       await completeOnboarding({
-        phone: data.phone, // This will be mapped to phoneNumber in the API layer
+        phone: data.phone,
+        wantsClarityCalls: data.wantsClarityCalls,
         callTime: data.callTime,
         wantsCallReminders: data.wantsCallReminders,
       });
 
       // Call the onComplete callback
-      onComplete();
+      // onComplete();
     } catch (err) {
       console.error("Error completing onboarding:", err);
       setError("An error occurred while completing onboarding. Please try again.");
