@@ -1,0 +1,129 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import PhoneStep from "./steps/PhoneStep";
+import CallTimeStep from "./steps/CallTimeStep";
+import RemindersStep from "./steps/RemindersStep";
+import SummaryStep from "./steps/SummaryStep";
+
+// Define the steps of the onboarding process
+enum OnboardingStep {
+  PHONE = 0,
+  CALL_TIME = 1,
+  REMINDERS = 2,
+  SUMMARY = 3,
+  COMPLETED = 4,
+}
+
+export default function OnboardingForm() {
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>(OnboardingStep.PHONE);
+  const [formData, setFormData] = useState({
+    phone: "",
+    callTime: "",
+    wantsCallReminders: false,
+  });
+
+  // Handle moving to the next step
+  const handleNext = (step: OnboardingStep, data: Partial<typeof formData>) => {
+    // Update the form data
+    setFormData((prev) => ({ ...prev, ...data }));
+
+    // Move to the next step
+    setCurrentStep(step);
+  };
+
+  // Handle moving to the previous step
+  const handleBack = (step: OnboardingStep) => {
+    setCurrentStep(step);
+  };
+
+  // Handle completing the onboarding process
+  const handleComplete = () => {
+    // Redirect to the dashboard or home page
+    router.push("/");
+  };
+
+  // Render the current step
+  const renderStep = () => {
+    switch (currentStep) {
+      case OnboardingStep.PHONE:
+        return (
+          <PhoneStep
+            initialValue={formData.phone}
+            onNext={(phone) => handleNext(OnboardingStep.CALL_TIME, { phone })}
+          />
+        );
+      case OnboardingStep.CALL_TIME:
+        return (
+          <CallTimeStep
+            initialValue={formData.callTime}
+            onNext={(callTime) => handleNext(OnboardingStep.REMINDERS, { callTime })}
+            onBack={() => handleBack(OnboardingStep.PHONE)}
+          />
+        );
+      case OnboardingStep.REMINDERS:
+        return (
+          <RemindersStep
+            initialValue={formData.wantsCallReminders}
+            onNext={(wantsCallReminders) => handleNext(OnboardingStep.SUMMARY, { wantsCallReminders })}
+            onBack={() => handleBack(OnboardingStep.CALL_TIME)}
+          />
+        );
+      case OnboardingStep.SUMMARY:
+        return (
+          <SummaryStep
+            data={formData}
+            onBack={() => handleBack(OnboardingStep.REMINDERS)}
+            onComplete={handleComplete}
+          />
+        );
+      case OnboardingStep.COMPLETED:
+        return (
+          <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+            <h2 className="text-2xl font-bold mb-4">Onboarding Complete!</h2>
+            <p className="mb-6 text-gray-600">
+              Thank you for completing the onboarding process. You will be redirected to the dashboard.
+            </p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-md mx-auto mb-8">
+        <div className="flex justify-between items-center">
+          {[
+            "Contact",
+            "Call Time",
+            "Reminders",
+            "Summary",
+          ].map((step, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${index <= currentStep
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-500"
+                  }`}
+              >
+                {index + 1}
+              </div>
+              <span
+                className={`text-xs mt-1 ${index <= currentStep ? "text-blue-500" : "text-gray-500"
+                  }`}
+              >
+                {step}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {renderStep()}
+    </div>
+  );
+}
