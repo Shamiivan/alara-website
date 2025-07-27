@@ -7,7 +7,8 @@ const publicRoutes = [
   "/auth/login",
   "/calls",
   "/api/calls",
-  "/hi-mom" // Added hi-mom page to public routes
+  "/hi-mom", // Added hi-mom page to public routes
+  "/onboarding" // Added onboarding page to public routes for testing
 ];
 
 // define routes that dont require onboarding 

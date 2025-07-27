@@ -61,8 +61,8 @@ export default function OnboardingForm() {
       case OnboardingStep.PHONE:
         return (
           <PhoneStep
-            initialValue={formData.phone}
-            onNext={(phone) => handleNext(OnboardingStep.WANTS_CLARITY_CALLS, { phone })}
+            initialValues={{ name: formData.name, phone: formData.phone }}
+            onNext={(data) => handleNext(OnboardingStep.WANTS_CLARITY_CALLS, { name: data.name, phone: data.phone })}
           />
         );
 

@@ -7,6 +7,7 @@ interface SummaryStepProps {
   onBack: () => void;
   onComplete: () => void;
   data: {
+    name: string;
     phone: string;
     wantsClarityCalls: boolean;
     callTime: string;
@@ -31,6 +32,7 @@ export default function SummaryStep({ onBack, onComplete, data }: SummaryStepPro
 
       // Then call the completeOnboarding function with the collected data
       await completeOnboarding({
+        name: data.name,
         phone: data.phone,
         wantsClarityCalls: data.wantsClarityCalls,
         callTime: data.callTime,
@@ -66,6 +68,9 @@ export default function SummaryStep({ onBack, onComplete, data }: SummaryStepPro
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Contact Information</h3>
         <div className="bg-gray-50 p-4 rounded-md">
+          <div className="mb-2">
+            <span className="font-medium">Name:</span> {data.name}
+          </div>
           <div className="mb-2">
             <span className="font-medium">Phone:</span> {data.phone}
           </div>

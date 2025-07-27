@@ -50,6 +50,7 @@ export const createUser = mutation({
 // complete onboarding 
 export const completeOnboarding = mutation({
   args: {
+    name: v.optional(v.string()),
     phoneNumber: v.optional(v.string()),
     wantsClarityCalls: v.optional(v.boolean()),
     callTime: v.string(),
@@ -71,7 +72,7 @@ export const completeOnboarding = mutation({
     }
     console.log(user);
     await ctx.db.patch(user._id, {
-      name: identity.name,
+      name: args.name || identity.name, // Use provided name or fallback to identity name
       phone: args.phoneNumber,
       callTime: args.callTime,
       wantsCallReminders: args.wantsCallReminders,

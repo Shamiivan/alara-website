@@ -33,6 +33,7 @@ export function useCompleteOnboarding() {
    * @returns Promise that resolves when onboarding is complete
    */
   const handleCompleteOnboarding = async (data: {
+    name: string;
     phone: string;
     wantsClarityCalls: boolean;
     callTime: string;
@@ -40,6 +41,7 @@ export function useCompleteOnboarding() {
   }) => {
     try {
       return await completeOnboarding({
+        name: data.name,
         phoneNumber: data.phone, // Map phone to phoneNumber for the API
         callTime: data.callTime,
         wantsCallReminders: data.wantsCallReminders,
