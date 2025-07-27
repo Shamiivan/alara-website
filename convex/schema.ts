@@ -21,7 +21,28 @@ const schema = defineSchema({
     updatedAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
-    .index("email", ["email"])
+    .index("email", ["email"]),
+
+  // ADD THIS NEW TABLE
+  calls: defineTable({
+    userId: v.id("users"),
+    toNumber: v.string(),
+    status: v.union(
+      v.literal("initiated"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("no_answer")
+    ),
+    elevenLabsCallId: v.optional(v.string()),
+    duration: v.optional(v.number()),
+    cost: v.optional(v.number()),
+    initiatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
 });
 
 export default schema;

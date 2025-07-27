@@ -50,8 +50,16 @@ export const createUser = mutation({
 // complete onboarding 
 export const completeOnboarding = mutation({
   args: {
+    phoneNumber: v.optional(v.string()),
     callTime: v.string(),
     wantsCallReminders: v.boolean(),
+    // Optional fields from the validator
+    biggestChallenge: v.optional(v.string()),
+    callFrequency: v.optional(v.string()),
+    feedbackParticipation: v.optional(v.boolean()),
+    purpose: v.optional(v.string()),
+    supportType: v.optional(v.array(v.string())),
+    timeOfDay: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
@@ -76,6 +84,7 @@ export const completeOnboarding = mutation({
     }
 
     await ctx.db.patch(user._id, {
+      phone: args.phoneNumber, // Map phoneNumber to phone in the database
       callTime: args.callTime,
       wantsCallReminders: args.wantsCallReminders,
       isOnboarded: true,

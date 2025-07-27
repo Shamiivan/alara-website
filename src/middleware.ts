@@ -4,14 +4,20 @@ import { NextRequest, NextResponse } from "next/server";
 // defining multiple routes 
 const publicRoutes = [
   "/",
-  "/auth/login" // Fixed: added leading slash
+  "/auth/login",
+  "/calls",
+  "/api/calls",
+  "/hi-mom" // Added hi-mom page to public routes
 ];
 
 // define routes that dont require onboarding 
 const onboardingExemptRoutes = [
   "/onboarding",
   "/auth/login",
-  "/"
+  "/calls",
+  "/api/calls",
+  "/",
+  "/hi-mom" // Added hi-mom page to onboarding exempt routes
 ];
 
 export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexAuth }) => {
