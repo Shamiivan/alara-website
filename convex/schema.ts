@@ -1,6 +1,8 @@
+// schema.ts
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
+
 
 const schema = defineSchema({
   ...authTables,
@@ -19,6 +21,10 @@ const schema = defineSchema({
     wantsCallReminders: v.optional(v.boolean()),
     wantsClarityCalls: v.optional(v.boolean()),
     updatedAt: v.optional(v.number()),
+
+    // Payment fields
+    hasPaid: v.optional(v.boolean()),
+    paidAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
     .index("email", ["email"]),
@@ -41,7 +47,27 @@ const schema = defineSchema({
     errorMessage: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_status", ["status"])
+    .index("by_status", ["status"]),
+
+  payments: defineTable({
+    userId: v.id("users"),
+    stripeCustomerId: v.string(),
+    stripePaymentIntentId: v.string(),
+    amount: v.number(), // counted in cents 
+    status: v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("canceled")
+    ),
+    metadata: v.optional(v.object({
+      description: v.optional(v.string())
+    })),
+    createdAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_stripe_payment_intent", ["stripePaymentIntentId"])
 });
 
 export default schema;
