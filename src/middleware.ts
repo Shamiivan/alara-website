@@ -11,6 +11,14 @@ const publicRoutes = [
   "/onboarding" // Added onboarding page to public routes for testing
 ];
 
+const privateRoutes = [
+  "/hi-mom",
+];
+
+const routeNeedsOnboarding = [
+  "/hi-mom"
+];
+
 // define routes that dont require onboarding 
 const onboardingExemptRoutes = [
   "/onboarding",
@@ -34,7 +42,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
   }
 
   // if its a public route, continue
-  if (publicRoutes.includes(pathname)) {
+  if (!privateRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
@@ -58,7 +66,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     }
 
     // if the user is authenticated, but not onboarded and its onboard exempt route, continue
-    if (onboardingExemptRoutes.includes(pathname)) {
+    if (!routeNeedsOnboarding.includes(pathname)) {
       return NextResponse.next();
     }
 
@@ -73,7 +81,6 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
       return NextResponse.redirect(loginUrl);
     }
 
-    // Fixed: removed unnecessary await from the condition
     const userOnboarded = await isUserOnboarded(token);
 
     // if the user is auth, not onboarded and its an onboard needed route, redirect

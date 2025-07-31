@@ -12,7 +12,6 @@ import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 
 
-// Define the steps of the onboarding process
 enum OnboardingStep {
   PHONE = 0,
   WANTS_CLARITY_CALLS = 1,
