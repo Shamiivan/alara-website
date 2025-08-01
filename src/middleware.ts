@@ -13,10 +13,13 @@ const publicRoutes = [
 
 const privateRoutes = [
   "/hi-mom",
+  "/onboarding",
+  "/payment"
 ];
 
 const routeNeedsOnboarding = [
-  "/hi-mom"
+  "/hi-mom",
+  "/payment"
 ];
 
 // define routes that dont require onboarding 
@@ -26,7 +29,7 @@ const onboardingExemptRoutes = [
   "/calls",
   "/api/calls",
   "/",
-  "/hi-mom" // Added hi-mom page to onboarding exempt routes
+  "/hi-mom"
 ];
 
 export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexAuth }) => {
@@ -82,6 +85,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     }
 
     const userOnboarded = await isUserOnboarded(token);
+    console.log("Middleware.ts] User is Onobaorde?", userOnboarded);
 
     // if the user is auth, not onboarded and its an onboard needed route, redirect
     if (!userOnboarded) {
@@ -101,6 +105,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
 });
 
 async function isUserOnboarded(token?: string): Promise<boolean> {
+  console.error("[Middleware.ts]  We are getting the token", token);
   if (!token) return false;
 
   try {
@@ -119,18 +124,20 @@ async function isUserOnboarded(token?: string): Promise<boolean> {
         "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
-        path: "users:isUserOnboarded",
+        path: "user:isUserOnboarded",
         args: {},
         format: "json",
       }),
     });
 
+    console.log("RESPONSE", response.ok);
     if (!response.ok) {
       console.error("Failed to check onboarding status:", response.status);
       return false; // Changed: assume needs onboarding if request fails
     }
 
     const result = await response.json();
+    console.log("RESULT: ", result);
 
     // Handle the response format from your query
     if (result.status === "success") {

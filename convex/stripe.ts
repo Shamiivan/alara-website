@@ -1,9 +1,10 @@
 // stripe.ts
 
-import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { action, internalMutation, internalAction } from "./_generated/server";
+import { api, internal } from "./_generated/api";
 import Stripe from "stripe";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Id } from "./_generated/dataModel";
 
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -13,39 +14,40 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export const pay = action({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("User not authenticated");
+    console.log("[Stripe.ts] Paying  ")
 
-    const currUser = (await ctx.runQuery(api.user.getCurrentUser, {})) as { _id: string; email?: string } | null;
+    const domain = process.env.SITE_URL ?? "http://localhost:3000";
+    const amount = 0;
 
-    const email = currUser?.email;
-    if (!currUser) throw new Error("User record not found in database");
-
-
-    const domain = process.env.SITE_URL;
-    if (!domain) throw new Error("Missing NEXT_PUBLIC_APP_URL environment variable");
-
-    const priceId = process.env.STRIPE_PRICE_ID;
-    if (!priceId) throw new Error("Missing STRIPE_ONE_TIME_PRICE_ID environment variable");
+    const paymentId: Id<"payments"> = await ctx.runMutation(internal.payments.create, { amount: amount });
+    // if (!priceId) throw new Error("Missing STRIPE_ONE_TIME_PRICE_ID environment variable");
 
     const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      payment_method_types: ["card"],
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency: "USD",
+            unit_amount: amount,
+            tax_behavior: "exclusive",
+            product_data: {
+              name: "One message of your choosing",
+            },
+          },
           quantity: 1,
         },
       ],
-      customer_email: email,
-      metadata: {
-        userId: currUser._id,
-      },
-      success_url: `${domain}/?success=true`,
-      cancel_url: `${domain}/?canceled=true`,
+      mode: "payment",
+      success_url: `${domain}?paymentId=${paymentId}`,
+      cancel_url: `${domain}`,
+      automatic_tax: { enabled: true },
     });
 
-    // 5. Return the redirect URL
+    await ctx.runMutation(internal.payments.markPending, {
+      paymentId,
+      stripeId: session.id,
+    });
+
     return session.url;
   },
 });
+

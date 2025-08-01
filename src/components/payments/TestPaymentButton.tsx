@@ -3,9 +3,14 @@
 
 import { useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function TestPayButton() {
+export default function TestPaymentButton() {
   const pay = useAction(api.stripe.pay);
+  console.log(useConsumeQueryParam("paymentId"));
+
+
 
   const handlePay = async () => {
     try {
@@ -28,4 +33,22 @@ export default function TestPayButton() {
       Test One-Time Pay
     </ button>
   );
+}
+
+
+function useConsumeQueryParam(name: string) {
+  const searchParams = useSearchParams();
+  const [value] = useState(searchParams.get(name));
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && searchParams.has(name)) {
+      const currUrl = new URL(window.location.href);
+      const searchParams = currUrl.searchParams;
+      searchParams.delete(name);
+      const consumedUrl =
+        currUrl.origin + currUrl.pathname + searchParams.toString();
+      window.history.replaceState(null, "", consumedUrl)
+    }
+  }, []);
+  return value;
 }

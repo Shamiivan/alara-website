@@ -51,23 +51,12 @@ const schema = defineSchema({
 
   payments: defineTable({
     userId: v.id("users"),
-    stripeCustomerId: v.string(),
-    stripePaymentIntentId: v.string(),
+    stripeId: v.optional(v.string()),
     amount: v.number(), // counted in cents 
-    status: v.union(
-      v.literal("pending"),
-      v.literal("completed"),
-      v.literal("failed"),
-      v.literal("canceled")
-    ),
-    metadata: v.optional(v.object({
-      description: v.optional(v.string())
-    })),
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_stripe_payment_intent", ["stripePaymentIntentId"])
 });
 
 export default schema;

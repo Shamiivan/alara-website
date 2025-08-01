@@ -6,7 +6,7 @@ export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
+    if (!identity) throw new Error("User not Authenticated");
 
     const user = await ctx.db
       .query("users")
