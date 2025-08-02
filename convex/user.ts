@@ -106,6 +106,31 @@ export const isUserOnboarded = query({
   },
 });
 
+// Check complete user status (auth, onboarding, payment)
+export const checkUserStatus = query({
+  args: {},
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return {
+        isAuthenticated: false,
+        isOnboarded: false,
+        hasPaid: false
+      }
+    }
+
+    const user = await ctx.db.query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+      .unique()
+
+    return {
+      isAuthenticated: true,
+      isOnboarded: user?.isOnboarded ?? false,
+      hasPaid: user?.hasPaid ?? false,
+    }
+  },
+});
+
 // New function to ensure user record exists with proper fields after auth
 export const ensureUserRecord = mutation({
   args: {},

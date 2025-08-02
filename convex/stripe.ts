@@ -19,7 +19,7 @@ export const pay = action({
     console.log("[Stripe.ts] Creating payment");
 
     const domain = process.env.SITE_URL ?? "http://localhost:3000";
-    const amount = 0;
+    const amount = 800; // $8.00 CAD in cents
 
     // Create a payment record in the database
     const paymentId: Id<"payments"> = await ctx.runMutation(internal.payments.create, {
@@ -35,15 +35,16 @@ export const pay = action({
             unit_amount: amount,
             tax_behavior: "exclusive",
             product_data: {
-              name: "One message of your choosing",
+              name: "Alara - One Month Access",
+              description: "Try the product for one month"
             },
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `${domain}?paymentId=${paymentId}`,
-      cancel_url: `${domain}`,
+      success_url: `${domain}/dashboard?payment=success&paymentId=${paymentId}`,
+      cancel_url: `${domain}/payment?payment=cancelled`,
       automatic_tax: { enabled: true },
     });
 

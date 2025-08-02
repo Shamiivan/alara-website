@@ -1,39 +1,38 @@
 import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
-// defining multiple routes 
+// Public routes that don't require authentication
 const publicRoutes = [
   "/",
   "/auth/login",
   "/calls",
-  "/api/calls",
-  "/hi-mom", // Added hi-mom page to public routes
-  "/onboarding" // Added onboarding page to public routes for testing
+  "/api/calls"
 ];
 
-const privateRoutes = [
-  "/hi-mom",
+// Routes that require authentication
+const protectedRoutes = [
+  "/dashboard",
   "/onboarding",
   "/payment"
 ];
 
-const routeNeedsOnboarding = [
-  "/hi-mom",
+// Routes that require onboarding to be completed
+const requiresOnboarding = [
+  "/dashboard",
   "/payment"
 ];
 
-// define routes that dont require onboarding 
-const onboardingExemptRoutes = [
-  "/onboarding",
-  "/auth/login",
-  "/calls",
-  "/api/calls",
-  "/",
-  "/hi-mom"
+// Routes that require payment to be completed
+const requiresPayment = [
+  "/dashboard"
 ];
 
 export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexAuth }) => {
-  const { pathname } = request.nextUrl;
+  const { pathname, searchParams } = request.nextUrl;
+
+  // Check if this is a redirect from successful payment
+  const isPaymentSuccess = searchParams.get('payment') === 'success';
+  const paymentId = searchParams.get('paymentId');
 
   // Check for static files first
   const isStaticFile = pathname.startsWith("/_next/") ||
@@ -44,13 +43,18 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     return NextResponse.next();
   }
 
-  // if its a public route, continue
-  if (!privateRoutes.includes(pathname)) {
+  // If it's a public route, continue
+  if (publicRoutes.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  // If it's not a protected route, continue
+  if (!protectedRoutes.includes(pathname)) {
     return NextResponse.next();
   }
 
   try {
-    // Add more detailed error handling around isAuthenticated
+    // Check authentication status
     let isAuthenticated = false;
 
     try {
@@ -62,38 +66,45 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
       return NextResponse.redirect(loginUrl);
     }
 
-    // if the user is not authenticated and its not a public route, redirect to login
+    // If not authenticated, redirect to login
     if (!isAuthenticated) {
       const loginUrl = new URL("/auth/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
 
-    // if the user is authenticated, but not onboarded and its onboard exempt route, continue
-    if (!routeNeedsOnboarding.includes(pathname)) {
-      return NextResponse.next();
-    }
-
-    // Check onboarding status
+    // Get token for user status check
     let token;
     try {
       token = await convexAuth.getToken();
     } catch (tokenError) {
       console.error("Error getting token:", tokenError);
-      // If we can't get token, redirect to login
       const loginUrl = new URL("/auth/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
 
-    const userOnboarded = await isUserOnboarded(token);
-    console.log("Middleware.ts] User is Onobaorde?", userOnboarded);
+    // Check complete user status (auth, onboarding, payment)
+    const userStatus = await checkUserStatus(token);
 
-    // if the user is auth, not onboarded and its an onboard needed route, redirect
-    if (!userOnboarded) {
+    // If route requires onboarding and user is not onboarded, redirect to onboarding
+    if (requiresOnboarding.includes(pathname) && !userStatus.isOnboarded) {
       const onboardingUrl = new URL("/onboarding", request.url);
       return NextResponse.redirect(onboardingUrl);
     }
 
-    // user is authenticated and onboarded 
+    // Special case: Allow access to dashboard if coming from successful payment
+    // This gives the webhook time to process the payment
+    if (pathname === '/dashboard' && isPaymentSuccess && paymentId) {
+      console.log('Allowing dashboard access after successful payment');
+      return NextResponse.next();
+    }
+
+    // If route requires payment and user has not paid, redirect to payment
+    if (requiresPayment.includes(pathname) && !userStatus.hasPaid) {
+      const paymentUrl = new URL("/payment", request.url);
+      return NextResponse.redirect(paymentUrl);
+    }
+
+    // User meets all requirements for the route
     return NextResponse.next();
 
   } catch (error) {
@@ -104,16 +115,16 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
   }
 });
 
-async function isUserOnboarded(token?: string): Promise<boolean> {
-  console.error("[Middleware.ts]  We are getting the token", token);
-  if (!token) return false;
+// Check complete user status (auth, onboarding, payment)
+async function checkUserStatus(token?: string): Promise<{ isAuthenticated: boolean, isOnboarded: boolean, hasPaid: boolean }> {
+  if (!token) return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
 
   try {
     const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
     if (!convexUrl) {
       console.error("NEXT_PUBLIC_CONVEX_URL not found");
-      return false; // Assume needs onboarding 
+      return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
     }
 
     // Make request to Convex HTTP API
@@ -124,32 +135,33 @@ async function isUserOnboarded(token?: string): Promise<boolean> {
         "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
-        path: "user:isUserOnboarded",
+        path: "user:checkUserStatus",
         args: {},
         format: "json",
       }),
     });
 
-    console.log("RESPONSE", response.ok);
     if (!response.ok) {
-      console.error("Failed to check onboarding status:", response.status);
-      return false; // Changed: assume needs onboarding if request fails
+      console.error("Failed to check user status:", response.status);
+      return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
     }
 
     const result = await response.json();
-    console.log("RESULT: ", result);
 
     // Handle the response format from your query
     if (result.status === "success") {
-      const { isUserOnboarded } = result.value;
-      return Boolean(isUserOnboarded); // Ensure boolean return
+      return {
+        isAuthenticated: result.value.isAuthenticated || false,
+        isOnboarded: result.value.isOnboarded || false,
+        hasPaid: result.value.hasPaid || false
+      };
     }
 
-    // If we get an error or unexpected response, assume the user needs onboarding 
-    return false;
+    // If we get an error or unexpected response, assume the user needs everything
+    return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
   } catch (error) {
     console.error("[Middleware Call to the backend]", error);
-    return false;
+    return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
   }
 }
 
