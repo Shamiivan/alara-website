@@ -1,6 +1,7 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { isAuthenticated } from "./auth";
+import { Id } from "./_generated/dataModel";
 
 export const getCurrentUser = query({
   args: {},
@@ -150,4 +151,17 @@ export const ensureUserRecord = mutation({
 
     return user;
   }
+});
+
+// Mark a user as paid
+export const markUserPaid = internalMutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      hasPaid: true,
+      paidAt: Date.now(),
+    });
+  },
 });

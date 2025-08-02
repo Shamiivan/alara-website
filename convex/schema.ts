@@ -52,11 +52,27 @@ const schema = defineSchema({
   payments: defineTable({
     userId: v.id("users"),
     stripeId: v.optional(v.string()),
-    amount: v.number(), // counted in cents 
+    amount: v.number(), // counted in cents
     createdAt: v.number(),
     completedAt: v.optional(v.number()),
+    status: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("completed"),
+      v.literal("failed")
+    )),
+    errorMessage: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
+    .index("by_stripeId", ["stripeId"]), // Add index for faster lookups
+
+  // Table for tracking processed Stripe webhook events (for idempotency)
+  stripeEvents: defineTable({
+    eventId: v.string(),
+    processedAt: v.number(),
+    eventType: v.string(),
+    status: v.union(v.literal("success"), v.literal("error")),
+    errorMessage: v.optional(v.string()),
+  }).index("by_eventId", ["eventId"]),
 });
 
 export default schema;
