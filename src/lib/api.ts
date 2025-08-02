@@ -43,6 +43,7 @@ export function useCompleteOnboarding() {
       return await completeOnboarding({
         name: data.name,
         phoneNumber: data.phone, // Map phone to phoneNumber for the API
+        wantsClarityCalls: data.wantsClarityCalls, // Add missing field
         callTime: data.callTime,
         wantsCallReminders: data.wantsCallReminders,
       });

@@ -40,7 +40,7 @@ export default function SummaryStep({ onBack, onComplete, data }: SummaryStepPro
       });
 
       // Call the onComplete callback
-      // onComplete();
+      onComplete();
     } catch (err) {
       console.error("Error completing onboarding:", err);
       setError("An error occurred while completing onboarding. Please try again.");

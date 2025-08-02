@@ -39,38 +39,46 @@ export default function OnboardingForm() {
 
   // Load user data and determine current step on mount
   useEffect(() => {
-    if (user) {
-      // Populate form data from existing user data
-      const updatedFormData = {
-        name: user.name || "",
-        phone: user.phone || "",
-        wantsClarityCalls: user.wantsClarityCalls || false,
-        callTime: user.callTime || "",
-        wantsCallReminders: user.wantsCallReminders || false,
-      };
+    // Check if the query has completed (even if it returned undefined)
+    if (user !== undefined) {
+      if (user) {
+        // Populate form data from existing user data
+        const updatedFormData = {
+          name: user.name || "",
+          phone: user.phone || "",
+          wantsClarityCalls: user.wantsClarityCalls || false,
+          callTime: user.callTime || "",
+          wantsCallReminders: user.wantsCallReminders || false,
+        };
 
-      setFormData(updatedFormData);
+        setFormData(updatedFormData);
 
-      // Determine current step based on available data
-      let step = OnboardingStep.PHONE;
+        // Determine current step based on available data
+        let step = OnboardingStep.PHONE;
 
-      if (updatedFormData.phone) {
-        step = OnboardingStep.WANTS_CLARITY_CALLS;
+        if (updatedFormData.phone) {
+          step = OnboardingStep.WANTS_CLARITY_CALLS;
 
-        if (updatedFormData.wantsClarityCalls !== undefined) {
-          step = OnboardingStep.CALL_TIME;
+          if (updatedFormData.wantsClarityCalls !== undefined) {
+            step = OnboardingStep.CALL_TIME;
 
-          if (updatedFormData.callTime) {
-            step = OnboardingStep.REMINDERS;
+            if (updatedFormData.callTime) {
+              step = OnboardingStep.REMINDERS;
 
-            if (updatedFormData.wantsCallReminders !== undefined) {
-              step = OnboardingStep.SUMMARY;
+              if (updatedFormData.wantsCallReminders !== undefined) {
+                step = OnboardingStep.SUMMARY;
+              }
             }
           }
         }
+
+        setCurrentStep(step);
+      } else {
+        // User query returned null/undefined, but it's done loading
+        console.log("No user data found, starting with empty form");
       }
 
-      setCurrentStep(step);
+      // Always set loading to false once the query completes
       setIsLoading(false);
     }
   }, [user]);
@@ -170,7 +178,6 @@ export default function OnboardingForm() {
             data={formData}
             onBack={() => handleBack(OnboardingStep.REMINDERS)}
             onComplete={handleComplete}
-            isSaving={isSaving}
           />
         );
       case OnboardingStep.COMPLETED:
@@ -209,10 +216,10 @@ export default function OnboardingForm() {
             <div key={index} className="flex flex-col items-center">
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center ${isLoading
-                    ? "bg-gray-200 text-gray-500"
-                    : index <= currentStep
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-500"
+                  ? "bg-gray-200 text-gray-500"
+                  : index <= currentStep
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-500"
                   }`}
               >
                 {isLoading ? (
@@ -223,10 +230,10 @@ export default function OnboardingForm() {
               </div>
               <span
                 className={`text-xs mt-1 ${isLoading
-                    ? "text-gray-400"
-                    : index <= currentStep
-                      ? "text-blue-500"
-                      : "text-gray-500"
+                  ? "text-gray-400"
+                  : index <= currentStep
+                    ? "text-blue-500"
+                    : "text-gray-500"
                   }`}
               >
                 {step}
