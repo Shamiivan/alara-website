@@ -27,7 +27,8 @@ const schema = defineSchema({
     paidAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
-    .index("email", ["email"]),
+    .index("email", ["email"])
+    .index("by_phone", ["phone"]),
 
   calls: defineTable({
     userId: v.id("users"),
@@ -63,7 +64,7 @@ const schema = defineSchema({
     errorMessage: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
-    .index("by_stripeId", ["stripeId"]), // Add index for faster lookups
+    .index("by_stripeId", ["stripeId"]),
 
   // Table for tracking processed Stripe webhook events (for idempotency)
   stripeEvents: defineTable({
