@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 // Add CSS for animations
 const styles = {
@@ -93,12 +94,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <h1 className="text-2xl font-bold">Welcome back, {user?.name || "there"}!</h1>
-            <button
-              onClick={() => router.push("/auth/login")}
-              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-            >
-              Sign Out
-            </button>
+            <LogoutButton variant="subtle" />
           </div>
         </div>
       </header>
