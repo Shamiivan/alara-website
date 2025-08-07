@@ -7,19 +7,20 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 
-// Initialize Stripe client
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-06-30.basil",
-});
 
 // Create a payment and Stripe checkout session
 export const pay = action({
   args: {},
   handler: async (ctx) => {
+    // Initialize Stripe client
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2025-06-30.basil",
+    });
+
     console.log("[Stripe.ts] Creating payment");
 
     const domain = process.env.SITE_URL ?? "http://localhost:3000";
-    const amount = 800; // $8.00 CAD in cents
+    const amount = 100; // $8.00 CAD in cents
 
     // Create a payment record in the database
     const paymentId: Id<"payments"> = await ctx.runMutation(internal.payments.create, {
@@ -111,6 +112,11 @@ export const fulfill = internalAction({
     signature: v.string(),
   },
   handler: async (ctx, args) => {
+
+    // Initialize Stripe client
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+      apiVersion: "2025-06-30.basil",
+    });
     console.log("Processing Stripe webhook");
 
     // 1. Verify webhook signature

@@ -1,17 +1,34 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useEventLogger } from "@/lib/eventLogger";
 
 export function SignInWithGoogle() {
   const { signIn } = useAuthActions();
   const [isHovered, setIsHovered] = useState(false);
+  const { info, error, logUserAction } = useEventLogger();
+
+  const handleSignIn = async () => {
+    try {
+      info("auth", "Google sign-in initiated");
+      logUserAction("Google sign-in button clicked", "auth");
+
+      await signIn("google");
+
+      info("auth", "Google sign-in completed successfully");
+    } catch (signInError) {
+      error("auth", "Google sign-in failed", {
+        error: signInError instanceof Error ? signInError.message : String(signInError)
+      }, true, "Sign in failed. Please try again.");
+    }
+  };
 
   return (
     <Button
       className={`flex items-center justify-center gap-3 w-full bg-white hover:bg-gray-50 text-gray-800 border-2 border-gray-300 shadow-sm hover:shadow-md hover:shadow-rose-500/20 transition-all duration-300 py-6 rounded-xl ${isHovered ? 'scale-[1.02]' : 'scale-100'}`}
       variant="outline"
       type="button"
-      onClick={() => void signIn("google")}
+      onClick={handleSignIn}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       aria-label="Sign in with Google"

@@ -10,6 +10,8 @@ import ClarityCalls from "./steps/ClarityCallsStep";
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { useEventLogger } from "@/lib/eventLogger";
+import { OnboardingErrorBoundary } from "@/components/ErrorBoundary";
 
 
 enum OnboardingStep {
@@ -25,6 +27,7 @@ export default function OnboardingForm() {
   const completeOnboarding = useMutation(api.user.completeOnboarding);
   const user = useQuery(api.user.getCurrentUser);
   const router = useRouter();
+  const { info, warn, error, logUserAction } = useEventLogger();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -42,6 +45,8 @@ export default function OnboardingForm() {
     // Check if the query has completed (even if it returned undefined)
     if (user !== undefined) {
       if (user) {
+        info("onboarding", "Onboarding form loaded with existing user data");
+
         // Populate form data from existing user data
         const updatedFormData = {
           name: user.name || "",
@@ -73,18 +78,29 @@ export default function OnboardingForm() {
         }
 
         setCurrentStep(step);
+        info("onboarding", "Resuming onboarding at step", {
+          step: Object.keys(OnboardingStep)[step],
+          hasExistingData: true
+        });
       } else {
         // User query returned null/undefined, but it's done loading
-        console.log("No user data found, starting with empty form");
+        info("onboarding", "Starting new onboarding flow");
       }
 
       // Always set loading to false once the query completes
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, info]);
 
   // Handle moving to the next step
   const handleNext = (step: OnboardingStep, data: Partial<typeof formData>) => {
+    // Log the step progression
+    logUserAction(`Onboarding step completed: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
+      fromStep: Object.keys(OnboardingStep)[currentStep],
+      toStep: Object.keys(OnboardingStep)[step],
+      data
+    });
+
     // Update the form data
     setFormData((prev) => ({ ...prev, ...data }));
 
@@ -94,6 +110,11 @@ export default function OnboardingForm() {
 
   // Handle moving to the previous step
   const handleBack = (step: OnboardingStep) => {
+    logUserAction(`Onboarding step back: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
+      fromStep: Object.keys(OnboardingStep)[currentStep],
+      toStep: Object.keys(OnboardingStep)[step],
+    });
+
     setCurrentStep(step);
   };
 
@@ -101,6 +122,7 @@ export default function OnboardingForm() {
   const handleComplete = async () => {
     try {
       setIsSaving(true);
+      info("onboarding", "Completing onboarding process", formData);
 
       // Save all data to the database
       await completeOnboarding({
@@ -111,17 +133,25 @@ export default function OnboardingForm() {
         wantsCallReminders: formData.wantsCallReminders,
       });
 
+      info("onboarding", "Onboarding completed successfully");
+      logUserAction("Onboarding completed", "onboarding", formData);
+
       // Show completion step briefly
       setCurrentStep(OnboardingStep.COMPLETED);
 
       // Redirect to payment page after a short delay
       setTimeout(() => {
+        info("onboarding", "Redirecting to payment page");
         router.push("/payment");
       }, 1500);
 
-    } catch (error) {
-      console.error("Error completing onboarding:", error);
-      // Could show an error message here
+    } catch (onboardingError) {
+      error("onboarding", "Failed to complete onboarding", {
+        error: onboardingError instanceof Error ? onboardingError.message : String(onboardingError),
+        formData
+      }, true, "Failed to complete onboarding. Please try again.");
+
+      console.error("Error completing onboarding:", onboardingError);
     } finally {
       setIsSaving(false);
     }
@@ -138,7 +168,10 @@ export default function OnboardingForm() {
       );
     }
 
-    console.log(currentStep);
+    // Debug current step
+    if (process.env.NODE_ENV === "development") {
+      console.log("Current onboarding step:", Object.keys(OnboardingStep)[currentStep]);
+    }
     switch (currentStep) {
       case OnboardingStep.PHONE:
         return (
@@ -203,47 +236,49 @@ export default function OnboardingForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto mb-8">
-        <div className="flex justify-between items-center">
-          {[
-            "Contact",
-            "Clarity Calls",
-            "Call Time",
-            "Reminders",
-            "Summary",
-          ].map((step, index) => (
-            <div key={index} className="flex flex-col items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center ${isLoading
-                  ? "bg-gray-200 text-gray-500"
-                  : index <= currentStep
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-500"
-                  }`}
-              >
-                {isLoading ? (
-                  <div className="animate-pulse h-3 w-3 bg-gray-300 rounded-full"></div>
-                ) : (
-                  index + 1
-                )}
+    <OnboardingErrorBoundary>
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-md mx-auto mb-8">
+          <div className="flex justify-between items-center">
+            {[
+              "Contact",
+              "Clarity Calls",
+              "Call Time",
+              "Reminders",
+              "Summary",
+            ].map((step, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center ${isLoading
+                    ? "bg-gray-200 text-gray-500"
+                    : index <= currentStep
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-500"
+                    }`}
+                >
+                  {isLoading ? (
+                    <div className="animate-pulse h-3 w-3 bg-gray-300 rounded-full"></div>
+                  ) : (
+                    index + 1
+                  )}
+                </div>
+                <span
+                  className={`text-xs mt-1 ${isLoading
+                    ? "text-gray-400"
+                    : index <= currentStep
+                      ? "text-blue-500"
+                      : "text-gray-500"
+                    }`}
+                >
+                  {step}
+                </span>
               </div>
-              <span
-                className={`text-xs mt-1 ${isLoading
-                  ? "text-gray-400"
-                  : index <= currentStep
-                    ? "text-blue-500"
-                    : "text-gray-500"
-                  }`}
-              >
-                {step}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      {renderStep()}
-    </div>
+        {renderStep()}
+      </div>
+    </OnboardingErrorBoundary>
   );
 }

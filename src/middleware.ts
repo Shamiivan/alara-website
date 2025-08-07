@@ -1,5 +1,6 @@
 import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { serverLogger, authLogger } from "@/lib/serverLogger";
 
 // Public routes that don't require authentication
 const publicRoutes = [
@@ -43,13 +44,18 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     return NextResponse.next();
   }
 
+  // Log the request
+  serverLogger.logRequest(request);
+
   // If it's a public route, continue
   if (publicRoutes.includes(pathname)) {
+    serverLogger.debug("system", `Public route accessed: ${pathname}`, undefined, request);
     return NextResponse.next();
   }
 
   // If it's not a protected route, continue
   if (!protectedRoutes.includes(pathname)) {
+    serverLogger.debug("system", `Non-protected route accessed: ${pathname}`, undefined, request);
     return NextResponse.next();
   }
 
@@ -60,7 +66,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     try {
       isAuthenticated = await convexAuth.isAuthenticated();
     } catch (authError) {
-      console.error("Error checking authentication:", authError);
+      authLogger.error("Authentication check failed", { error: authError }, request);
       // If we can't check auth status, redirect to login for safety
       const loginUrl = new URL("/auth/login", request.url);
       return NextResponse.redirect(loginUrl);
@@ -68,6 +74,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
 
     // If not authenticated, redirect to login
     if (!isAuthenticated) {
+      authLogger.info("Unauthenticated access to protected route", { pathname }, request);
       const loginUrl = new URL("/auth/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
@@ -77,7 +84,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     try {
       token = await convexAuth.getToken();
     } catch (tokenError) {
-      console.error("Error getting token:", tokenError);
+      authLogger.error("Token retrieval failed", { error: tokenError }, request);
       const loginUrl = new URL("/auth/login", request.url);
       return NextResponse.redirect(loginUrl);
     }
@@ -87,6 +94,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
 
     // If route requires onboarding and user is not onboarded, redirect to onboarding
     if (requiresOnboarding.includes(pathname) && !userStatus.isOnboarded) {
+      authLogger.info("User needs onboarding", { pathname, userStatus }, request);
       const onboardingUrl = new URL("/onboarding", request.url);
       return NextResponse.redirect(onboardingUrl);
     }
@@ -94,21 +102,23 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     // Special case: Allow access to dashboard if coming from successful payment
     // This gives the webhook time to process the payment
     if (pathname === '/dashboard' && isPaymentSuccess && paymentId) {
-      console.log('Allowing dashboard access after successful payment');
+      serverLogger.info("payment", "Dashboard access allowed after payment success", { paymentId }, request);
       return NextResponse.next();
     }
 
     // If route requires payment and user has not paid, redirect to payment
     if (requiresPayment.includes(pathname) && !userStatus.hasPaid) {
+      serverLogger.info("payment", "User needs to complete payment", { pathname, userStatus }, request);
       const paymentUrl = new URL("/payment", request.url);
       return NextResponse.redirect(paymentUrl);
     }
 
     // User meets all requirements for the route
+    serverLogger.debug("system", "Route access granted", { pathname, userStatus }, request);
     return NextResponse.next();
 
   } catch (error) {
-    console.error("Middleware error:", error);
+    serverLogger.error("system", "Middleware error", { error }, request);
     // On any error, redirect to login for safety
     const loginUrl = new URL("/auth/login", request.url);
     return NextResponse.redirect(loginUrl);
@@ -142,7 +152,7 @@ async function checkUserStatus(token?: string): Promise<{ isAuthenticated: boole
     });
 
     if (!response.ok) {
-      console.error("Failed to check user status:", response.status);
+      serverLogger.error("system", "Failed to check user status", { status: response.status });
       return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
     }
 
@@ -160,7 +170,7 @@ async function checkUserStatus(token?: string): Promise<{ isAuthenticated: boole
     // If we get an error or unexpected response, assume the user needs everything
     return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
   } catch (error) {
-    console.error("[Middleware Call to the backend]", error);
+    serverLogger.error("system", "Error checking user status", { error });
     return { isAuthenticated: false, isOnboarded: false, hasPaid: false };
   }
 }

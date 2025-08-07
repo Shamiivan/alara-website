@@ -74,6 +74,37 @@ const schema = defineSchema({
     status: v.union(v.literal("success"), v.literal("error")),
     errorMessage: v.optional(v.string()),
   }).index("by_eventId", ["eventId"]),
+
+  // Event logging table (errors only)
+  events: defineTable({
+    // Core event data
+    category: v.string(), // "auth", "onboarding", "payment", "calls", "api", "system"
+    type: v.literal("error"), // Only storing errors in DB
+    message: v.string(),
+    details: v.optional(v.any()), // JSON object with error details, stack trace, etc.
+
+    // User context
+    userId: v.optional(v.id("users")),
+    sessionId: v.optional(v.string()),
+
+    // Request context
+    url: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+
+    // Metadata
+    timestamp: v.number(),
+    source: v.string(), // "client", "server", "middleware", "api", "convex"
+
+    // User-facing features
+    showToUser: v.optional(v.boolean()), // Whether to display error to user
+    userMessage: v.optional(v.string()), // User-friendly error message
+    resolved: v.optional(v.boolean()), // For error tracking
+  })
+    .index("by_user", ["userId"])
+    .index("by_category", ["category"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_source", ["source"])
+    .index("by_user_unresolved", ["userId", "resolved"]),
 });
 
 export default schema;

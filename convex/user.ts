@@ -3,23 +3,23 @@ import { v } from "convex/values";
 import { isAuthenticated } from "./auth";
 import { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { api } from "./_generated/api";
 
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
     // Get the authenticated user ID directly
     const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("User not Authenticated");
-
-    // Log the user ID for debugging
-    console.log("[getCurrentUser] Auth User ID:", userId);
+    if (!userId) {
+      // Log authentication error (but don't store in DB since we can't get userId)
+      console.warn("[getCurrentUser] User not authenticated");
+      throw new Error("User not Authenticated");
+    }
 
     // Get user directly by ID
     const user = await ctx.db.get(userId);
 
-    // Log the retrieved user for debugging
-    console.log("[getCurrentUser] Retrieved user:", user);
-
+    console.log("[getCurrentUser] Retrieved user for userId:", userId);
     return user;
   },
 })
@@ -29,15 +29,26 @@ export const createUser = mutation({
   handler: async (ctx, args_0) => {
     // Get the authenticated user ID directly
     const id = await getAuthUserId(ctx);
-    if (!id) throw new Error("Not Authenticated");
+    if (!id) {
+      console.warn("[createUser] Not authenticated");
+      throw new Error("Not Authenticated");
+    }
 
     // Check if user already exists by ID
     const existingUser = await ctx.db.get(id);
-    if (existingUser) return existingUser;
+    if (existingUser) {
+      console.log("[createUser] User already exists:", id);
+      return existingUser;
+    }
 
     // Get user identity for additional fields
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not Authenticated");
+    if (!identity) {
+      console.warn("[createUser] No identity found");
+      throw new Error("Not Authenticated");
+    }
+
+    console.log("[createUser] Creating new user with ID:", id, "email:", identity.email);
 
     // Create user with the same ID as auth user
     await ctx.db.patch(id, {
@@ -48,7 +59,9 @@ export const createUser = mutation({
     });
 
     // Return the user
-    return await ctx.db.get(id);
+    const newUser = await ctx.db.get(id);
+    console.log("[createUser] User created successfully:", id);
+    return newUser;
   }
 });
 
@@ -62,55 +75,68 @@ export const completeOnboarding = mutation({
     wantsCallReminders: v.boolean(),
   },
   handler: async (ctx, args) => {
-    // Get the authenticated user ID directly
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Not authenticated");
+    try {
+      // Get the authenticated user ID directly
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        console.warn("[completeOnboarding] Not authenticated");
+        throw new Error("Not authenticated");
+      }
 
-    console.log("[completeOnboarding] Auth User ID:", userId);
-    console.log("[completeOnboarding] Onboarding data:", args);
+      console.log("[completeOnboarding] Starting onboarding for userId:", userId);
 
-    // Get user directly by ID
-    const user = await ctx.db.get(userId);
-    if (!user) throw new Error("User not found");
+      // Get user directly by ID
+      const user = await ctx.db.get(userId);
+      if (!user) {
+        console.error("[completeOnboarding] User not found:", userId);
+        throw new Error("User not found");
+      }
 
-    console.log("[completeOnboarding] Existing user:", user);
+      // Get identity for name fallback
+      const identity = await ctx.auth.getUserIdentity();
 
-    // Get identity for name fallback
-    const identity = await ctx.auth.getUserIdentity();
-    if (identity) {
-      console.log("[completeOnboarding] Auth identity:", {
-        tokenIdentifier: identity.tokenIdentifier,
-        email: identity.email,
-        name: identity.name
-      });
+      // Validate time format(basic validation for HH:MM format)
+      const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+      if (!timeRegex.test(args.callTime)) {
+        console.warn("[completeOnboarding] Invalid time format:", args.callTime);
+        throw new Error("Invalid time format. Use HH:MM format (e.g., '09:00', '14:30')");
+      }
+
+      // Update user with onboarding information
+      const updateData = {
+        name: args.name || (identity ? identity.name : user.name), // Use provided name or fallback
+        phone: args.phoneNumber,
+        wantsClarityCalls: args.wantsClarityCalls,
+        callTime: args.callTime,
+        wantsCallReminders: args.wantsCallReminders,
+        isOnboarded: true,
+        updatedAt: Date.now(),
+      };
+
+      await ctx.db.patch(userId, updateData);
+
+      console.log("[completeOnboarding] Onboarding completed successfully for userId:", userId);
+      return { success: true }
+    } catch (error) {
+      console.error("[completeOnboarding] Error:", error);
+
+      // Try to log error to events table
+      try {
+        await ctx.runMutation(api.events.logErrorInternal, {
+          category: "onboarding",
+          message: `Onboarding completion failed: ${error instanceof Error ? error.message : String(error)}`,
+          details: {
+            args,
+            error: error instanceof Error ? error.stack : String(error),
+          },
+          source: "convex",
+        });
+      } catch (logError) {
+        console.error("[completeOnboarding] Failed to log error:", logError);
+      }
+
+      throw error;
     }
-
-    // Validate time format(basic validation for HH:MM format)
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(args.callTime)) {
-      throw new Error("Invalid time format. Use HH:MM format (e.g., '09:00', '14:30')");
-    }
-
-    // Update user with onboarding information
-    const updateData = {
-      name: args.name || (identity ? identity.name : user.name), // Use provided name or fallback
-      phone: args.phoneNumber,
-      wantsClarityCalls: args.wantsClarityCalls,
-      callTime: args.callTime,
-      wantsCallReminders: args.wantsCallReminders,
-      isOnboarded: true,
-      updatedAt: Date.now(),
-    };
-
-    console.log("[completeOnboarding] Updating user with:", updateData);
-
-    await ctx.db.patch(userId, updateData);
-
-    // Get updated user for logging
-    const updatedUser = await ctx.db.get(userId);
-    console.log("[completeOnboarding] Updated user:", updatedUser);
-
-    return { success: true }
   }
 });
 
@@ -123,18 +149,24 @@ export const updateUser = mutation({
 export const isUserOnboarded = query({
   args: {},
   handler: async (ctx, args) => {
-    // Get the authenticated user ID directly
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    try {
+      // Get the authenticated user ID directly
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        console.log("[isUserOnboarded] User not authenticated");
+        return { isAuthenticated: false, isOnboarded: false }
+      }
+
+      // Get user directly by ID
+      const user = await ctx.db.get(userId);
+
+      return {
+        isAuthenticated: true,
+        isUserOnboarded: user?.isOnboarded ?? false,
+      }
+    } catch (error) {
+      console.error("[isUserOnboarded] Error:", error);
       return { isAuthenticated: false, isOnboarded: false }
-    }
-
-    // Get user directly by ID
-    const user = await ctx.db.get(userId);
-
-    return {
-      isAuthenticated: true,
-      isUserOnboarded: user?.isOnboarded ?? false,
     }
   },
 });
@@ -143,23 +175,32 @@ export const isUserOnboarded = query({
 export const checkUserStatus = query({
   args: {},
   handler: async (ctx, args) => {
-    // Get the authenticated user ID directly
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
+    try {
+      // Get the authenticated user ID directly
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        return {
+          isAuthenticated: false,
+          isOnboarded: false,
+          hasPaid: false
+        }
+      }
+
+      // Get user directly by ID
+      const user = await ctx.db.get(userId);
+
+      return {
+        isAuthenticated: true,
+        isOnboarded: user?.isOnboarded ?? false,
+        hasPaid: user?.hasPaid ?? false,
+      }
+    } catch (error) {
+      console.error("[checkUserStatus] Error:", error);
       return {
         isAuthenticated: false,
         isOnboarded: false,
         hasPaid: false
       }
-    }
-
-    // Get user directly by ID
-    const user = await ctx.db.get(userId);
-
-    return {
-      isAuthenticated: true,
-      isOnboarded: user?.isOnboarded ?? false,
-      hasPaid: user?.hasPaid ?? false,
     }
   },
 });
@@ -225,9 +266,32 @@ export const markUserPaid = internalMutation({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.userId, {
-      hasPaid: true,
-      paidAt: Date.now(),
-    });
+    try {
+      await ctx.db.patch(args.userId, {
+        hasPaid: true,
+        paidAt: Date.now(),
+      });
+
+      console.log("[markUserPaid] User marked as paid:", args.userId);
+    } catch (error) {
+      console.error("[markUserPaid] Error:", error);
+
+      // Log error to events table
+      try {
+        await ctx.runMutation(api.events.logErrorInternal, {
+          category: "payment",
+          message: `Failed to mark user as paid: ${error instanceof Error ? error.message : String(error)}`,
+          details: {
+            userId: args.userId,
+            error: error instanceof Error ? error.stack : String(error),
+          },
+          source: "convex",
+        });
+      } catch (logError) {
+        console.error("[markUserPaid] Failed to log error:", logError);
+      }
+
+      throw error;
+    }
   },
 });
