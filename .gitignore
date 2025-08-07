@@ -39,3 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+STRIPE_WEBHOOK_TESTING.md
+STRIPE_WEBHOOK_SECURITY.md

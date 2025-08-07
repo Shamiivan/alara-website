@@ -1,10 +1,13 @@
 
 import { Button } from "@/components/ui/button";
 import TypingAnimation from "./TypingAnimation";
-import { Mic, Phone, Clock, MessageCircle } from "lucide-react";
+import { Mic, Phone, Clock, MessageCircle, Link } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import TestPaymentButton from "@/components/payments/TestPaymentButton"
 
 const Hero = () => {
+  const router = useRouter();
   const typingPhrases = [
     "help you stay organized",
     "help you follow through",
@@ -32,13 +35,18 @@ const Hero = () => {
     return () => clearTimeout(timer);
   }, []);
 
+
+
+  const handleJoinProgram = () => {
+    router.push("/payment");
+  };
   return (
     <section className="w-full overflow-hidden flex flex-col items-center justify-center bg-[hsl(var(--primary-light)/0.15)] px-4 py-12 sm:py-20">
       <div className="w-full max-w-4xl mx-auto text-center">
         {/* Voice-first indicator */}
         <div className="inline-flex items-center gap-2 bg-[hsl(var(--primary-light)/0.5)] text-[hsl(var(--primary))] px-3 sm:px-4 py-1.5 sm:py-2 rounded-full mb-6 sm:mb-8 text-xs sm:text-sm font-medium">
           <Mic className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span>Voice-First Productivity</span>
+          <span>Conversation-First Productivity</span>
         </div>
 
         <div className="mb-8 sm:mb-12">
@@ -87,9 +95,11 @@ const Hero = () => {
 
         <div className="mb-10 sm:mb-16">
           <Button
+            onClick={handleJoinProgram}
             size="lg"
             className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary-dark))] text-white px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-semibold rounded-xl shadow-lg transition-all hover:shadow-xl hover:scale-[1.02] duration-300 min-h-[48px] touch-manipulation"
           >
+
             Join the Program – Just $9/month
           </Button>
           <p className="text-xs sm:text-sm text-muted-foreground mt-3">Built with pilot users like you.</p>
@@ -122,7 +132,7 @@ const Hero = () => {
           </div>
         </div>
       </div>
-    </section>
+    </section >
   );
 };
 
