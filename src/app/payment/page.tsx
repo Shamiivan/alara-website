@@ -22,7 +22,7 @@ export default function PaymentPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Complete Your Setup</h1>
           <p className="mt-2 text-gray-600">
-            You're almost there! Just one more step to unlock full access.
+            You&apos;re almost there! Just one more step to unlock full access.
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export default function PaymentPage() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-red-700">
-                    Your previous payment was cancelled. No worries, you can try again when you're ready.
+                    Your previous payment was cancelled. No worries, you can try again when you&apos;re ready.
                   </p>
                 </div>
               </div>
@@ -58,13 +58,13 @@ export default function PaymentPage() {
 
           {/* Features */}
           <div className="px-6 py-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">What you'll get:</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-4">What you&apos;ll get:</h3>
             <ul className="space-y-3">
               <li className="flex items-start">
                 <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-gray-700">Full access to Alara's features</span>
+                <span className="text-gray-700">Full access to Alara&apos;s features</span>
               </li>
               <li className="flex items-start">
                 <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

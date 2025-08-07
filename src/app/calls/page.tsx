@@ -29,7 +29,7 @@ export default function CallsPage() {
       } else {
         setMessage({ type: 'error', text: result.error || 'Unknown error' });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Call error:', error);
       setMessage({ type: 'error', text: 'Failed to initiate call' });
     } finally {

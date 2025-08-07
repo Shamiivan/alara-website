@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { phoneNumbers } from "@elevenlabs/elevenlabs-js/api/resources/conversationalAi";
 
 /**
  * Hook to get the current user

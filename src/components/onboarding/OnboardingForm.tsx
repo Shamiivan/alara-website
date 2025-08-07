@@ -27,10 +27,9 @@ export default function OnboardingForm() {
   const completeOnboarding = useMutation(api.user.completeOnboarding);
   const user = useQuery(api.user.getCurrentUser);
   const router = useRouter();
-  const { info, warn, error, logUserAction } = useEventLogger();
+  const { info, error, logUserAction } = useEventLogger();
 
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(OnboardingStep.PHONE);
   const [formData, setFormData] = useState({
     name: "",
@@ -121,7 +120,6 @@ export default function OnboardingForm() {
   // Handle completing the onboarding process
   const handleComplete = async () => {
     try {
-      setIsSaving(true);
       info("onboarding", "Completing onboarding process", formData);
 
       // Save all data to the database
@@ -152,8 +150,6 @@ export default function OnboardingForm() {
       }, true, "Failed to complete onboarding. Please try again.");
 
       console.error("Error completing onboarding:", onboardingError);
-    } finally {
-      setIsSaving(false);
     }
   };
 

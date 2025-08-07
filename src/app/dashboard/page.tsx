@@ -2,7 +2,7 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
@@ -19,7 +19,6 @@ const styles = {
 
 export default function Dashboard() {
   const user = useQuery(api.user.getCurrentUser);
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -105,7 +104,7 @@ export default function Dashboard() {
           {/* Quick Stats Card */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold mb-4">Your Activity</h2>
-            <p className="text-gray-600">You're all set up and ready to use Alara!</p>
+            <p className="text-gray-600">You&apos;re all set up and ready to use Alara!</p>
             <div className="mt-4 p-4 bg-blue-50 rounded-md">
               <p className="text-sm text-blue-700">
                 Your preferred call time: <span className="font-medium">{user?.callTime || "Not set"}</span>

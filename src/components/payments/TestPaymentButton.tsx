@@ -3,13 +3,11 @@
 import { useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export default function PaymentButton() {
   const pay = useAction(api.stripe.pay);
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const paymentId = useConsumeQueryParam("paymentId");
   const paymentStatus = useConsumeQueryParam("payment");
 
   useEffect(() => {
@@ -73,6 +71,6 @@ function useConsumeQueryParam(name: string) {
         currUrl.origin + currUrl.pathname + searchParams.toString();
       window.history.replaceState(null, "", consumedUrl)
     }
-  }, []);
+  }, [name, searchParams]);
   return value;
 }

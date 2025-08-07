@@ -7,11 +7,24 @@ import { api } from "../../convex/_generated/api";
 export interface EventData {
   category: "auth" | "onboarding" | "payment" | "calls" | "api" | "system";
   message: string;
-  details?: any;
+  details?: Record<string, unknown>;
   url?: string;
   showToUser?: boolean;
   userMessage?: string;
 }
+
+// Convex mutation type (flexible to match actual Convex types)
+type ConvexMutation = (args: {
+  category: string;
+  message: string;
+  details?: unknown;
+  url?: string;
+  userAgent?: string;
+  sessionId?: string;
+  source: string;
+  showToUser?: boolean;
+  userMessage?: string;
+}) => Promise<unknown>;
 
 // Environment checks
 const isLoggingEnabled = () => {
@@ -23,7 +36,8 @@ const isClientLoggingEnabled = () => {
 };
 
 const getLogLevel = (): "debug" | "info" | "warn" | "error" => {
-  return (process.env.NEXT_PUBLIC_LOG_LEVEL as any) || "info";
+  const level = process.env.NEXT_PUBLIC_LOG_LEVEL as "debug" | "info" | "warn" | "error" | undefined;
+  return level || "info";
 };
 
 // Simple console logger with levels
@@ -36,25 +50,25 @@ class ConsoleLogger {
     return messageIndex >= currentIndex;
   }
 
-  debug(message: string, data?: any) {
+  debug(message: string, data?: unknown) {
     if (this.shouldLog("debug")) {
       console.log(`🐛 [DEBUG] ${message}`, data || "");
     }
   }
 
-  info(message: string, data?: any) {
+  info(message: string, data?: unknown) {
     if (this.shouldLog("info")) {
       console.info(`ℹ️ [INFO] ${message}`, data || "");
     }
   }
 
-  warn(message: string, data?: any) {
+  warn(message: string, data?: unknown) {
     if (this.shouldLog("warn")) {
       console.warn(`⚠️ [WARN] ${message}`, data || "");
     }
   }
 
-  error(message: string, data?: any) {
+  error(message: string, data?: unknown) {
     if (this.shouldLog("error")) {
       console.error(`❌ [ERROR] ${message}`, data || "");
     }
@@ -66,14 +80,14 @@ export const logger = new ConsoleLogger();
 
 // Event logger class for database logging
 export class EventLogger {
-  private logErrorMutation: any;
+  private logErrorMutation: ConvexMutation | null;
 
   constructor() {
     // This will be set from React components that use the hook
     this.logErrorMutation = null;
   }
 
-  setMutation(mutation: any) {
+  setMutation(mutation: ConvexMutation) {
     this.logErrorMutation = mutation;
   }
 
@@ -151,19 +165,19 @@ export class EventLogger {
   }
 
   // Convenience methods
-  debug(category: EventData["category"], message: string, details?: any) {
+  debug(category: EventData["category"], message: string, details?: Record<string, unknown>) {
     this.logEvent("debug", { category, message, details });
   }
 
-  info(category: EventData["category"], message: string, details?: any) {
+  info(category: EventData["category"], message: string, details?: Record<string, unknown>) {
     this.logEvent("info", { category, message, details });
   }
 
-  warn(category: EventData["category"], message: string, details?: any) {
+  warn(category: EventData["category"], message: string, details?: Record<string, unknown>) {
     this.logEvent("warn", { category, message, details });
   }
 
-  error(category: EventData["category"], message: string, details?: any, showToUser?: boolean, userMessage?: string) {
+  error(category: EventData["category"], message: string, details?: Record<string, unknown>, showToUser?: boolean, userMessage?: string) {
     this.logEvent("error", {
       category,
       message,
@@ -174,7 +188,7 @@ export class EventLogger {
   }
 
   // Log JavaScript errors
-  logJSError(error: Error, category: EventData["category"] = "system", additionalContext?: any) {
+  logJSError(error: Error, category: EventData["category"] = "system", additionalContext?: Record<string, unknown>) {
     this.error(
       category,
       error.message,
@@ -189,14 +203,14 @@ export class EventLogger {
   }
 
   // Log user actions
-  logUserAction(action: string, category: EventData["category"], details?: any) {
+  logUserAction(action: string, category: EventData["category"], details?: Record<string, unknown>) {
     this.info(category, `User action: ${action}`, details);
   }
 
   // Log API calls
-  logApiCall(url: string, method: string, status?: number, error?: any) {
+  logApiCall(url: string, method: string, status?: number, error?: unknown) {
     if (error || (status && status >= 400)) {
-      this.error("api", `API call failed: ${method} ${url}`, { status, error });
+      this.error("api", `API call failed: ${method} ${url}`, { status, error: error instanceof Error ? error.message : String(error) });
     } else {
       this.info("api", `API call: ${method} ${url}`, { status });
     }
@@ -216,19 +230,19 @@ export const useEventLogger = () => {
   return {
     logger: eventLogger,
     // Re-export convenience methods
-    debug: (category: EventData["category"], message: string, details?: any) =>
+    debug: (category: EventData["category"], message: string, details?: Record<string, unknown>) =>
       eventLogger.debug(category, message, details),
-    info: (category: EventData["category"], message: string, details?: any) =>
+    info: (category: EventData["category"], message: string, details?: Record<string, unknown>) =>
       eventLogger.info(category, message, details),
-    warn: (category: EventData["category"], message: string, details?: any) =>
+    warn: (category: EventData["category"], message: string, details?: Record<string, unknown>) =>
       eventLogger.warn(category, message, details),
-    error: (category: EventData["category"], message: string, details?: any, showToUser?: boolean, userMessage?: string) =>
+    error: (category: EventData["category"], message: string, details?: Record<string, unknown>, showToUser?: boolean, userMessage?: string) =>
       eventLogger.error(category, message, details, showToUser, userMessage),
-    logJSError: (error: Error, category?: EventData["category"], additionalContext?: any) =>
+    logJSError: (error: Error, category?: EventData["category"], additionalContext?: Record<string, unknown>) =>
       eventLogger.logJSError(error, category, additionalContext),
-    logUserAction: (action: string, category: EventData["category"], details?: any) =>
+    logUserAction: (action: string, category: EventData["category"], details?: Record<string, unknown>) =>
       eventLogger.logUserAction(action, category, details),
-    logApiCall: (url: string, method: string, status?: number, error?: any) =>
+    logApiCall: (url: string, method: string, status?: number, error?: unknown) =>
       eventLogger.logApiCall(url, method, status, error),
   };
 };
