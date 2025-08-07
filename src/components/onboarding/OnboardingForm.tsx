@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import PhoneStep from "./steps/PhoneStep";
 import CallTimeStep from "./steps/CallTimeStep";
@@ -44,7 +44,9 @@ export default function OnboardingForm() {
     // Check if the query has completed (even if it returned undefined)
     if (user !== undefined) {
       if (user) {
-        info("onboarding", "Onboarding form loaded with existing user data");
+        if (process.env.NODE_ENV === "development") {
+          info("onboarding", "Onboarding form loaded with existing user data");
+        }
 
         // Populate form data from existing user data
         const updatedFormData = {
@@ -77,50 +79,61 @@ export default function OnboardingForm() {
         }
 
         setCurrentStep(step);
-        info("onboarding", "Resuming onboarding at step", {
-          step: Object.keys(OnboardingStep)[step],
-          hasExistingData: true
-        });
+        if (process.env.NODE_ENV === "development") {
+          info("onboarding", "Resuming onboarding at step", {
+            step: Object.keys(OnboardingStep)[step],
+            hasExistingData: true
+          });
+        }
       } else {
         // User query returned null/undefined, but it's done loading
-        info("onboarding", "Starting new onboarding flow");
+        if (process.env.NODE_ENV === "development") {
+          info("onboarding", "Starting new onboarding flow");
+        }
       }
 
       // Always set loading to false once the query completes
       setIsLoading(false);
     }
-  }, [user, info]);
+  }, [user]); // Remove 'info' dependency to prevent infinite re-renders
 
-  // Handle moving to the next step
-  const handleNext = (step: OnboardingStep, data: Partial<typeof formData>) => {
-    // Log the step progression
-    logUserAction(`Onboarding step completed: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
-      fromStep: Object.keys(OnboardingStep)[currentStep],
-      toStep: Object.keys(OnboardingStep)[step],
-      data
-    });
+  // Handle moving to the next step - useCallback to prevent unnecessary re-renders
+  const handleNext = useCallback((step: OnboardingStep, data: Partial<typeof formData>) => {
+    // Log the step progression (development only)
+    if (process.env.NODE_ENV === "development") {
+      logUserAction(`Onboarding step completed: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
+        fromStep: Object.keys(OnboardingStep)[currentStep],
+        toStep: Object.keys(OnboardingStep)[step],
+        data
+      });
+    }
 
     // Update the form data
     setFormData((prev) => ({ ...prev, ...data }));
 
     // Move to the next step
     setCurrentStep(step);
-  };
+  }, [currentStep, logUserAction]);
 
-  // Handle moving to the previous step
-  const handleBack = (step: OnboardingStep) => {
-    logUserAction(`Onboarding step back: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
-      fromStep: Object.keys(OnboardingStep)[currentStep],
-      toStep: Object.keys(OnboardingStep)[step],
-    });
+  // Handle moving to the previous step - useCallback to prevent unnecessary re-renders
+  const handleBack = useCallback((step: OnboardingStep) => {
+    // Log the step progression (development only)
+    if (process.env.NODE_ENV === "development") {
+      logUserAction(`Onboarding step back: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
+        fromStep: Object.keys(OnboardingStep)[currentStep],
+        toStep: Object.keys(OnboardingStep)[step],
+      });
+    }
 
     setCurrentStep(step);
-  };
+  }, [currentStep, logUserAction]);
 
-  // Handle completing the onboarding process
-  const handleComplete = async () => {
+  // Handle completing the onboarding process - useCallback to prevent unnecessary re-renders
+  const handleComplete = useCallback(async () => {
     try {
-      info("onboarding", "Completing onboarding process", formData);
+      if (process.env.NODE_ENV === "development") {
+        info("onboarding", "Completing onboarding process", formData);
+      }
 
       // Save all data to the database
       await completeOnboarding({
@@ -131,15 +144,19 @@ export default function OnboardingForm() {
         wantsCallReminders: formData.wantsCallReminders,
       });
 
-      info("onboarding", "Onboarding completed successfully");
-      logUserAction("Onboarding completed", "onboarding", formData);
+      if (process.env.NODE_ENV === "development") {
+        info("onboarding", "Onboarding completed successfully");
+        logUserAction("Onboarding completed", "onboarding", formData);
+      }
 
       // Show completion step briefly
       setCurrentStep(OnboardingStep.COMPLETED);
 
       // Redirect to payment page after a short delay
       setTimeout(() => {
-        info("onboarding", "Redirecting to payment page");
+        if (process.env.NODE_ENV === "development") {
+          info("onboarding", "Redirecting to payment page");
+        }
         router.push("/payment");
       }, 1500);
 
@@ -149,9 +166,45 @@ export default function OnboardingForm() {
         formData
       }, true, "Failed to complete onboarding. Please try again.");
 
-      console.error("Error completing onboarding:", onboardingError);
+      // Only log to console in development
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error completing onboarding:", onboardingError);
+      }
     }
-  };
+  }, [completeOnboarding, formData, info, logUserAction, error, router]);
+
+  // Create stable callback functions for navigation
+  const handlePhoneNext = useCallback((data: { name: string; phone: string }) => {
+    handleNext(OnboardingStep.WANTS_CLARITY_CALLS, { name: data.name, phone: data.phone });
+  }, [handleNext]);
+
+  const handleClarityNext = useCallback((wantsClarityCalls: boolean) => {
+    handleNext(OnboardingStep.CALL_TIME, { wantsClarityCalls });
+  }, [handleNext]);
+
+  const handleClarityBack = useCallback(() => {
+    handleBack(OnboardingStep.PHONE);
+  }, [handleBack]);
+
+  const handleCallTimeNext = useCallback((callTime: string) => {
+    handleNext(OnboardingStep.REMINDERS, { callTime });
+  }, [handleNext]);
+
+  const handleCallTimeBack = useCallback(() => {
+    handleBack(OnboardingStep.WANTS_CLARITY_CALLS);
+  }, [handleBack]);
+
+  const handleRemindersNext = useCallback((wantsCallReminders: boolean) => {
+    handleNext(OnboardingStep.SUMMARY, { wantsCallReminders });
+  }, [handleNext]);
+
+  const handleRemindersBack = useCallback(() => {
+    handleBack(OnboardingStep.CALL_TIME);
+  }, [handleBack]);
+
+  const handleSummaryBack = useCallback(() => {
+    handleBack(OnboardingStep.REMINDERS);
+  }, [handleBack]);
 
   // Render the current step
   const renderStep = () => {
@@ -172,40 +225,45 @@ export default function OnboardingForm() {
       case OnboardingStep.PHONE:
         return (
           <PhoneStep
+            key="phone-step"
             initialValues={{ name: formData.name, phone: formData.phone }}
-            onNext={(data) => handleNext(OnboardingStep.WANTS_CLARITY_CALLS, { name: data.name, phone: data.phone })}
+            onNext={handlePhoneNext}
           />
         );
 
       case OnboardingStep.WANTS_CLARITY_CALLS:
         return (
           <ClarityCalls
+            key="clarity-calls-step"
             initialValue={formData.wantsClarityCalls}
-            onNext={(wantsClarityCalls) => handleNext(OnboardingStep.CALL_TIME, { wantsClarityCalls })}
-            onBack={() => handleBack(OnboardingStep.PHONE)}
+            onNext={handleClarityNext}
+            onBack={handleClarityBack}
           />
-        )
+        );
       case OnboardingStep.CALL_TIME:
         return (
           <CallTimeStep
+            key="call-time-step"
             initialValue={formData.callTime}
-            onNext={(callTime) => handleNext(OnboardingStep.REMINDERS, { callTime })}
-            onBack={() => handleBack(OnboardingStep.WANTS_CLARITY_CALLS)}
+            onNext={handleCallTimeNext}
+            onBack={handleCallTimeBack}
           />
         );
       case OnboardingStep.REMINDERS:
         return (
           <RemindersStep
+            key="reminders-step"
             initialValue={formData.wantsCallReminders}
-            onNext={(wantsCallReminders) => handleNext(OnboardingStep.SUMMARY, { wantsCallReminders })}
-            onBack={() => handleBack(OnboardingStep.CALL_TIME)}
+            onNext={handleRemindersNext}
+            onBack={handleRemindersBack}
           />
         );
       case OnboardingStep.SUMMARY:
         return (
           <SummaryStep
+            key="summary-step"
             data={formData}
-            onBack={() => handleBack(OnboardingStep.REMINDERS)}
+            onBack={handleSummaryBack}
             onComplete={handleComplete}
           />
         );

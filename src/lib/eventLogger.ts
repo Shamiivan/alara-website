@@ -43,6 +43,11 @@ const getLogLevel = (): "debug" | "info" | "warn" | "error" => {
 // Simple console logger with levels
 class ConsoleLogger {
   private shouldLog(level: string): boolean {
+    // Don't log in production unless explicitly enabled
+    if (process.env.NODE_ENV === "production" && !isLoggingEnabled()) {
+      return false;
+    }
+
     const currentLevel = getLogLevel();
     const levels = ["debug", "info", "warn", "error"];
     const currentIndex = levels.indexOf(currentLevel);
@@ -116,6 +121,15 @@ export class EventLogger {
 
   // Log events to console (all events)
   logEvent(level: "debug" | "info" | "warn" | "error", data: EventData) {
+    // In production, only log errors to database, skip console logging unless explicitly enabled
+    if (process.env.NODE_ENV === "production") {
+      if (level === "error") {
+        this.logErrorToDatabase(data);
+      }
+      return;
+    }
+
+    // Development logging
     if (!isLoggingEnabled() || !isClientLoggingEnabled()) return;
 
     const message = `[${data.category.toUpperCase()}] ${data.message}`;
@@ -141,7 +155,10 @@ export class EventLogger {
   // Log errors to database
   private async logErrorToDatabase(data: EventData) {
     if (!this.logErrorMutation) {
-      logger.warn("Error mutation not available, cannot log to database");
+      // Only warn in development
+      if (process.env.NODE_ENV === "development") {
+        logger.warn("Error mutation not available, cannot log to database");
+      }
       return;
     }
 
@@ -158,9 +175,16 @@ export class EventLogger {
         showToUser: data.showToUser,
         userMessage: data.userMessage,
       });
-      logger.debug("Error logged to database successfully");
+
+      // Only log success in development
+      if (process.env.NODE_ENV === "development") {
+        logger.debug("Error logged to database successfully");
+      }
     } catch (error) {
-      logger.error("Failed to log error to database:", error);
+      // Only log to console in development
+      if (process.env.NODE_ENV === "development") {
+        logger.error("Failed to log error to database:", error);
+      }
     }
   }
 
