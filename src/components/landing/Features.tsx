@@ -1,5 +1,5 @@
 
-import { CheckCircle, Phone, Clock, Users, Mic, MessageCircle } from "lucide-react";
+import { CheckCircle, Phone, Clock, Mic, MessageCircle } from "lucide-react";
 
 const Features = () => {
   const features = [

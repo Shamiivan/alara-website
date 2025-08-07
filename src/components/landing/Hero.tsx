@@ -1,10 +1,9 @@
 
 import { Button } from "@/components/ui/button";
 import TypingAnimation from "./TypingAnimation";
-import { Mic, Phone, Clock, MessageCircle, Link } from "lucide-react";
+import { Mic, Phone, Clock, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import TestPaymentButton from "@/components/payments/TestPaymentButton"
 
 const Hero = () => {
   const router = useRouter();

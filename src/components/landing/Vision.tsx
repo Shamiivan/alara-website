@@ -1,5 +1,5 @@
 
-import { MessageCircle, Heart, Brain, Target, Mic, Headphones } from "lucide-react";
+import { MessageCircle, Heart, Brain, Target, Headphones } from "lucide-react";
 
 const Vision = () => {
   return (

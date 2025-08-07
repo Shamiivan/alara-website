@@ -43,25 +43,28 @@ export async function POST(request: NextRequest) {
       message: `Call initiated successfully to ${userName} at ${toNumber}`
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    const errorDetails = error && typeof error === 'object' && 'response' in error ? (error as { response?: { data?: unknown } }).response?.data : undefined;
+    const errorStack = error instanceof Error ? error.stack : undefined;
 
     callLogger.error('Call initiation failed', {
-      error: error.message,
-      errorDetails: error.response?.data,
-      stack: error.stack,
+      error: errorMessage,
+      errorDetails,
+      stack: errorStack,
       duration: `${duration}ms`
     });
 
     apiLogger.error('POST /api/calls - Error', {
       status: 500,
-      error: error.message,
+      error: errorMessage,
       duration: `${duration}ms`
     }, request);
 
     return NextResponse.json({
-      error: error.message || 'Failed to initiate call',
-      details: error.response?.data || 'No additional details'
+      error: errorMessage,
+      details: errorDetails || 'No additional details'
     }, { status: 500 });
   }
 }
