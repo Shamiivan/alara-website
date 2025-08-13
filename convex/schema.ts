@@ -46,9 +46,41 @@ const schema = defineSchema({
     initiatedAt: v.number(),
     completedAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
+
+    // NEW FIELDS FOR ELEVENLABS INTEGRATION
+    agentId: v.optional(v.string()),
+    agentPhoneNumberId: v.optional(v.string()),
+    conversationId: v.optional(v.string()),
+    twilioCallSid: v.optional(v.string()),
+    hasTranscript: v.optional(v.boolean()),
+    hasAudio: v.optional(v.boolean()),
+    startTimeUnix: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
+
+  // NEW TABLE FOR CONVERSATION TRANSCRIPTS
+  conversations: defineTable({
+    callId: v.id("calls"),
+    userId: v.id("users"),
+    conversationId: v.string(), // From ElevenLabs
+    transcript: v.array(v.object({
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      timeInCallSecs: v.number(),
+      message: v.string(),
+    })),
+    metadata: v.object({
+      startTimeUnixSecs: v.number(),
+      callDurationSecs: v.number(),
+    }),
+    hasAudio: v.boolean(),
+    hasUserAudio: v.boolean(),
+    hasResponseAudio: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_call", ["callId"])
+    .index("by_user", ["userId"])
+    .index("by_conversation_id", ["conversationId"]),
 
   payments: defineTable({
     userId: v.id("users"),

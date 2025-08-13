@@ -5,6 +5,7 @@ import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { NavigationProvider } from "@/components/navigation/useNavigation";
 import { Navbar } from "@/components/navigation";
+import HydrationDebugger from "@/components/HydrationDebugger";
 
 
 const geistSans = Geist({
@@ -41,6 +42,8 @@ export default function RootLayout({
         <ConvexAuthNextjsServerProvider>
           <ConvexClientProvider>
             <NavigationProvider>
+              {/* Add HydrationDebugger to catch hydration errors */}
+              <HydrationDebugger />
               <Navbar />
               <main id="main-content">
                 {children}

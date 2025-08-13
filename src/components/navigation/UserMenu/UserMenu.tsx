@@ -26,9 +26,39 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   className
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { signOut } = useAuthActions();
   const router = useRouter();
+
+  // Log for debugging hydration issues
+  console.log('[UserMenu] Rendering with user:', {
+    id: user.id,
+    name: user.name,
+    email: user.email
+  }, 'isClient:', isClient);
+
+  // Prevent hydration mismatch by not rendering the menu until client-side
+  if (!isClient) {
+    console.log('[UserMenu] Skipping render until hydration');
+    return (
+      <div className={cn('relative', className)}>
+        <button
+          className="flex items-center gap-2 p-1 rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
+          aria-label="User menu"
+        >
+          <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+          <span className="text-sm font-medium hidden sm:block">User</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Mark component as hydrated
+  useEffect(() => {
+    setIsClient(true);
+    console.log('[UserMenu] Component hydrated');
+  }, []);
 
   // Close menu when clicking outside
   useEffect(() => {

@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
+import { Button } from '@/components/ui/button';
 import { cn } from '../utils';
 import { NavbarBrand } from './NavbarBrand';
 import { NavbarNav } from './NavbarNav';
@@ -51,8 +53,25 @@ export const Navbar: React.FC<NavbarProps> = ({
   logo,
   className
 }) => {
+  // For debugging hydration issues
+  const isHydrated = useRef(false);
+  const [isClient, setIsClient] = useState(false);
+
   // Fetch current user from Convex
   const convexUser = useQuery(api.user.getCurrentUser);
+
+  // Log user state for debugging
+  console.log('[Navbar] Render state:', {
+    isHydrated: isHydrated.current,
+    isClient,
+    hasConvexUser: !!convexUser,
+    convexUserData: convexUser ? {
+      id: convexUser._id.toString(),
+      name: convexUser.name,
+      email: convexUser.email
+    } : null,
+    hasPropUser: !!propUser
+  });
 
   // Convert Convex user to our User type if available
   const convertedUser = convexUser ? {
@@ -64,17 +83,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   } : undefined;
 
   // Use provided user prop or converted user
-  const user = propUser || convertedUser;
+  // IMPORTANT: Only use user data after client-side hydration to prevent hydration mismatch
+  const user = isClient ? (propUser || convertedUser) : undefined;
   const { isMobileMenuOpen, toggleMobileMenu } = useNavigation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const pathname = usePathname();
 
+  // Mark component as hydrated after first render
+  useEffect(() => {
+    isHydrated.current = true;
+    setIsClient(true);
+    console.log('[Navbar] Component hydrated');
+  }, []);
+
   // Handle scroll behavior
   useEffect(() => {
     if (!hideOnScroll && !showShadow) return;
 
-    let lastScrollY = window.scrollY;
+    // Only access window after hydration
+    let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
 
     const handleScroll = () => {
       const scrollY = window.scrollY;
@@ -140,16 +168,40 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           <div className="hidden lg:flex items-center gap-8">
             <NavbarNav items={navigationConfig.mainNav} />
-            <NavbarCTA user={user} />
+            {/* Only render NavbarCTA with user data after hydration */}
+            {isClient ? (
+              <NavbarCTA user={user} />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link href="/auth/login">
+                  <Button variant="ghost" size="sm" className="text-sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/payment">
+                  <Button size="sm" className="text-sm bg-primary hover:bg-primary/90 text-white">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </nav>
 
-      <MobileNav
-        isOpen={isMobileMenuOpen}
-        user={user}
-        items={[...navigationConfig.mainNav, ...navigationConfig.userNav]}
-      />
+      {/* Only render MobileNav with user data after hydration */}
+      {isClient ? (
+        <MobileNav
+          isOpen={isMobileMenuOpen}
+          user={user}
+          items={[...navigationConfig.mainNav, ...navigationConfig.userNav]}
+        />
+      ) : (
+        <MobileNav
+          isOpen={false}
+          items={[...navigationConfig.mainNav]}
+        />
+      )}
 
       {/* Skip navigation target */}
       <div id={skipNavId} className="sr-only" tabIndex={-1} />
