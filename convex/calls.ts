@@ -358,77 +358,17 @@ export const getUserConversations = query({
 // The initiateCall action has been moved to calls_node.ts to use the Node.js runtime
 
 // Action to fetch conversation data from ElevenLabs API
+// This is a wrapper around the Node.js implementation in calls_node.ts
 export const fetchElevenLabsConversation = action({
   args: {
     callId: v.id("calls"),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean }> => {
     try {
-      // Get the call details
-      const call = await ctx.runQuery(api.calls.getCall, {
+      // Call the Node.js implementation
+      return await ctx.runAction(api.calls_node.fetchElevenLabsConversation, {
         callId: args.callId,
       });
-
-      if (!call || !call.conversationId) {
-        throw new Error("Call not found or missing conversation ID");
-      }
-
-      // Initialize ElevenLabs client (placeholder for actual implementation)
-      // const elevenLabs = new ElevenLabs(process.env.ELEVENLABS_API_KEY);
-
-      // Fetch conversation from ElevenLabs (placeholder)
-      // const conversation = await elevenLabs.getConversation(call.conversationId);
-
-      // For now, simulate a conversation response
-      // Add proper type assertion to ensure transcript roles are correctly typed
-      const conversation = {
-        conversationId: call.conversationId,
-        transcript: [
-          {
-            role: "assistant",
-            timeInCallSecs: 0,
-            message: "Hello, how can I help you today?",
-          },
-          {
-            role: "user",
-            timeInCallSecs: 3,
-            message: "I'd like to schedule an appointment.",
-          },
-          {
-            role: "assistant",
-            timeInCallSecs: 6,
-            message: "Sure, I can help you with that. What day works best for you?",
-          },
-        ] as Array<{
-          role: "user" | "assistant";
-          timeInCallSecs: number;
-          message: string;
-        }>,
-        metadata: {
-          startTimeUnixSecs: Math.floor(Date.now() / 1000) - 60,
-          callDurationSecs: 30,
-        },
-        hasAudio: true,
-        hasUserAudio: true,
-        hasResponseAudio: true,
-      };
-
-      // Log the transcript type for debugging
-      console.log("Conversation transcript type:",
-        conversation.transcript.map(item => typeof item.role));
-
-      // Store the conversation in the database
-      await ctx.runMutation(api.calls.storeConversation, {
-        callId: args.callId,
-        conversationId: conversation.conversationId,
-        transcript: conversation.transcript,
-        metadata: conversation.metadata,
-        hasAudio: conversation.hasAudio,
-        hasUserAudio: conversation.hasUserAudio,
-        hasResponseAudio: conversation.hasResponseAudio,
-      });
-
-      return { success: true };
     } catch (error) {
       // Log error
       await ctx.runMutation(api.events.logErrorInternal, {
