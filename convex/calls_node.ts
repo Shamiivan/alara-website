@@ -12,6 +12,7 @@ export const initiateCall = action({
   args: {
     toNumber: v.string(),
     userName: v.optional(v.string()),
+    timezone: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{
     success: boolean;
@@ -29,11 +30,19 @@ export const initiateCall = action({
         apiKey: apiKey
       });
 
+      // build the arguments (username and )
+      const dynamicVariables: Record<string, string> = {
+        user_name: args.userName || "",
+        user_timezone: args.timezone || "America/Toronto",
+      }
       // Make API call to ElevenLabs to initiate the call
       const result = await elevenLabs.conversationalAi.twilio.outboundCall({
         agentId: agentId,
         agentPhoneNumberId: agentPhoneNumberId,
-        toNumber: args.toNumber
+        toNumber: args.toNumber,
+        conversationInitiationClientData: {
+          dynamicVariables: dynamicVariables,
+        }
       });
 
       if (!result.callSid) {
