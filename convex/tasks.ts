@@ -104,3 +104,76 @@ export const get_tasks = query({
     return await ctx.db.query("tasks").collect();
   },
 });
+
+export const update_task = mutation({
+  args: {
+    id: v.id("tasks"),
+    status: v.optional(v.string()),
+    title: v.optional(v.string()),
+    due: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { id, ...updates } = args;
+
+    // Check if task exists
+    const task = await ctx.db.get(id);
+    if (!task) {
+      throw new Error(`Task with ID ${id} not found`);
+    }
+
+    // Update the task
+    await ctx.db.patch(id, {
+      ...updates,
+      updatedAt: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+export const delete_task = mutation({
+  args: {
+    id: v.id("tasks"),
+  },
+  handler: async (ctx, args) => {
+    const { id } = args;
+
+    // Check if task exists
+    const task = await ctx.db.get(id);
+    if (!task) {
+      throw new Error(`Task with ID ${id} not found`);
+    }
+
+    // Delete the task
+    await ctx.db.delete(id);
+
+    return { success: true };
+  },
+});
+
+export const create_task = mutation({
+  args: {
+    title: v.string(),
+    due: v.string(),
+    timezone: v.string(),
+    status: v.optional(v.string()),
+    source: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { title, due, timezone, status, source } = args;
+    const now = Date.now();
+
+    const id = await ctx.db.insert("tasks", {
+      title,
+      due,
+      timezone,
+      status: status || "scheduled",
+      source: source || "manual",
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return { id };
+  },
+});
