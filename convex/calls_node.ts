@@ -229,6 +229,13 @@ export const fetchElevenLabsConversation = action({
         hasResponseAudio: conversation.hasResponseAudio,
       });
 
+      // Extract and register tasks from the conversation
+      await ctx.runMutation(api.tasks.registerFromConversation, {
+        callId: args.callId,
+        userId: call.userId,
+        messages: conversationData.transcript || [],
+      });
+
       return { success: true };
     } catch (error) {
       // Log error

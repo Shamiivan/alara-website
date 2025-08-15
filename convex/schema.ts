@@ -2,6 +2,10 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
+import { title } from "process";
+import { user } from "@elevenlabs/elevenlabs-js/api";
+import { userInfo } from "os";
+import { create } from "domain";
 
 
 const schema = defineSchema({
@@ -81,6 +85,20 @@ const schema = defineSchema({
     .index("by_call", ["callId"])
     .index("by_user", ["userId"])
     .index("by_conversation_id", ["conversationId"]),
+
+  // new audio 
+  tasks: defineTable({
+    title: v.string(),
+    due: v.string(), // ISO string with offset
+    timezone: v.string(),
+    callId: v.optional(v.id("calls")),
+    userId: v.optional(v.id("users")),
+    status: v.optional(v.string()), // Added status field
+    source: v.optional(v.string()), // Added source field
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_call_due", ["callId", "due"]), // Added index for de-duplication
 
   payments: defineTable({
     userId: v.id("users"),
