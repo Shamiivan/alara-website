@@ -2,6 +2,10 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
+import { title } from "process";
+import { user } from "@elevenlabs/elevenlabs-js/api";
+import { userInfo } from "os";
+import { create } from "domain";
 
 
 const schema = defineSchema({
@@ -32,13 +36,14 @@ const schema = defineSchema({
 
   calls: defineTable({
     userId: v.id("users"),
+    purpose: v.optional(v.string()),
     toNumber: v.string(),
     status: v.union(
       v.literal("initiated"),
       v.literal("in_progress"),
       v.literal("completed"),
       v.literal("failed"),
-      v.literal("no_answer")
+      v.literal("no_answer"),
     ),
     elevenLabsCallId: v.optional(v.string()),
     duration: v.optional(v.number()),
@@ -46,9 +51,55 @@ const schema = defineSchema({
     initiatedAt: v.number(),
     completedAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
+
+    agentId: v.optional(v.string()),
+    agentPhoneNumberId: v.optional(v.string()),
+    conversationId: v.optional(v.string()),
+    twilioCallSid: v.optional(v.string()),
+    hasTranscript: v.optional(v.boolean()),
+    hasAudio: v.optional(v.boolean()),
+    startTimeUnix: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"]),
+
+  // NEW TABLE FOR CONVERSATION TRANSCRIPTS
+  conversations: defineTable({
+    callId: v.id("calls"),
+    userId: v.id("users"),
+    conversationId: v.string(), // From ElevenLabs
+    transcript: v.array(v.object({
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      timeInCallSecs: v.number(),
+      message: v.string(),
+    })),
+    metadata: v.object({
+      startTimeUnixSecs: v.number(),
+      callDurationSecs: v.number(),
+    }),
+    hasAudio: v.boolean(),
+    hasUserAudio: v.boolean(),
+    hasResponseAudio: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_call", ["callId"])
+    .index("by_user", ["userId"])
+    .index("by_conversation_id", ["conversationId"]),
+
+  // new audio 
+  tasks: defineTable({
+    title: v.string(),
+    due: v.string(), // ISO string with offset
+    timezone: v.string(),
+    callId: v.optional(v.id("calls")),
+    userId: v.optional(v.id("users")),
+    status: v.optional(v.string()),
+    source: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_call_due", ["callId", "due"])
+    .index("by_status_due", ["status", "due"]),
 
   payments: defineTable({
     userId: v.id("users"),

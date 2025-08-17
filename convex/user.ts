@@ -8,19 +8,24 @@ import { api } from "./_generated/api";
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    // Get the authenticated user ID directly
-    const userId = await getAuthUserId(ctx);
-    if (!userId) {
-      // Log authentication error (but don't store in DB since we can't get userId)
-      console.warn("[getCurrentUser] User not authenticated");
-      throw new Error("User not Authenticated");
+    try {
+      // Get the authenticated user ID directly
+      const userId = await getAuthUserId(ctx);
+      if (!userId) {
+        // Log authentication warning but don't throw an error
+        console.warn("[getCurrentUser] User not authenticated");
+        return null;
+      }
+
+      // Get user directly by ID
+      const user = await ctx.db.get(userId);
+
+      console.log("[getCurrentUser] Retrieved user for userId:", userId);
+      return user;
+    } catch (error) {
+      console.error("[getCurrentUser] Error:", error);
+      return null;
     }
-
-    // Get user directly by ID
-    const user = await ctx.db.get(userId);
-
-    console.log("[getCurrentUser] Retrieved user for userId:", userId);
-    return user;
   },
 })
 

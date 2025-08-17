@@ -86,27 +86,27 @@
   --popover-foreground: 224 71% 4%;
 
   /* Primary - Deep Indigo */
-  --primary: 246 83% 50%;
-  --primary-light: 246 83% 94%;
-  --primary-dark: 246 83% 40%;
+  --primary: 244 75% 59%;
+  --primary-light: 226 100% 94%;
+  --primary-dark: 244 75% 45%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary - Soft Lavender */
-  --secondary: 250 95% 76%;
-  --secondary-foreground: 246 83% 16%;
+  /* Secondary - Warm Purple */
+  --secondary: 255 91% 76%;
+  --secondary-foreground: 244 75% 20%;
 
   /* Muted */
   --muted: 210 20% 96%;
   --muted-foreground: 215 16% 47%;
 
   /* Accent - Warm Orange */
-  --accent: 24 95% 53%;
+  --accent: 38 92% 50%;
   --accent-foreground: 0 0% 100%;
 
-  /* Success - Soft Teal */
-  --success: 168 76% 42%;
+  /* Success - Soft Green */
+  --success: 155 84% 39%;
 
-  /* Destructive */
+  /* Destructive - Soft Red */
   --destructive: 0 84% 60%;
 
   /* Border & Input */
@@ -132,10 +132,10 @@
   --sidebar-ring: 246 83% 50%;
 
   /* Voice UI */
-  --voice-bg: 246 83% 97%;
-  --voice-accent: 246 83% 50%;
-  --voice-user: 168 76% 42%;
-  --voice-ai: 250 95% 76%;
+  --voice-bg: 226 100% 97%;
+  --voice-accent: 173 80% 40%;
+  --voice-user: 155 84% 39%;
+  --voice-ai: 255 91% 76%;
 
   /* Typography */
   --font-size-xs: 0.75rem;
@@ -185,13 +185,13 @@
   --popover-foreground: 210 20% 98%;
 
   /* Primary - Deep Indigo (brighter for dark mode) */
-  --primary: 246 83% 65%;
-  --primary-light: 246 83% 25%;
-  --primary-dark: 246 83% 75%;
+  --primary: 244 75% 65%;
+  --primary-light: 226 100% 25%;
+  --primary-dark: 244 75% 75%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary - Soft Lavender */
-  --secondary: 250 95% 80%;
+  /* Secondary - Warm Purple */
+  --secondary: 255 91% 80%;
   --secondary-foreground: 0 0% 100%;
 
   /* Muted */
@@ -199,11 +199,11 @@
   --muted-foreground: 215 16% 65%;
 
   /* Accent - Warm Orange (brighter for dark mode) */
-  --accent: 24 95% 65%;
+  --accent: 38 92% 65%;
   --accent-foreground: 0 0% 100%;
 
-  /* Success - Soft Teal */
-  --success: 168 76% 50%;
+  /* Success - Soft Green */
+  --success: 155 84% 50%;
 
   /* Destructive */
   --destructive: 0 84% 65%;
@@ -232,9 +232,9 @@
 
   /* Voice UI */
   --voice-bg: 224 71% 10%;
-  --voice-accent: 246 83% 65%;
-  --voice-user: 168 76% 50%;
-  --voice-ai: 250 95% 80%;
+  --voice-accent: 173 80% 50%;
+  --voice-user: 155 84% 50%;
+  --voice-ai: 255 91% 80%;
 }
 
 @layer base {
