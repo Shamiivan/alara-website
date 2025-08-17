@@ -162,9 +162,11 @@ export const create_task = mutation({
     timezone: v.string(),
     status: v.optional(v.string()),
     source: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
+    reminderMinutesBefore: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { title, due, timezone, status, source } = args;
+    const { title, due, timezone, status, source, userId, reminderMinutesBefore } = args;
     const now = Date.now();
 
     // get the due date from this format 2025-08-15T14:18:02.971Z to a number the scheduler can use
@@ -183,16 +185,77 @@ export const create_task = mutation({
       timezone,
       status: status || "scheduled",
       source: source || "manual",
+      userId: userId || undefined,
       createdAt: now,
       updatedAt: now,
     });
 
-    // schedule the job to run 5 min before due time
-    const timeOfReminderCall = dueDate.getTime() - 5 * 60 * 1000;
+    // Use the provided reminderMinutesBefore or default to 5 minutes
+    const minutesBefore = reminderMinutesBefore !== undefined ? reminderMinutesBefore : 5;
+
+    // Log the original values for debugging
+    console.log(`[DEBUG] Original due date (ISO): ${due}`);
+    console.log(`[DEBUG] User timezone: ${timezone}`);
+    console.log(`[DEBUG] Parsed due date (UTC): ${dueDate.toISOString()}`);
+
+    // Function to get timezone offset in milliseconds for a specific timezone
+    function getTimezoneOffset(dateStr: string, timeZone: string): number {
+      // Create a date formatter that will output dates in the specified timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+
+      // Parse the original date
+      const date = new Date(dateStr);
+
+      // Format the date in the target timezone
+      const parts = formatter.formatToParts(date);
+
+      // Extract components from the formatted parts
+      const tzYear = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+      const tzMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0') - 1; // 0-based
+      const tzDay = parseInt(parts.find(p => p.type === 'day')?.value || '0');
+      const tzHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+      const tzMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+      const tzSecond = parseInt(parts.find(p => p.type === 'second')?.value || '0');
+
+      // Create a new date with the timezone-adjusted components
+      const tzDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond));
+
+      // Calculate the offset (UTC time - timezone time)
+      return date.getTime() - tzDate.getTime();
+    }
+
+    // Calculate the timezone offset
+    const timezoneOffset = getTimezoneOffset(due, timezone);
+    console.log(`[DEBUG] Timezone offset for ${timezone}: ${timezoneOffset} ms (${timezoneOffset / (60 * 60 * 1000)} hours)`);
+
+    // Adjust the reminder time based on the user's timezone
+    // 1. Convert the UTC due date to the user's local time by applying the offset
+    // 2. Calculate the reminder time by subtracting minutes
+    // 3. Convert back to UTC for scheduling
+    const adjustedDueDate = new Date(dueDate.getTime() - timezoneOffset);
+    const localReminderTime = adjustedDueDate.getTime() - minutesBefore * 60 * 1000;
+    const timeOfReminderCall = new Date(localReminderTime + timezoneOffset).getTime();
+
+    console.log(`[DEBUG] Adjusted due date in user's timezone: ${new Date(adjustedDueDate).toISOString()}`);
+    console.log(`[DEBUG] Local reminder time: ${new Date(localReminderTime).toISOString()}`);
+    console.log(`[DEBUG] Final UTC reminder time: ${new Date(timeOfReminderCall).toISOString()}`);
+
     const callArgs = {
       taskId: id,
     };
     const jobId = await ctx.scheduler.runAt(timeOfReminderCall, internal.tasks.runScheduledReminder, callArgs);
+    console.log(`Scheduled reminder for task ${id} at ${new Date(timeOfReminderCall).toLocaleTimeString()} UTC (${new Date(localReminderTime).toLocaleTimeString()} user local time) with job ID ${jobId}, ${minutesBefore} minutes before due time`);
+
+
   },
 });
 
@@ -211,6 +274,7 @@ export const runScheduledReminder = internalMutation({
     taskId: v.id("tasks"),
   },
   handler: async (ctx, { taskId }) => {
+    console.log(`Running scheduled reminder for task ${taskId}`);
     const task = await ctx.db.get(taskId);
     if (!task) {
       throw new Error(`Task with ID ${taskId} not found`);
@@ -220,8 +284,44 @@ export const runScheduledReminder = internalMutation({
     if (task.status !== "scheduled") throw new Error(`Task with ID ${taskId} is not scheduled`);
 
     // if the task was moved later, skip, remember the reminder is run 5 minutes before the due time
-    if (new Date(task.due).getTime() > Date.now() + 6 * 60 * 1000) {
-      console.log(`Task ${taskId} is not due yet, skipping reminder`);
+    // We need to account for timezone when checking if the task is due
+    function getTimezoneOffset(dateStr: string, timeZone: string): number {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+
+      const date = new Date(dateStr);
+      const parts = formatter.formatToParts(date);
+
+      const tzYear = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+      const tzMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0') - 1;
+      const tzDay = parseInt(parts.find(p => p.type === 'day')?.value || '0');
+      const tzHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+      const tzMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+      const tzSecond = parseInt(parts.find(p => p.type === 'second')?.value || '0');
+
+      const tzDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond));
+
+      return date.getTime() - tzDate.getTime();
+    }
+
+    const timezoneOffset = getTimezoneOffset(task.due, task.timezone);
+    const dueTimeInUserTimezone = new Date(task.due).getTime() - timezoneOffset;
+
+    console.log(`[DEBUG] Task due time in UTC: ${new Date(task.due).toISOString()}`);
+    console.log(`[DEBUG] Task due time in user timezone (${task.timezone}): ${new Date(dueTimeInUserTimezone).toISOString()}`);
+    console.log(`[DEBUG] Current time: ${new Date().toISOString()}`);
+    console.log(`[DEBUG] Timezone offset: ${timezoneOffset / (60 * 60 * 1000)} hours`);
+
+    if (dueTimeInUserTimezone > Date.now() + 6 * 60 * 1000) {
+      console.log(`Task ${taskId} is not due yet in user's timezone, skipping reminder`);
     }
     if (!task.userId) throw new Error(`Task with ID ${taskId} has no user assigned`);
 
@@ -236,15 +336,15 @@ export const runScheduledReminder = internalMutation({
     });
 
     // call the action to send the reminder using eleven labs
-    const runTime = 0; // we call now 
-    await ctx.scheduler.runAt(
-      runTime,
+    await ctx.scheduler.runAfter(
+      0, // 0 is for now
       api.calls_node.initiateReminderCall,
       {
         toNumber: user.phone,
         userName: user.name,
         taskName: task.title,
         taskTime: task.due,
+        taskID: task._id,
       }
     );
 

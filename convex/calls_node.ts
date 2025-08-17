@@ -4,7 +4,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 
 // Action to initiate a call via ElevenLabs API
@@ -253,13 +253,14 @@ export const initiateReminderCall = action({
     taskName: v.optional(v.string()),
     taskTime: v.optional(v.string()),
     timezone: v.optional(v.string()),
-    taskID: v.optional(v.id("tasks"))
+    taskID: v.id("tasks")
   },
   handler: async (ctx, args) => {
     try {
-
+      const id = args.taskID;
       // get the task 
-      const task = args.taskID ? await ctx.runQuery(api.tasks.getTaskById, { taskId: args.taskID }) : null;
+      // const task = args.taskID ? await ctx.runQuery(api.tasks.getTaskById, { taskId: args.taskID }) : null;
+      const task = await ctx.runQuery(api.tasks.getTaskById, { taskId: id });
 
       if (!task) throw new Error(`Task with ID ${args.taskID} not found`);
 
@@ -278,6 +279,8 @@ export const initiateReminderCall = action({
       const dynamicVariables: Record<string, string> = {
         user_name: args.userName || "",
         user_timezone: args.timezone || "America/Toronto",
+        task_name: args.taskName || "",
+        task_time: args.taskTime || "",
       }
       // Make API call to ElevenLabs to initiate the call
       const result = await elevenLabs.conversationalAi.twilio.outboundCall({

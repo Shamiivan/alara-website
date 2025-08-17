@@ -8,8 +8,9 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Mic, Plus, Calendar, Clock, Trash2, CheckCircle2, Circle } from 'lucide-react';
+import { Mic, Plus, Calendar, Clock, Trash2, CheckCircle2, Circle, X } from 'lucide-react';
 import { Id } from "../../../convex/_generated/dataModel";
+import TaskForm from './TaskForm';
 
 interface Todo {
   _id?: Id<"tasks">;
@@ -25,8 +26,9 @@ interface Todo {
 
 const TodoApp = () => {
   const tasks = useQuery(api.tasks.get_tasks) || [];
-  const [newTodo, setNewTodo] = useState('');
+  const currentUser = useQuery(api.user.getCurrentUser);
   const [isListening, setIsListening] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
   const [encouragementMessage, setEncouragementMessage] = useState("You're doing better than you think.");
 
   // Convert Convex tasks to Todo format
@@ -63,23 +65,6 @@ const TodoApp = () => {
   const deleteTask = useMutation(api.tasks.delete_task);
   const createTask = useMutation(api.tasks.create_task);
 
-  const addTodo = () => {
-    if (newTodo.trim()) {
-      const now = new Date();
-      const dueDate = new Date(now.getTime() + 24 * 60 * 60 * 1000); // Due tomorrow
-
-      createTask({
-        title: newTodo,
-        due: dueDate.toISOString(),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        status: 'scheduled',
-        source: 'manual'
-      });
-
-      setNewTodo('');
-      showEncouragingNotification();
-    }
-  };
 
   const toggleTodo = (id: Id<"tasks">, completed: boolean) => {
     updateTask({
@@ -171,7 +156,7 @@ const TodoApp = () => {
           <p className="text-md text-accent mt-4">{encouragementMessage}</p>
         </div>
 
-        {/* Stats and Voice Button */}
+        {/* Stats and Add Task Button */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-6">
             <div className="text-center">
@@ -184,7 +169,37 @@ const TodoApp = () => {
             </div>
           </div>
 
+          <Button
+            onClick={() => setShowTaskForm(!showTaskForm)}
+            className="flex items-center gap-2"
+          >
+            {showTaskForm ? (
+              <>
+                <X className="w-4 h-4" />
+                Cancel
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                Add Task
+              </>
+            )}
+          </Button>
         </div>
+
+        {/* Task Form */}
+        {showTaskForm && (
+          <div className="mb-8">
+            <TaskForm
+              userId={currentUser?._id}
+              onSuccess={() => {
+                setShowTaskForm(false);
+                showEncouragingNotification();
+              }}
+              onCancel={() => setShowTaskForm(false)}
+            />
+          </div>
+        )}
 
 
         {/* Todo List */}
