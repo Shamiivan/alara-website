@@ -6,9 +6,8 @@ import { api } from "./_generated/api";
 export const createCall = mutation({
   args: {
     toNumber: v.string(),
-    agentId: v.string(), // NEW: Required ElevenLabs agent ID
-    agentPhoneNumberId: v.string(), // NEW: Required ElevenLabs phone number ID
-    // Keep existing optional fields
+    agentId: v.string(),
+    agentPhoneNumberId: v.string(),
     elevenLabsCallId: v.optional(v.string()),
     status: v.union(
       v.literal("initiated"),
@@ -171,6 +170,7 @@ export const getCall = query({
 export const updateCallWithElevenLabsResponse = mutation({
   args: {
     callId: v.id("calls"),
+    purpose: v.optional(v.string()),
     elevenLabsCallId: v.string(),
     conversationId: v.string(),
     twilioCallSid: v.string(),
@@ -187,6 +187,7 @@ export const updateCallWithElevenLabsResponse = mutation({
 
       // Update the call with ElevenLabs response
       await ctx.db.patch(args.callId, {
+        purpose: args.purpose || "unknown",
         elevenLabsCallId: args.elevenLabsCallId,
         conversationId: args.conversationId,
         twilioCallSid: args.twilioCallSid,

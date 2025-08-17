@@ -14,17 +14,15 @@ export const initiateCall = action({
     userName: v.optional(v.string()),
     timezone: v.optional(v.string()),
   },
-  handler: async (ctx, args): Promise<{
-    success: boolean;
-    callId: string;
-    message: string;
-  }> => {
+  handler: async (ctx, args) => {
     try {
       const agentId = process.env.ELEVEN_LABS_AGENT_ID!;
-      const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID!;
-      console.log("AGENT", agentId);
+      if (!agentId) throw new Error("Missing ELEVEN_LABS_AGENT_ID environment variable");
 
+      const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID!;
+      if (!agentId) throw new Error("Missing ELEVEN_LABS_PHONE_NUMBER_ID environment variable");
       const apiKey = process.env.ELEVEN_LABS_API_KEY!;
+      if (!apiKey) throw new Error("Missing ELEVEN_LABS_API_KEY environment variable");
 
       const elevenLabs = new ElevenLabsClient({
         apiKey: apiKey
@@ -32,7 +30,7 @@ export const initiateCall = action({
 
       // build the arguments (username and )
       const dynamicVariables: Record<string, string> = {
-        user_name: args.userName || "",
+        user_name: args.userName || "There",
         user_timezone: args.timezone || "America/Toronto",
       }
       // Make API call to ElevenLabs to initiate the call
@@ -45,9 +43,7 @@ export const initiateCall = action({
         }
       });
 
-      if (!result.callSid) {
-        throw new Error("Failed to get callSid from ElevenLabs");
-      }
+      if (!result.callSid) throw new Error("Failed to get callSid from ElevenLabs");
 
       // Create a call record in the database
       const dbCallId = await ctx.runMutation(api.calls.createCall, {
@@ -83,11 +79,6 @@ export const initiateCall = action({
         }
       }, 5000); // Wait 5 seconds before fetching - adjust as needed
 
-      return {
-        success: true,
-        callId: result.callSid,
-        message: `Call initiated successfully to ${args.userName || 'user'} at ${args.toNumber}`
-      };
     } catch (error) {
       // Log error
       await ctx.runMutation(api.events.logErrorInternal, {
@@ -250,6 +241,111 @@ export const fetchElevenLabsConversation = action({
       });
 
       console.error("Error fetching conversation from ElevenLabs:", error);
+      throw error;
+    }
+  },
+});
+
+export const initiateReminderCall = action({
+  args: {
+    toNumber: v.string(),
+    userName: v.optional(v.string()),
+    taskName: v.optional(v.string()),
+    taskTime: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    taskID: v.optional(v.id("tasks"))
+  },
+  handler: async (ctx, args) => {
+    try {
+
+      // get the task 
+      const task = args.taskID ? await ctx.runQuery(api.tasks.getTaskById, { taskId: args.taskID }) : null;
+
+      if (!task) throw new Error(`Task with ID ${args.taskID} not found`);
+
+      // const agentId = process.env.ELEVEN_LABS_AGENT_ID!;
+      console.error("Please set the ELEVEN_LABS_PHONE_NUMBER_ID environment variable")
+      const agentId = "agent_8401k2w9rap2f9d8ryhn4tp9tgp9"
+      const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID!;
+
+      const apiKey = process.env.ELEVEN_LABS_API_KEY!;
+
+      const elevenLabs = new ElevenLabsClient({
+        apiKey: apiKey
+      });
+
+      // build the arguments (username and )
+      const dynamicVariables: Record<string, string> = {
+        user_name: args.userName || "",
+        user_timezone: args.timezone || "America/Toronto",
+      }
+      // Make API call to ElevenLabs to initiate the call
+      const result = await elevenLabs.conversationalAi.twilio.outboundCall({
+        agentId: agentId,
+        agentPhoneNumberId: agentPhoneNumberId,
+        toNumber: args.toNumber,
+        conversationInitiationClientData: {
+          dynamicVariables: dynamicVariables,
+        }
+      });
+
+      if (!result.callSid) {
+        throw new Error("Failed to get callSid from ElevenLabs");
+      }
+
+      // Create a call record in the database
+      const dbCallId = await ctx.runMutation(api.calls.createCall, {
+        toNumber: args.toNumber,
+        agentId: agentId,
+        agentPhoneNumberId: agentPhoneNumberId,
+        elevenLabsCallId: result.callSid,
+        status: "initiated"
+      });
+
+      // Update the call with ElevenLabs response data
+      await ctx.runMutation(api.calls.updateCallWithElevenLabsResponse, {
+        callId: dbCallId,
+        purpose: "reminder",
+        elevenLabsCallId: result.callSid,
+        conversationId: result.conversationId || "",
+        twilioCallSid: result.callSid,
+        success: true
+      });
+
+      // Wait a short time for the call to be established before fetching the conversation
+      // This is a temporary solution - in a production environment, we should use webhooks
+      // or a polling mechanism to determine when the call is complete
+      setTimeout(async () => {
+        try {
+          if (result.conversationId) {
+            // Fetch and store the conversation data
+            await ctx.runAction(api.calls_node.fetchElevenLabsConversation, {
+              callId: dbCallId
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching conversation after call:", error);
+        }
+      }, 5000);
+
+    } catch (error) {
+      // Log error
+      await ctx.runMutation(api.events.logErrorInternal, {
+        category: "calls",
+        message: `Failed to initiate ElevenLabs call: ${error instanceof Error ? error.message : String(error)}`,
+        details: {
+          toNumber: args.toNumber,
+          error: error instanceof Error ? error.stack : String(error),
+        },
+        source: "convex",
+      });
+
+      // Log the error for debugging
+      console.log("Error in initiateCall:", error);
+
+      // We don't need to update call status here since we don't have a callId
+      // if there was an error before creating the call
+
       throw error;
     }
   },

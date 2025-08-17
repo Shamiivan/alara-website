@@ -36,13 +36,14 @@ const schema = defineSchema({
 
   calls: defineTable({
     userId: v.id("users"),
+    purpose: v.optional(v.string()),
     toNumber: v.string(),
     status: v.union(
       v.literal("initiated"),
       v.literal("in_progress"),
       v.literal("completed"),
       v.literal("failed"),
-      v.literal("no_answer")
+      v.literal("no_answer"),
     ),
     elevenLabsCallId: v.optional(v.string()),
     duration: v.optional(v.number()),
@@ -51,7 +52,6 @@ const schema = defineSchema({
     completedAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
 
-    // NEW FIELDS FOR ELEVENLABS INTEGRATION
     agentId: v.optional(v.string()),
     agentPhoneNumberId: v.optional(v.string()),
     conversationId: v.optional(v.string()),
@@ -93,12 +93,13 @@ const schema = defineSchema({
     timezone: v.string(),
     callId: v.optional(v.id("calls")),
     userId: v.optional(v.id("users")),
-    status: v.optional(v.string()), // Added status field
-    source: v.optional(v.string()), // Added source field
+    status: v.optional(v.string()),
+    source: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("by_call_due", ["callId", "due"]), // Added index for de-duplication
+    .index("by_call_due", ["callId", "due"])
+    .index("by_status_due", ["status", "due"]),
 
   payments: defineTable({
     userId: v.id("users"),

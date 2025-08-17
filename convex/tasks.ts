@@ -1,5 +1,8 @@
-import { query, mutation, action } from "./_generated/server";
+import { timeStamp } from "console";
+import { query, mutation, action, internalAction, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { api, internal } from "./_generated/api";
+import { user } from "@elevenlabs/elevenlabs-js/api";
 
 // Shape we expect from the ElevenLabs 
 type ToolCall = {
@@ -164,6 +167,16 @@ export const create_task = mutation({
     const { title, due, timezone, status, source } = args;
     const now = Date.now();
 
+    // get the due date from this format 2025-08-15T14:18:02.971Z to a number the scheduler can use
+    if (!title || !due || !timezone) {
+      throw new Error("Title, due date, and timezone are required");
+    }
+
+    const dueDate = new Date(due);
+    if (isNaN(dueDate.getTime())) {
+      throw new Error(`Invalid due date: ${due}`);
+    }
+
     const id = await ctx.db.insert("tasks", {
       title,
       due,
@@ -174,6 +187,67 @@ export const create_task = mutation({
       updatedAt: now,
     });
 
-    return { id };
+    // schedule the job to run 5 min before due time
+    const timeOfReminderCall = dueDate.getTime() - 5 * 60 * 1000;
+    const callArgs = {
+      taskId: id,
+    };
+    const jobId = await ctx.scheduler.runAt(timeOfReminderCall, internal.tasks.runScheduledReminder, callArgs);
+  },
+});
+
+// get a task by id
+export const getTaskById = query({
+  args: {
+    taskId: v.id("tasks"),
+  },
+  handler: async (ctx, { taskId }) => {
+    return await ctx.db.get(taskId);
+  },
+});
+
+export const runScheduledReminder = internalMutation({
+  args: {
+    taskId: v.id("tasks"),
+  },
+  handler: async (ctx, { taskId }) => {
+    const task = await ctx.db.get(taskId);
+    if (!task) {
+      throw new Error(`Task with ID ${taskId} not found`);
+    }
+
+
+    if (task.status !== "scheduled") throw new Error(`Task with ID ${taskId} is not scheduled`);
+
+    // if the task was moved later, skip, remember the reminder is run 5 minutes before the due time
+    if (new Date(task.due).getTime() > Date.now() + 6 * 60 * 1000) {
+      console.log(`Task ${taskId} is not due yet, skipping reminder`);
+    }
+    if (!task.userId) throw new Error(`Task with ID ${taskId} has no user assigned`);
+
+    // get user from task if userId exists
+    const user = await ctx.db.get(task.userId);
+    if (!user) throw new Error(`User with ID ${task.userId} not found`);
+    if (!user.phone) throw new Error(`User with ID ${task.userId} has no phone number`);
+    // flip the state
+    await ctx.db.patch(taskId, {
+      status: "calling",
+      updatedAt: Date.now(),
+    });
+
+    // call the action to send the reminder using eleven labs
+    const runTime = 0; // we call now 
+    await ctx.scheduler.runAt(
+      runTime,
+      api.calls_node.initiateReminderCall,
+      {
+        toNumber: user.phone,
+        userName: user.name,
+        taskName: task.title,
+        taskTime: task.due,
+      }
+    );
+
+    return { success: true };
   },
 });
