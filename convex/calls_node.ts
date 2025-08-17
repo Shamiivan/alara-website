@@ -264,9 +264,8 @@ export const initiateReminderCall = action({
 
       if (!task) throw new Error(`Task with ID ${args.taskID} not found`);
 
-      // const agentId = process.env.ELEVEN_LABS_AGENT_ID!;
+      const agentId = process.env.ELEVEN_LABS_REMINDER_AGENT_ID!;
       console.error("Please set the ELEVEN_LABS_PHONE_NUMBER_ID environment variable")
-      const agentId = "agent_8401k2w9rap2f9d8ryhn4tp9tgp9"
       const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID!;
 
       const apiKey = process.env.ELEVEN_LABS_API_KEY!;
