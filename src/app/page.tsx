@@ -1,5 +1,6 @@
 "use client"
 import Hero from "@/components/landing/Hero"
+import Problem from "@/components/landing/Problem"
 import Features from "@/components/landing/Features"
 import DemoSection from "@/components/landing/DemoSection"
 import WhoThisIsFor from "@/components/landing/WhoThisIsFor"
@@ -11,6 +12,7 @@ export default function Home() {
       <main className="flex flex-col">
         {/* {tasks?.map(({ _id, text }) => <div key={_id}>{text}</div>)} */}
         <Hero />
+        <Problem />
         <Vision />
         <Features />
         <DemoSection />
