@@ -30,7 +30,7 @@ const AudioPlayer = () => {
   }, [audioRef]);
 
   return (
-    <div className="flex flex-col items-center justify-center mb-10 sm:mb-12 fade-in">
+    <div className="inline-flex flex-col items-center justify-center fade-in">
       <button
         onClick={togglePlayPause}
         className="flex items-center gap-2 bg-[hsl(var(--background))] border border-[hsl(var(--border))] text-foreground px-5 py-3 rounded-full mb-4 hover:bg-[hsl(var(--muted))] transition-colors duration-300 shadow-sm"
