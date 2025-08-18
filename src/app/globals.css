@@ -269,4 +269,34 @@
   .bubble-ai {
     @apply bg-[hsl(var(--voice-ai)/0.15)] text-foreground rounded-2xl rounded-bl-sm px-3 sm:px-4 py-2 sm:py-3 max-w-[85%] mr-auto text-sm sm:text-base shadow-sm;
   }
+
+  /* Fade-in animation */
+  .fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes bounce {
+
+    0%,
+    100% {
+      transform: scaleY(0.5);
+    }
+
+    50% {
+      transform: scaleY(1);
+    }
+  }
 }
