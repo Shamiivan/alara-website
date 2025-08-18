@@ -160,7 +160,7 @@ const Problem = () => {
       <div className="max-w-6xl mx-auto">
         {/* Headline */}
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-12 sm:mb-16 fade-in">
-          👉 Why traditional productivity tools break in real life
+          Why traditional productivity tools break in real life
         </h2>
 
         {/* Problem Cards Grid */}
@@ -185,7 +185,7 @@ const Problem = () => {
 
         {/* Closing Line */}
         <p className="text-lg sm:text-xl md:text-2xl text-center font-medium text-foreground/90 fade-in">
-          ✨ We've all been there — busy, but not aligned.
+          ✨ We've all been there — busy, but not moving forward.
         </p>
       </div>
     </section>
