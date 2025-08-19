@@ -31,9 +31,19 @@ export const navigationConfig = {
       href: '/calls',
     },
     {
+      id: 'pricing',
+      label: 'Pricing',
+      href: '/pricing',
+    },
+    {
       id: 'faq',
       label: 'FAQ',
       href: '/faq',
+    },
+    {
+      id: 'policy',
+      label: 'Policies',
+      href: '/policy',
     }
   ],
 
