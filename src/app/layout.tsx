@@ -4,7 +4,7 @@ import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { NavigationProvider } from "@/components/navigation/useNavigation";
-import { Navbar } from "@/components/navigation";
+import { Navbar, Footer } from "@/components/navigation";
 import HydrationDebugger from "@/components/HydrationDebugger";
 
 
@@ -48,6 +48,7 @@ export default function RootLayout({
               <main id="main-content">
                 {children}
               </main>
+              <Footer />
             </NavigationProvider>
           </ConvexClientProvider>
         </ConvexAuthNextjsServerProvider>
