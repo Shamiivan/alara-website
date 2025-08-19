@@ -112,7 +112,7 @@ export default function FAQPage() {
               <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary-light)/0.1)] to-transparent rounded-3xl"></div>
               <div className="relative z-10 p-8 text-center">
                 <p className="text-lg sm:text-xl italic text-foreground/80 mb-6">
-                  "Still have questions? Contact our support team and we'll be happy to help."
+                  &ldquo;Still have questions? Contact our support team and we&apos;ll be happy to help.&rdquo;
                 </p>
               </div>
             </div>

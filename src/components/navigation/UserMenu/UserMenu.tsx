@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { cn } from '../utils';
 import UserAvatar from './UserAvatar';
 import UserMenuItem from './UserMenuItem';
-import { navigationConfig, UserMenuItem as UserMenuItemType } from '../navigationConfig';
+import { navigationConfig } from '../navigationConfig';
 
 interface User {
   id: string;
@@ -38,30 +38,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     email: user.email
   }, 'isClient:', isClient);
 
-  // Prevent hydration mismatch by not rendering the menu until client-side
-  if (!isClient) {
-    console.log('[UserMenu] Skipping render until hydration');
-    return (
-      <div className={cn('relative', className)}>
-        <button
-          className="flex items-center gap-2 p-1 rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
-          aria-label="User menu"
-        >
-          <div className="w-8 h-8 rounded-full bg-gray-200"></div>
-          <span className="text-sm font-medium hidden sm:block">User</span>
-        </button>
-      </div>
-    );
-  }
-
-  // Mark component as hydrated
+  // Mark component as hydrated - always call hooks in the same order
   useEffect(() => {
     setIsClient(true);
     console.log('[UserMenu] Component hydrated');
   }, []);
 
-  // Close menu when clicking outside
+  // Close menu when clicking outside - always call hooks in the same order
   useEffect(() => {
+    if (!isClient) return; // Skip effect logic until hydrated, but still call the hook
+
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -72,7 +58,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isClient]);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -94,6 +80,23 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     }
   };
 
+  // Render a placeholder during server-side rendering to prevent hydration mismatch
+  if (!isClient) {
+    console.log('[UserMenu] Rendering placeholder for SSR');
+    return (
+      <div className={cn('relative', className)}>
+        <button
+          className="flex items-center gap-2 p-1 rounded-md hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary"
+          aria-label="User menu"
+        >
+          <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+          <span className="text-sm font-medium hidden sm:block">User</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Client-side render with full functionality
   return (
     <div className={cn('relative', className)} ref={menuRef}>
       <button

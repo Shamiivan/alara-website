@@ -6,6 +6,16 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api, internal } from "./_generated/api";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import { Id } from "./_generated/dataModel";
+
+// Define return type for initiateCall
+interface InitiateCallResult {
+  success: boolean;
+  callId: Id<"calls">;
+  elevenLabsCallId: string;
+  conversationId: string;
+  message: string;
+}
 
 // Action to initiate a call via ElevenLabs API
 export const initiateCall = action({
@@ -14,7 +24,7 @@ export const initiateCall = action({
     userName: v.optional(v.string()),
     timezone: v.optional(v.string()),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<InitiateCallResult> => {
     try {
       const agentId = process.env.ELEVEN_LABS_AGENT_ID!;
       if (!agentId) throw new Error("Missing ELEVEN_LABS_AGENT_ID environment variable");
@@ -46,7 +56,7 @@ export const initiateCall = action({
       if (!result.callSid) throw new Error("Failed to get callSid from ElevenLabs");
 
       // Create a call record in the database
-      const dbCallId = await ctx.runMutation(api.calls.createCall, {
+      const dbCallId: Id<"calls"> = await ctx.runMutation(api.calls.createCall, {
         toNumber: args.toNumber,
         agentId: agentId,
         agentPhoneNumberId: agentPhoneNumberId,
@@ -79,6 +89,14 @@ export const initiateCall = action({
         }
       }, 5000); // Wait 5 seconds before fetching - adjust as needed
 
+      // Return success response with call details
+      return {
+        success: true,
+        callId: dbCallId,
+        elevenLabsCallId: result.callSid,
+        conversationId: result.conversationId || "",
+        message: "Call initiated successfully"
+      };
     } catch (error) {
       // Log error
       await ctx.runMutation(api.events.logErrorInternal, {
@@ -97,7 +115,14 @@ export const initiateCall = action({
       // We don't need to update call status here since we don't have a callId
       // if there was an error before creating the call
 
-      throw error;
+      // Return error response with proper typing
+      return {
+        success: false,
+        callId: "" as Id<"calls">, // Empty ID as placeholder
+        elevenLabsCallId: "",
+        conversationId: "",
+        message: error instanceof Error ? error.message : String(error)
+      };
     }
   },
 });

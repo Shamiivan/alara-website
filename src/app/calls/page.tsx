@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAction, useQuery } from "convex/react";
@@ -30,6 +30,27 @@ export default function CallsPage() {
   // Use the Convex action from calls_node.ts
   const initiateCall = useAction(api.calls_node.initiateCall);
   const fetchConversation = useAction(api.calls.fetchElevenLabsConversation);
+
+  // Define handleFetchConversation with useCallback
+  const handleFetchConversation = useCallback(async (callId: Id<"calls">) => {
+    try {
+      setMessage(null);
+      setIsLoading(true);
+
+      await fetchConversation({ callId });
+
+      setSelectedCallId(callId);
+      setMessage({ type: 'success', text: 'Conversation fetched successfully' });
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to fetch conversation'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchConversation]);
 
   // Auto-refresh mechanism
   useEffect(() => {
@@ -64,7 +85,7 @@ export default function CallsPage() {
     }, 10000); // Check every 10 seconds
 
     return () => clearInterval(intervalId);
-  }, [userCalls, isLoading, isAutoRefreshing]);
+  }, [userCalls, isLoading, isAutoRefreshing, handleFetchConversation]);
 
   const handleInitiateCall = async () => {
     setIsLoading(true);
@@ -80,9 +101,12 @@ export default function CallsPage() {
       });
 
       console.log('Response:', result);
+      console.log('Response type:', typeof result);
+      console.log('Response has success property:', result && typeof result === 'object' && 'success' in result);
 
-      if (result.success) {
-        setMessage({ type: 'success', text: result.message });
+      // Type assertion to handle the TypeScript error
+      if (result && typeof result === 'object' && 'success' in result && result.success) {
+        setMessage({ type: 'success', text: 'success' in result && 'message' in result ? result.message as string : 'Call initiated successfully' });
       } else {
         setMessage({ type: 'error', text: 'Failed to initiate call' });
       }
@@ -97,25 +121,6 @@ export default function CallsPage() {
     }
   };
 
-  const handleFetchConversation = async (callId: Id<"calls">) => {
-    try {
-      setMessage(null);
-      setIsLoading(true);
-
-      await fetchConversation({ callId });
-
-      setSelectedCallId(callId);
-      setMessage({ type: 'success', text: 'Conversation fetched successfully' });
-    } catch (error) {
-      console.error('Error fetching conversation:', error);
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to fetch conversation'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">

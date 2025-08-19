@@ -46,7 +46,7 @@ const Hero = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary-light)/0.1)] to-transparent rounded-3xl"></div>
             <div className="relative z-10 p-8 text-center">
               <p className="text-lg sm:text-xl italic text-foreground/80 mb-6">
-                "It's like having a calm friend who helps you see through the noise and find your next step."
+                &ldquo;It&apos;s like having a calm friend who helps you see through the noise and find your next step.&rdquo;
               </p>
             </div>
           </div>

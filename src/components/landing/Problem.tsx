@@ -37,7 +37,7 @@ const Problem = () => {
   useEffect(() => {
     // List animation - grows and tips
     if (visibleCards.includes(0) && listRef.current) {
-      const animation = listRef.current.animate(
+      listRef.current.animate(
         [
           { transform: "scale(0.95)", opacity: "0.7" },
           { transform: "scale(1.05)", opacity: "1" },
@@ -49,7 +49,7 @@ const Problem = () => {
 
     // Battery + sun animation
     if (visibleCards.includes(1) && batteryRef.current) {
-      const animation = batteryRef.current.animate(
+      batteryRef.current.animate(
         [
           { opacity: "0.7", filter: "brightness(0.8)" },
           { opacity: "1", filter: "brightness(1.2)" },
@@ -61,7 +61,7 @@ const Problem = () => {
 
     // Calendar animation - X appears
     if (visibleCards.includes(2) && calendarRef.current) {
-      const animation = calendarRef.current.animate(
+      calendarRef.current.animate(
         [
           { transform: "scale(1)", opacity: "0.9" },
           { transform: "scale(1.1)", opacity: "1" },
@@ -73,7 +73,7 @@ const Problem = () => {
 
     // Schedule shattering animation
     if (visibleCards.includes(3) && scheduleRef.current) {
-      const animation = scheduleRef.current.animate(
+      scheduleRef.current.animate(
         [
           { transform: "scale(1)", opacity: "1" },
           { transform: "scale(1.05)", opacity: "1" },
@@ -185,7 +185,7 @@ const Problem = () => {
 
         {/* Closing Line */}
         <p className="text-lg sm:text-xl md:text-2xl text-center font-medium text-foreground/90 fade-in">
-          ✨ We've all been there — busy, but not moving forward.
+          ✨ We&apos;ve all been there — busy, but not moving forward.
         </p>
       </div>
     </section>

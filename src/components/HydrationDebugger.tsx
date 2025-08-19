@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 export default function HydrationDebugger() {
-  const [isClient, setIsClient] = useState(false);
+  const [, setIsClient] = useState(false);
 
   // This will only run on the client
   useEffect(() => {
