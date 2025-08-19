@@ -20,7 +20,7 @@ export const pay = action({
     console.log("[Stripe.ts] Creating payment");
 
     const domain = process.env.SITE_URL ?? "http://localhost:3000";
-    const amount = 100; // $8.00 CAD in cents
+    const amount = 1000; // $10.00 CAD in cents
 
     // Create a payment record in the database
     const paymentId: Id<"payments"> = await ctx.runMutation(internal.payments.create, {
