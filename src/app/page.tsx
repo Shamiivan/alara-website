@@ -6,6 +6,7 @@ import DemoSection from "@/components/landing/DemoSection"
 import WhoThisIsFor from "@/components/landing/WhoThisIsFor"
 import Vision from "@/components/landing/Vision"
 import WhatWereBuilding from "@/components/landing/WhatWereBuilding"
+import HowItWorks from "@/components/landing/HowItWorks"
 
 export default function Home() {
   return (
@@ -14,11 +15,8 @@ export default function Home() {
         {/* {tasks?.map(({ _id, text }) => <div key={_id}>{text}</div>)} */}
         <Hero />
         <Problem />
-        <Vision />
         <WhatWereBuilding />
-        <Features />
-        <DemoSection />
-        <WhoThisIsFor />
+        <HowItWorks />
       </main>
     </div>
   );
