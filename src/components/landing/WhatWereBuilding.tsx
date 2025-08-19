@@ -15,7 +15,7 @@ const WhatWereBuilding = () => {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [emojis]);
 
   // Function to trigger confetti animation on Card 4 hover
   useEffect(() => {

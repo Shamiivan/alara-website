@@ -65,7 +65,7 @@ export default function PolicyPage() {
                 title="Privacy Policy"
                 content={
                   <>
-                    <p>We only collect what's needed to make the service work: your profile (name, email, phone if provided), your calls and transcripts, and the tasks you create.</p>
+                    <p>We only collect what&apos;s needed to make the service work: your profile (name, email, phone if provided), your calls and transcripts, and the tasks you create.</p>
                     <p>Your data is stored securely. We do not sell it. We do not share it with advertisers.</p>
                     <p>We use your data only to provide the service and to improve features.</p>
                     <p>You can request deletion or export of your data anytime — just email us.</p>
@@ -85,7 +85,7 @@ export default function PolicyPage() {
                       <li>Provide accurate information when asked.</li>
                       <li>Accept that the service may change or pause during the pilot.</li>
                     </ul>
-                    <p className="mt-4"><strong>Payments & Refunds:</strong> The pilot costs $10 for one month. If you're not satisfied, we will refund you in full.</p>
+                    <p className="mt-4"><strong>Payments & Refunds:</strong> The pilot costs $10 for one month. If you&apos;re not satisfied, we will refund you in full.</p>
                     <p><strong>Ownership:</strong> You own your content. We own the brand, design, and service code.</p>
                   </>
                 }
@@ -121,7 +121,7 @@ export default function PolicyPage() {
               <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary-light)/0.1)] to-transparent rounded-3xl"></div>
               <div className="relative z-10 p-8 text-center">
                 <p className="text-lg sm:text-xl italic text-foreground/80 mb-6">
-                  "We believe in transparency and fairness in everything we do."
+                  &ldquo;We believe in transparency and fairness in everything we do.&rdquo;
                 </p>
               </div>
             </div>

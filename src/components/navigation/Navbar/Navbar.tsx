@@ -15,16 +15,6 @@ import MobileNav from '../MobileNav/MobileNav';
 import { navigationConfig } from '../navigationConfig';
 import { useNavigation } from '../useNavigation';
 
-// Define the Convex user type
-interface ConvexUser {
-  _id: string;
-  _creationTime: number;
-  name?: string;
-  email?: string;
-  isOnboarded?: boolean;
-  hasPaid?: boolean;
-  [key: string]: any;
-}
 
 // Define our internal User type
 interface User {
@@ -88,7 +78,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { isMobileMenuOpen, toggleMobileMenu } = useNavigation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const pathname = usePathname();
+  // We'll use the pathname in the future for active link highlighting
+  usePathname();
 
   // Mark component as hydrated after first render
   useEffect(() => {

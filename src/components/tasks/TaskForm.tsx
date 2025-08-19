@@ -179,7 +179,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ userId, onSuccess, onCancel }) => {
               <span className="text-sm text-muted-foreground">minutes before</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              You'll receive a reminder {reminderMinutes} {reminderMinutes === 1 ? 'minute' : 'minutes'} before the task is due
+              You&apos;ll receive a reminder {reminderMinutes} {reminderMinutes === 1 ? 'minute' : 'minutes'} before the task is due
             </p>
           </div>
 

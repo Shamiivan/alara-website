@@ -45,7 +45,7 @@ export default function PricingPage() {
                   One month to find your flow. Cancel anytime.
                 </p>
                 <p className="text-sm text-muted-foreground mb-8">
-                  Try it. If it's not for you, we'll refund you.
+                  Try it. If it&apos;s not for you, we&apos;ll refund you.
                 </p>
                 <Button size="lg" className="w-full mb-4 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] hover:opacity-90 transition-all duration-300 shadow-md">
                   Start 1-Month Trial
@@ -72,7 +72,7 @@ export default function PricingPage() {
                   </svg>
                 </div>
                 <p className="text-lg sm:text-xl italic text-foreground/80 mb-6">
-                  "Join us on a journey to clarity and focused productivity."
+                  &ldquo;Join us on a journey to clarity and focused productivity.&rdquo;
                 </p>
               </div>
             </div>

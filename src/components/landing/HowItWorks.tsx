@@ -23,7 +23,7 @@ const HowItWorks = () => {
                 Planning Call <span className="text-[hsl(var(--muted-foreground))]">(morning)</span>
               </h3>
               <p className="text-base text-muted-foreground mb-2">
-                A short conversation to unload what's on your mind.
+                A short conversation to unload what&apos;s on your mind.
               </p>
               <p className="text-base text-muted-foreground">
                 We turn it into one clear step with light support.
@@ -41,7 +41,7 @@ const HowItWorks = () => {
                 Check-in Call <span className="text-[hsl(var(--muted-foreground))]">(when the tasks are scheduled)</span>
               </h3>
               <p className="text-base text-muted-foreground mb-2">
-                A quick call to see how it's going. Are you on track? Did something change? Should we adjust?
+                A quick call to see how it&apos;s going. Are you on track? Did something change? Should we adjust?
               </p>
               {/* list of question remove the bullet point  */}
               {/* make the list align center */}

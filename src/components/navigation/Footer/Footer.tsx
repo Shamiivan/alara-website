@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { navigationConfig } from '../navigationConfig';
 
 export function Footer() {
   return (

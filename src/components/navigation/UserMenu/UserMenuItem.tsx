@@ -15,7 +15,6 @@ interface UserMenuItemProps {
 }
 
 export const UserMenuItem: React.FC<UserMenuItemProps> = ({
-  id,
   label,
   href,
   icon: Icon,

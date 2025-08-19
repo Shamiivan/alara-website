@@ -4,8 +4,8 @@ import { usePathname } from 'next/navigation';
 import { useConvexAuth } from 'convex/react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import routes, { RouteConfig, getRouteConfig } from './routes';
-import { useEffect } from 'react';
+import { RouteConfig, getRouteConfig } from './routes';
+import { useEffect, useMemo } from 'react';
 
 export interface UseRoutesReturn {
   currentRoute: RouteConfig | undefined;
@@ -34,12 +34,12 @@ export function useRoutes(): UseRoutesReturn {
   // Get current route config
   const currentRoute = getRouteConfig(pathname);
 
-  // Default user status
-  const userStatus = {
+  // Default user status wrapped in useMemo to avoid dependency changes on every render
+  const userStatus = useMemo(() => ({
     isAuthenticated: isAuthenticated,
     isOnboarded: user?.isOnboarded || false,
     hasPaid: user?.hasPaid || false
-  };
+  }), [isAuthenticated, user?.isOnboarded, user?.hasPaid]);
 
   // Debug logging
   useEffect(() => {

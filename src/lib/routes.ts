@@ -1,5 +1,4 @@
 import { LayoutDashboard, Settings, User, HelpCircle, LogOut } from 'lucide-react';
-import { ReactNode } from 'react';
 
 export interface RouteConfig {
   id: string;

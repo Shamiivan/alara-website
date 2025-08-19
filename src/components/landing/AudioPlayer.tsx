@@ -17,17 +17,17 @@ const AudioPlayer = () => {
   };
 
   useEffect(() => {
-    if (audioRef.current) {
+    const audioElement = audioRef.current;
+    if (audioElement) {
       const handleEnded = () => setIsPlaying(false);
-      audioRef.current.addEventListener('ended', handleEnded);
+      audioElement.addEventListener('ended', handleEnded);
 
       return () => {
-        if (audioRef.current) {
-          audioRef.current.removeEventListener('ended', handleEnded);
-        }
+        // Using the captured audioElement reference in cleanup
+        audioElement.removeEventListener('ended', handleEnded);
       };
     }
-  }, [audioRef]);
+  }, []);
 
   return (
     <div className="inline-flex flex-col items-center justify-center fade-in">

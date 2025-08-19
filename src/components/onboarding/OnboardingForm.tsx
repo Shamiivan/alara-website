@@ -40,13 +40,18 @@ export default function OnboardingForm() {
   });
 
   // Load user data and determine current step on mount
+  // Helper function to log info in development mode
+  const logDevInfo = useCallback((message: string, data?: Record<string, unknown>) => {
+    if (process.env.NODE_ENV === "development") {
+      info("onboarding", message, data);
+    }
+  }, [info]);
+
   useEffect(() => {
     // Check if the query has completed (even if it returned undefined)
     if (user !== undefined) {
       if (user) {
-        if (process.env.NODE_ENV === "development") {
-          info("onboarding", "Onboarding form loaded with existing user data");
-        }
+        logDevInfo("Onboarding form loaded with existing user data");
 
         // Populate form data from existing user data
         const updatedFormData = {
@@ -79,23 +84,19 @@ export default function OnboardingForm() {
         }
 
         setCurrentStep(step);
-        if (process.env.NODE_ENV === "development") {
-          info("onboarding", "Resuming onboarding at step", {
-            step: Object.keys(OnboardingStep)[step],
-            hasExistingData: true
-          });
-        }
+        logDevInfo("Resuming onboarding at step", {
+          step: Object.keys(OnboardingStep)[step],
+          hasExistingData: true
+        });
       } else {
         // User query returned null/undefined, but it's done loading
-        if (process.env.NODE_ENV === "development") {
-          info("onboarding", "Starting new onboarding flow");
-        }
+        logDevInfo("Starting new onboarding flow");
       }
 
       // Always set loading to false once the query completes
       setIsLoading(false);
     }
-  }, [user]); // Remove 'info' dependency to prevent infinite re-renders
+  }, [user, logDevInfo]);
 
   // Handle moving to the next step - useCallback to prevent unnecessary re-renders
   const handleNext = useCallback((step: OnboardingStep, data: Partial<typeof formData>) => {

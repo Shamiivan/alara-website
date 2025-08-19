@@ -1,17 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Mic, Plus, Calendar, Clock, Trash2, CheckCircle2, Circle, X } from 'lucide-react';
 import { Id } from "../../../convex/_generated/dataModel";
 import TaskForm from './TaskForm';
 
+// Define the Task type from Convex
+interface ConvexTask {
+  _id: Id<"tasks">;
+  _creationTime: number;
+  title: string;
+  due: string;
+  timezone: string;
+  status?: string;
+  source?: string;
+  userId?: Id<"users">;
+  callId?: Id<"calls">;
+  reminderMinutesBefore?: number;
+  // Allow for additional properties
+  [key: string]: unknown;
+}
+
+// Define the Todo type for UI representation
 interface Todo {
   _id?: Id<"tasks">;
   _creationTime?: number;
@@ -27,12 +42,12 @@ interface Todo {
 const TodoApp = () => {
   const tasks = useQuery(api.tasks.get_tasks) || [];
   const currentUser = useQuery(api.user.getCurrentUser);
-  const [isListening, setIsListening] = useState(false);
+  // State for potential future voice listening feature will be added here
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [encouragementMessage, setEncouragementMessage] = useState("You're doing better than you think.");
 
   // Convert Convex tasks to Todo format
-  const todos: Todo[] = tasks ? tasks.map((task: any) => ({
+  const todos: Todo[] = tasks ? tasks.map((task: ConvexTask) => ({
     _id: task._id,
     _creationTime: task._creationTime,
     title: task.title,
@@ -63,7 +78,6 @@ const TodoApp = () => {
   // Mutations
   const updateTask = useMutation(api.tasks.update_task);
   const deleteTask = useMutation(api.tasks.delete_task);
-  const createTask = useMutation(api.tasks.create_task);
 
 
   const toggleTodo = (id: Id<"tasks">, completed: boolean) => {
@@ -81,10 +95,12 @@ const TodoApp = () => {
     deleteTask({ id });
   };
 
+  // Commented out for future implementation
+  /*
   const simulateVoiceListening = () => {
-    setIsListening(true);
+    _setIsListening(true);
     setTimeout(() => {
-      setIsListening(false);
+      _setIsListening(false);
       // Simulate adding a voice-created task
       const now = new Date();
       const dueDate = new Date(now.getTime() + 12 * 60 * 60 * 1000); // Due in 12 hours
@@ -100,6 +116,7 @@ const TodoApp = () => {
       showEncouragingNotification();
     }, 2000);
   };
+  */
 
   const showEncouragingNotification = () => {
     const encouragements = [
