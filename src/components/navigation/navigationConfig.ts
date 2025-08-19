@@ -29,6 +29,11 @@ export const navigationConfig = {
       id: 'calls',
       label: 'Calls',
       href: '/calls',
+    },
+    {
+      id: 'faq',
+      label: 'FAQ',
+      href: '/faq',
     }
   ],
 
