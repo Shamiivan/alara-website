@@ -1,4 +1,6 @@
-import { Phone, Clock, CheckCircle } from "lucide-react";
+import { Phone, Clock, CheckCircle, ArrowRight, HelpCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const HowItWorks = () => {
   return (
@@ -53,9 +55,40 @@ const HowItWorks = () => {
         </div>
 
         {/* Closing Line */}
-        <p className="text-lg sm:text-xl md:text-2xl text-center font-medium text-foreground/90 max-w-3xl mx-auto">
+        <p className="text-lg sm:text-xl md:text-2xl text-center font-medium text-foreground/90 max-w-3xl mx-auto mb-10">
           The calls are what make it different. The rest works like a to-do app.
         </p>
+      </div>
+
+      {/* CTA Section - Full Width Background */}
+      <div className="w-full bg-gradient-to-b from-[hsl(var(--primary-light)/0.3)] to-transparent py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary mb-2 animate-subtle-bounce">
+              <ArrowRight className="w-6 h-6 text-primary-foreground" />
+            </div>
+
+            {/* Enhanced Join Pilot Button */}
+            <div className="relative group">
+              {/* Subtle glow effect */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[hsl(var(--primary)/0.6)] via-[hsl(var(--secondary)/0.7)] to-[hsl(var(--primary)/0.6)] rounded-full blur-sm opacity-60 group-hover:opacity-90 transition-all duration-500"></div>
+
+              <Button asChild size="lg" className="relative text-base sm:text-lg font-semibold px-8 py-4 h-auto rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] hover:from-[hsl(var(--secondary))] hover:to-[hsl(var(--primary))] shadow-md hover:shadow-lg transition-all duration-300 border border-white/10">
+                <Link href="/onboarding" className="flex items-center gap-2">
+                  <span>Join the Pilot</span>
+                  <CheckCircle className="w-5 h-5" />
+                </Link>
+              </Button>
+            </div>
+
+            <Button asChild variant="link" className="text-base font-medium hover:text-primary/80 transition-colors mt-3">
+              <Link href="/faq" className="flex items-center gap-1.5">
+                <HelpCircle className="w-4 h-4" />
+                <span>Read the FAQ</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
     </section>
   );
