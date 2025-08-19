@@ -41,3 +41,5 @@ yarn-error.log*
 next-env.d.ts
 STRIPE_WEBHOOK_TESTING.md
 STRIPE_WEBHOOK_SECURITY.md
+old/*
+data.json

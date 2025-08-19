@@ -1,32 +1,18 @@
 import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { serverLogger, authLogger } from "@/lib/serverLogger";
+import {
+  getPublicRoutes,
+  getProtectedRoutes,
+  getRoutesRequiringOnboarding,
+  getRoutesRequiringPayment
+} from "@/lib/routes";
 
-// Public routes that don't require authentication
-const publicRoutes = [
-  "/",
-  "/auth/login",
-  "/calls",
-  "/api/calls"
-];
-
-// Routes that require authentication
-const protectedRoutes = [
-  "/dashboard",
-  "/onboarding",
-  "/payment"
-];
-
-// Routes that require onboarding to be completed
-const requiresOnboarding = [
-  "/dashboard",
-  "/payment"
-];
-
-// Routes that require payment to be completed
-const requiresPayment = [
-  "/dashboard"
-];
+// Get routes from centralized configuration
+const publicRoutes = getPublicRoutes();
+const protectedRoutes = getProtectedRoutes();
+const requiresOnboarding = getRoutesRequiringOnboarding();
+const requiresPayment = getRoutesRequiringPayment();
 
 export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexAuth }) => {
   const { pathname, searchParams } = request.nextUrl;
@@ -94,7 +80,19 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
 
     // If route requires onboarding and user is not onboarded, redirect to onboarding
     if (requiresOnboarding.includes(pathname) && !userStatus.isOnboarded) {
-      authLogger.info("User needs onboarding", { pathname, userStatus }, request);
+      // Log additional details for debugging payment-to-onboarding issue
+      const paymentParams = {
+        isPaymentSuccess: searchParams.get('payment') === 'success',
+        paymentId: searchParams.get('paymentId')
+      };
+
+      authLogger.info("User needs onboarding", {
+        pathname,
+        userStatus,
+        paymentParams,
+        hasPaymentQueryParams: isPaymentSuccess && paymentId
+      }, request);
+
       const onboardingUrl = new URL("/onboarding", request.url);
       return NextResponse.redirect(onboardingUrl);
     }
@@ -102,7 +100,11 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     // Special case: Allow access to dashboard if coming from successful payment
     // This gives the webhook time to process the payment
     if (pathname === '/dashboard' && isPaymentSuccess && paymentId) {
-      serverLogger.info("payment", "Dashboard access allowed after payment success", { paymentId }, request);
+      serverLogger.info("payment", "Dashboard access allowed after payment success", {
+        paymentId,
+        userStatus,
+        pathname
+      }, request);
       return NextResponse.next();
     }
 

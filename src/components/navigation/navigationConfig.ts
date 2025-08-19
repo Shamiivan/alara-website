@@ -1,5 +1,10 @@
-import { LayoutDashboard, Settings, User, HelpCircle, LogOut } from 'lucide-react';
+import {
+  getNavItems,
+  getUserNavItems,
+  getUserMenuItems
+} from '@/lib/routes';
 
+// Re-export the interfaces from routes.ts
 export interface NavItem {
   id: string;
   label: string;
@@ -23,40 +28,9 @@ export interface UserMenuItem {
   variant?: 'default' | 'danger';
 }
 
+// Use the centralized route configuration
 export const navigationConfig = {
-  mainNav: [
-    {
-      id: 'calls',
-      label: 'Calls',
-      href: '/calls',
-    }
-  ],
-
-  userNav: [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-      requiresAuth: true,
-      requiresOnboarding: true,
-      requiresPayment: true
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      href: '/settings',
-      icon: Settings,
-      requiresAuth: true
-    }
-  ],
-
-  userMenuItems: [
-    { id: 'profile', label: 'Your Profile', href: '/profile', icon: User },
-    { id: 'settings', label: 'Settings', href: '/settings', icon: Settings },
-    { id: 'divider-1', divider: true },
-    { id: 'help', label: 'Help & Support', href: '/help', icon: HelpCircle },
-    { id: 'divider-2', divider: true },
-    { id: 'signout', label: 'Sign Out', icon: LogOut, variant: 'danger' as const }
-  ] as UserMenuItem[]
+  mainNav: getNavItems(),
+  userNav: getUserNavItems(),
+  userMenuItems: getUserMenuItems() as UserMenuItem[]
 };

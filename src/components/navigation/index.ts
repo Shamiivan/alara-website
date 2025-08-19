@@ -28,5 +28,8 @@ export {
   HamburgerButton
 } from './MobileNav';
 
+// Export Footer component
+export { Footer } from './Footer';
+
 // Default export for easy import
 export { Navbar as default } from './Navbar';

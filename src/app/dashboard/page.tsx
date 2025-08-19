@@ -2,9 +2,10 @@
 
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { useRoutes } from "@/lib/useRoutes";
 
 // Add CSS for animations
 const styles = {
@@ -19,14 +20,54 @@ const styles = {
 
 export default function Dashboard() {
   const user = useQuery(api.user.getCurrentUser);
+  const userStatus = useQuery(api.user.checkUserStatus);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { isLoading: routeLoading, shouldRedirect, redirectTo, isAuthorized, userStatus: routeUserStatus } = useRoutes();
   const [loading, setLoading] = useState(true);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("Dashboard - User data:", user);
+      console.log("Dashboard - User status from query:", userStatus);
+      console.log("Dashboard - Route status:", {
+        routeLoading,
+        shouldRedirect,
+        redirectTo,
+        isAuthorized,
+        routeUserStatus
+      });
+      console.log("Dashboard - Search params:", Object.fromEntries(searchParams.entries()));
+    }
+  }, [user, userStatus, routeLoading, shouldRedirect, redirectTo, isAuthorized, routeUserStatus, searchParams]);
+
+  useEffect(() => {
+    // Handle redirects based on route configuration
+    if (!routeLoading && shouldRedirect && redirectTo) {
+      console.log("Dashboard - Redirecting to:", redirectTo, "Route status:", {
+        routeLoading,
+        shouldRedirect,
+        isAuthorized,
+        routeUserStatus
+      });
+      router.push(redirectTo);
+    }
+  }, [shouldRedirect, redirectTo, routeLoading, router, routeUserStatus, isAuthorized]);
 
   useEffect(() => {
     // Check for payment success parameter
     const paymentStatus = searchParams.get('payment');
+    const paymentId = searchParams.get('paymentId');
+
     if (paymentStatus === 'success') {
+      console.log("Dashboard - Payment success detected", {
+        paymentId,
+        userStatus: userStatus || "loading",
+        user: user ? { id: user._id, isOnboarded: user.isOnboarded, hasPaid: user.hasPaid } : "loading"
+      });
+
       setShowPaymentSuccess(true);
 
       // Hide the success message after 5 seconds
@@ -36,16 +77,16 @@ export default function Dashboard() {
 
       return () => clearTimeout(timer);
     }
-  }, [searchParams]);
+  }, [searchParams, user, userStatus]);
 
   useEffect(() => {
     // Simple loading state
-    if (user !== undefined) {
+    if (user !== undefined && !routeLoading) {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, routeLoading]);
 
-  if (loading) {
+  if (loading || routeLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
