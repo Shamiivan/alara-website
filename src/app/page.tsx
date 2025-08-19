@@ -5,6 +5,7 @@ import Features from "@/components/landing/Features"
 import DemoSection from "@/components/landing/DemoSection"
 import WhoThisIsFor from "@/components/landing/WhoThisIsFor"
 import Vision from "@/components/landing/Vision"
+import WhatWereBuilding from "@/components/landing/WhatWereBuilding"
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
         <Hero />
         <Problem />
         <Vision />
+        <WhatWereBuilding />
         <Features />
         <DemoSection />
         <WhoThisIsFor />
