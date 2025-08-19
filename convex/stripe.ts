@@ -276,15 +276,28 @@ async function fulfillPayment(ctx: any, paymentId: any) {
     throw new Error(`Payment not found with ID: ${paymentId}`);
   }
 
+  console.log(`Payment found: ${paymentId}, userId: ${payment.userId}`);
+
   // 2. Update the payment with completedAt
   await ctx.runMutation(internal.payments.markCompleted, {
     paymentId: payment._id,
   });
+  console.log(`Payment marked as completed: ${paymentId}`);
 
   // 3. Update the user's payment status
-  await ctx.runMutation(internal.user.markUserPaid, {
-    userId: payment.userId,
-  });
+  try {
+    await ctx.runMutation(internal.user.markUserPaid, {
+      userId: payment.userId,
+    });
+    console.log(`User ${payment.userId} marked as paid successfully`);
+
+    // 4. Verify user status after update
+    const updatedUser = await ctx.runQuery(api.user.checkUserStatus, {});
+    console.log(`User status after payment: `, updatedUser);
+  } catch (error) {
+    console.error(`Failed to mark user ${payment.userId} as paid:`, error);
+    throw error;
+  }
 
   console.log(`Successfully fulfilled payment: ${paymentId}`);
   return { paymentId };
