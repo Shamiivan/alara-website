@@ -178,7 +178,12 @@ async function checkUserStatus(token?: string): Promise<{ isAuthenticated: boole
 }
 
 export const config = {
-  // The following matcher runs middleware on all routes
-  // except static assets.
-  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
+  /*
+  The matcher runs everything except 
+    - static assets.
+    - API routes.
+    - _next
+  */
+
+  matcher: ["/((?!api|trpc|_next|.*\\..*).*)"],
 };
