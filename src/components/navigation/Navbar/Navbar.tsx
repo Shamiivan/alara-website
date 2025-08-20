@@ -42,15 +42,8 @@ export default function Navbar() {
   }, [pathname]);
 
   return (
-    <header
-      className="sticky top-0 z-40"
-      style={{
-        backgroundColor: COLORS.white,
-        borderBottom: `1px solid ${COLORS.border}`,
-        backdropFilter: "saturate(180%) blur(6px)",
-      }}
-      role="banner"
-    >
+
+    <div>
       {/* Support strip (visible on md+) — reinforces reliability */}
       <div
         className="hidden md:flex items-center justify-center text-sm"
@@ -70,76 +63,88 @@ export default function Navbar() {
           </a>
         </div>
       </div>
-
-      {/* Main bar */}
-      <div className="container mx-auto px-4">
-        <nav className="h-16 flex items-center justify-between" aria-label="Primary">
-          {/* Brand */}
-          <Brand />
-
-          {/* Desktop nav */}
-          <ul className="hidden md:flex items-center gap-6" aria-label="Sections">
-            {NAV_LINKS.map((item) => (
-              <li key={item.href}>
-                <NavLink href={item.href} active={pathname === item.href}>
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-
-          {/* Right cluster: Help + CTA (desktop) */}
-          <div className="hidden md:flex items-center gap-3">
-            <HelpLink />
-            <CTA href="/signup">Start 30‑day pilot</CTA>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            type="button"
-            className="md:hidden inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm"
-            onClick={() => setOpen((v) => !v)}
-            aria-controls="mobile-nav"
-            aria-expanded={open}
-            style={{
-              borderColor: COLORS.border,
-              color: COLORS.slate,
-              backgroundColor: COLORS.white,
-            }}
-          >
-            <span className="sr-only">Toggle menu</span>
-            <span className={`transition-transform ${open ? "rotate-90" : "rotate-0"}`}>☰</span>
-          </button>
-        </nav>
-      </div>
-
-      {/* Mobile drawer */}
-      <div
-        id="mobile-nav"
-        className={`md:hidden overflow-hidden transition-[max-height] duration-300 ease-out`}
-        style={{ maxHeight: open ? 320 : 0, borderTop: `1px solid ${COLORS.border}` }}
+      <header
+        className="sticky top-0 z-40"
+        style={{
+          backgroundColor: COLORS.white,
+          borderBottom: `1px solid ${COLORS.border}`,
+          backdropFilter: "saturate(180%) blur(6px)",
+        }}
+        role="banner"
       >
-        <div className="px-4 py-3">
-          <ul className="flex flex-col gap-2">
-            {NAV_LINKS.map((item) => (
-              <li key={item.href}>
-                <NavLink href={item.href} active={pathname === item.href} mobile>
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-            <li className="pt-1">
-              <HelpLink mobile />
-            </li>
-            <li className="pt-1">
-              <CTA href="/dashboard" mobile>
-                Start 30‑day pilot
-              </CTA>
-            </li>
-          </ul>
+
+        {/* Support strip (visible on md+) — reinforces reliability */}
+
+        {/* Main bar */}
+        <div className="container mx-auto px-4">
+          <nav className="h-16 flex items-center justify-between" aria-label="Primary">
+            {/* Brand */}
+            <Brand />
+
+            {/* Desktop nav */}
+            <ul className="hidden md:flex items-center gap-6" aria-label="Sections">
+              {NAV_LINKS.map((item) => (
+                <li key={item.href}>
+                  <NavLink href={item.href} active={pathname === item.href}>
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+
+            {/* Right cluster: Help + CTA (desktop) */}
+            <div className="hidden md:flex items-center gap-3">
+              <HelpLink />
+              <CTA href="/dashboard">Start 30‑day pilot</CTA>
+            </div>
+
+            {/* Mobile menu button */}
+            <button
+              type="button"
+              className="md:hidden inline-flex items-center justify-center rounded-lg border px-3 py-2 text-sm"
+              onClick={() => setOpen((v) => !v)}
+              aria-controls="mobile-nav"
+              aria-expanded={open}
+              style={{
+                borderColor: COLORS.border,
+                color: COLORS.slate,
+                backgroundColor: COLORS.white,
+              }}
+            >
+              <span className="sr-only">Toggle menu</span>
+              <span className={`transition-transform ${open ? "rotate-90" : "rotate-0"}`}>☰</span>
+            </button>
+          </nav>
         </div>
-      </div>
-    </header>
+
+        {/* Mobile drawer */}
+        <div
+          id="mobile-nav"
+          className={`md:hidden overflow-hidden transition-[max-height] duration-300 ease-out`}
+          style={{ maxHeight: open ? 320 : 0, borderTop: `1px solid ${COLORS.border}` }}
+        >
+          <div className="px-4 py-3">
+            <ul className="flex flex-col gap-2">
+              {NAV_LINKS.map((item) => (
+                <li key={item.href}>
+                  <NavLink href={item.href} active={pathname === item.href} mobile>
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+              <li className="pt-1">
+                <HelpLink mobile />
+              </li>
+              <li className="pt-1">
+                <CTA href="/dashboard" mobile>
+                  Start 30‑day pilot
+                </CTA>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </header>
+    </div>
   );
 }
 
