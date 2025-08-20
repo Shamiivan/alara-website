@@ -181,7 +181,7 @@ export default function OnboardingForm() {
           error = "Time machines need proper coordinates! (24-hour HH:MM format) 🕰️";
           status = "invalid";
         } else if (!timeRegex.test(value)) {
-          error = "Our time wizard is confused! Try 24-hour format like 14:30 ⏰";
+          error = "I'm a bit confused! Try 24-hour format like 14:30 ⏰";
           status = "invalid";
         }
         break;
@@ -322,7 +322,7 @@ export default function OnboardingForm() {
 
   if (showSuccess) {
     return (
-      <div className="max-w-[420px] mx-auto p-6 sm:p-8 bg-white/90 backdrop-blur-sm rounded-lg shadow-[0_8px_25px_rgba(109,40,217,0.25)] text-center bg-primary-light/20 border-2 border-[#6D28D9]/30 transform transition-all duration-500 animate-fadeIn relative overflow-hidden">
+      <div className="max-w-[420px] mx-auto p-6 sm:p-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-[0_8px_25px_rgba(109,40,217,0.25)] text-center bg-primary-light/20 border-2 border-[#6D28D9]/30 transform transition-all duration-500 animate-fadeIn relative overflow-hidden">
         {/* Quirky background elements */}
         <div className="absolute -right-12 -top-12 w-24 h-24 bg-purple-100 rounded-full opacity-40 blur-xl"></div>
         <div className="absolute -left-8 -bottom-10 w-20 h-20 bg-blue-100 rounded-full opacity-30 blur-lg"></div>
@@ -347,8 +347,11 @@ export default function OnboardingForm() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-primary-dark">Woohoo! You're magical! ✨</h2>
-        <p className="mb-6 text-muted-foreground">One tiny hop and we'll be ready for adventure!</p>
+        <h2 className="text-2xl font-bold mb-2 text-primary-dark">Woohoo! You're all set! ✨</h2>
+        <p className="mb-6 text-muted-foreground">
+          We’ve saved your preferences and you’re ready to start.
+          To join the pilot group, activate your plan ($10/month). This helps us keep the service running while we grow together.
+        </p>
         <div className="relative">
           <div className="h-3 bg-[#E4E4FE] rounded-full overflow-hidden">
             <div className="h-full bg-[#6D28D9] rounded-full w-4/5 animate-pulse"></div>
