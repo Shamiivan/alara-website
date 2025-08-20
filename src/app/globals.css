@@ -288,6 +288,38 @@
     }
   }
 
+  @keyframes wiggle {
+
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+
+    25% {
+      transform: translateX(-5px);
+    }
+
+    75% {
+      transform: translateX(5px);
+    }
+  }
+
+  @keyframes wave {
+
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+
+    25% {
+      transform: rotate(-20deg);
+    }
+
+    75% {
+      transform: rotate(20deg);
+    }
+  }
+
   @keyframes bounce {
 
     0%,
@@ -314,5 +346,19 @@
 
   .animate-subtle-bounce {
     animation: subtle-bounce 2s ease-in-out infinite;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-wiggle {
+    animation: wiggle 0.3s ease-in-out 2;
+  }
+
+  .animate-wave {
+    animation: wave 0.7s ease-in-out infinite;
+    transform-origin: bottom right;
+    display: inline-block;
   }
 }
