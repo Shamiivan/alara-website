@@ -22,7 +22,7 @@ export function SignInWithGoogle({ returnUrl = "/dashboard" }: SignInWithGoogleP
       if (returnUrl !== '/dashboard') {
         localStorage.setItem('auth_returnTo', returnUrl);
       }
-      await signIn("google",);
+      await signIn("google", { redirectTo: returnUrl });
       info("auth", "Google sign-in completed successfully");
     } catch (signInError) {
       error("auth", "Google sign-in failed", {
