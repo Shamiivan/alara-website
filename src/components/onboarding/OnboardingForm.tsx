@@ -349,8 +349,7 @@ export default function OnboardingForm() {
         </div>
         <h2 className="text-2xl font-bold mb-2 text-primary-dark">Woohoo! You&apos;re all set! ✨</h2>
         <p className="mb-6 text-muted-foreground">
-          We’ve saved your preferences and you’re ready to start.
-          To join the pilot group, activate your plan ($10/month). This helps us keep the service running while we grow together.
+          We’ve saved your preferences remains to pay and you're ready to go!
         </p>
         <div className="relative">
           <div className="h-3 bg-[#E4E4FE] rounded-full overflow-hidden">
