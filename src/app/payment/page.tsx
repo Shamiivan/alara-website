@@ -85,7 +85,7 @@ export default function PaymentPage() {
             Start your month for $10.
           </h1>
           <p className="text-base text-muted-foreground">
-            One plan. Cancel anytime. Full refund if it's not for you.
+            One plan. Cancel anytime. Full refund if it&apos;s not for you.
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export default function PaymentPage() {
             <Alert variant="destructive">
               <AlertTitle>Something went wrong</AlertTitle>
               <AlertDescription>
-                We couldn't start checkout. Please try again.
+                We couldn&apos;t start checkout. Please try again.
               </AlertDescription>
             </Alert>
           </div>
