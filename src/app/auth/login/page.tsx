@@ -1,5 +1,9 @@
 "use client";
 
+import { useSearchParams, useRouter } from "next/navigation";
+import { useConvex, useConvexAuth } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { SignInWithGoogle } from "./SignInWithGoogle";
 import Link from "next/link";
@@ -79,7 +83,7 @@ export default function Login() {
             </div>
 
             <div className="grid grid-cols-1 gap-3">
-              <SignInWithGoogle />
+              <SignInWithGoogle returnUrl="/dashboard" />
             </div>
           </div>
         </div>

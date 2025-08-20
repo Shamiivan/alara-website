@@ -1,4 +1,4 @@
-import { convexAuthNextjsMiddleware } from "@convex-dev/auth/nextjs/server";
+import { convexAuthNextjsMiddleware, nextjsMiddlewareRedirect } from "@convex-dev/auth/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { serverLogger, authLogger } from "@/lib/serverLogger";
 import {
@@ -62,7 +62,9 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     if (!isAuthenticated) {
       authLogger.info("Unauthenticated access to protected route", { pathname }, request);
       const loginUrl = new URL("/auth/login", request.url);
-      return NextResponse.redirect(loginUrl);
+      loginUrl.searchParams.set('returnUrl', pathname);
+      // return NextResponse.redirect(loginUrl);
+      return nextjsMiddlewareRedirect(request, "/auth/login");
     }
 
     // Get token for user status check
@@ -116,7 +118,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
     }
 
     // User meets all requirements for the route
-    serverLogger.debug("system", "Route access granted", { pathname, userStatus }, request);
+    serverLogger.info("system", "Route access granted", { pathname, userStatus }, request);
     return NextResponse.next();
 
   } catch (error) {
