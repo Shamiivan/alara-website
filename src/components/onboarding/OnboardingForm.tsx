@@ -1,338 +1,334 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import PhoneStep from "./steps/PhoneStep";
-import CallTimeStep from "./steps/CallTimeStep";
-import RemindersStep from "./steps/RemindersStep";
-import SummaryStep from "./steps/SummaryStep";
-import ClarityCalls from "./steps/ClarityCallsStep";
-
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { useEventLogger } from "@/lib/eventLogger";
 import { OnboardingErrorBoundary } from "@/components/ErrorBoundary";
 
+type FormData = {
+  name: string;
+  phone: string;
+  wantsClarityCalls: boolean;
+  callTime: string; // "HH:MM"
+  wantsCallReminders: boolean;
+};
 
-enum OnboardingStep {
-  PHONE = 0,
-  WANTS_CLARITY_CALLS = 1,
-  CALL_TIME = 2,
-  REMINDERS = 3,
-  SUMMARY = 4,
-  COMPLETED = 5,
-}
+type FormErrors = Partial<
+  Record<keyof Pick<FormData, "name" | "phone" | "callTime">, string>
+>;
 
 export default function OnboardingForm() {
-  const completeOnboarding = useMutation(api.user.completeOnboarding);
-  const user = useQuery(api.user.getCurrentUser);
   const router = useRouter();
   const { info, error, logUserAction } = useEventLogger();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(OnboardingStep.PHONE);
-  const [formData, setFormData] = useState({
+  // convex hooks
+  const completeOnboarding = useMutation(api.user.completeOnboarding);
+  const user = useQuery(api.user.getCurrentUser); // undefined = loading, null = unauth, object = user
+
+  // local state
+  const [formEdited, setFormEdited] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
     name: "",
     phone: "",
     wantsClarityCalls: false,
     callTime: "",
     wantsCallReminders: false,
   });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
-  // Load user data and determine current step on mount
-  // Helper function to log info in development mode
-  const logDevInfo = useCallback((message: string, data?: Record<string, unknown>) => {
-    if (process.env.NODE_ENV === "development") {
-      info("onboarding", message, data);
-    }
-  }, [info]);
+  // derived
+  const isLoading = user === undefined;
 
+  // 1) redirect unauthenticated users once we know
   useEffect(() => {
-    // Check if the query has completed (even if it returned undefined)
-    if (user !== undefined) {
-      if (user) {
-        logDevInfo("Onboarding form loaded with existing user data");
+    if (user === null) router.replace("/signin");
+  }, [user, router]);
 
-        // Populate form data from existing user data
-        const updatedFormData = {
-          name: user.name || "",
-          phone: user.phone || "",
-          wantsClarityCalls: user.wantsClarityCalls || false,
-          callTime: user.callTime || "",
-          wantsCallReminders: user.wantsCallReminders || false,
-        };
+  // 2) hydrate once from server (StrictMode-safe)
+  const hydratedRef = useRef(false);
+  useEffect(() => {
+    if (!user || formEdited || hydratedRef.current) return;
 
-        setFormData(updatedFormData);
+    const next: FormData = {
+      name: user.name ?? "",
+      phone: user.phone ?? "",
+      wantsClarityCalls: Boolean(user.wantsClarityCalls),
+      callTime: user.callTime ?? "",
+      wantsCallReminders: Boolean(user.wantsCallReminders),
+    };
 
-        // Determine current step based on available data
-        let step = OnboardingStep.PHONE;
+    const changed =
+      next.name !== formData.name ||
+      next.phone !== formData.phone ||
+      next.wantsClarityCalls !== formData.wantsClarityCalls ||
+      next.callTime !== formData.callTime ||
+      next.wantsCallReminders !== formData.wantsCallReminders;
 
-        if (updatedFormData.phone) {
-          step = OnboardingStep.WANTS_CLARITY_CALLS;
+    if (changed) setFormData(next);
 
-          if (typeof updatedFormData.wantsClarityCalls === "boolean") {
-            step = OnboardingStep.CALL_TIME;
+    hydratedRef.current = true;
 
-            if (updatedFormData.callTime) {
-              step = OnboardingStep.REMINDERS;
-
-              if (updatedFormData.wantsCallReminders !== undefined) {
-                step = OnboardingStep.SUMMARY;
-              }
-            }
-          }
-        }
-
-        setCurrentStep(step);
-        logDevInfo("Resuming onboarding at step", {
-          step: Object.keys(OnboardingStep)[step],
-          hasExistingData: true
-        });
-      } else {
-        // User query returned null/undefined, but it's done loading
-        logDevInfo("Starting new onboarding flow");
-      }
-
-      // Always set loading to false once the query completes
-      setIsLoading(false);
-    }
-  }, [user, logDevInfo]);
-
-  // Handle moving to the next step - useCallback to prevent unnecessary re-renders
-  const handleNext = useCallback((step: OnboardingStep, data: Partial<typeof formData>) => {
-    // Log the step progression (development only)
     if (process.env.NODE_ENV === "development") {
-      logUserAction(`Onboarding step completed: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
-        fromStep: Object.keys(OnboardingStep)[currentStep],
-        toStep: Object.keys(OnboardingStep)[step],
-        data
-      });
+      // Avoid putting `info` in deps; it may be unstable
+      try {
+        console.debug("[onboarding] hydrated form from user");
+      } catch { }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, formEdited]); // do NOT include formData / info here
+
+  // 3) input handlers
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormEdited(true);
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+
+    if (name in formErrors) {
+      setFormErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  // 4) validation
+  const timeRegex = useMemo(() => /^([01]?\d|2[0-3]):[0-5]\d$/, []);
+  const phoneRegex = useMemo(
+    () => /^\+?[0-9()\-\s]{7,20}$/,
+    []
+  );
+
+  const validateForm = () => {
+    const next: FormErrors = {};
+    let ok = true;
+
+    if (!formData.name.trim()) {
+      next.name = "Full name is required.";
+      ok = false;
+    }
+    if (!formData.phone.trim()) {
+      next.phone = "Phone number is required.";
+      ok = false;
+    } else if (!phoneRegex.test(formData.phone.trim())) {
+      next.phone = "Enter a valid phone number (you can include +, spaces, or dashes).";
+      ok = false;
+    }
+    if (!formData.callTime) {
+      next.callTime = "Preferred call time is required.";
+      ok = false;
+    } else if (!timeRegex.test(formData.callTime)) {
+      next.callTime = "Use 24‑hour HH:MM (e.g., 09:00 or 14:30).";
+      ok = false;
     }
 
-    // Update the form data
-    setFormData((prev) => ({ ...prev, ...data }));
+    setFormErrors(next);
+    return ok;
+  };
 
-    // Move to the next step
-    setCurrentStep(step);
-  }, [currentStep, logUserAction]);
+  // 5) submit/redirect
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+    };
+  }, []);
 
-  // Handle moving to the previous step - useCallback to prevent unnecessary re-renders
-  const handleBack = useCallback((step: OnboardingStep) => {
-    // Log the step progression (development only)
-    if (process.env.NODE_ENV === "development") {
-      logUserAction(`Onboarding step back: ${Object.keys(OnboardingStep)[currentStep]}`, "onboarding", {
-        fromStep: Object.keys(OnboardingStep)[currentStep],
-        toStep: Object.keys(OnboardingStep)[step],
-      });
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
 
-    setCurrentStep(step);
-  }, [currentStep, logUserAction]);
+    if (!validateForm()) return;
 
-  // Handle completing the onboarding process - useCallback to prevent unnecessary re-renders
-  const handleComplete = useCallback(async () => {
+    setIsSubmitting(true);
     try {
       if (process.env.NODE_ENV === "development") {
-        info("onboarding", "Completing onboarding process", formData);
+        info("onboarding", "Submitting onboarding form", formData);
+        logUserAction("Onboarding form submitted", "onboarding", formData);
       }
 
-      // Save all data to the database
       await completeOnboarding({
-        name: formData.name,
-        phoneNumber: formData.phone,
+        name: formData.name.trim(),
+        phoneNumber: formData.phone.trim(),
         wantsClarityCalls: formData.wantsClarityCalls,
         callTime: formData.callTime,
         wantsCallReminders: formData.wantsCallReminders,
       });
 
       if (process.env.NODE_ENV === "development") {
-        info("onboarding", "Onboarding completed successfully");
+        info("onboarding", "Onboarding completed");
         logUserAction("Onboarding completed", "onboarding", formData);
       }
 
-      // Show completion step briefly
-      setCurrentStep(OnboardingStep.COMPLETED);
-
-      // Redirect to payment page after a short delay
-      setTimeout(() => {
-        if (process.env.NODE_ENV === "development") {
-          info("onboarding", "Redirecting to payment page");
-        }
+      redirectTimeoutRef.current = setTimeout(() => {
         router.push("/payment");
-      }, 1500);
-
-    } catch (onboardingError) {
-      error("onboarding", "Failed to complete onboarding", {
-        error: onboardingError instanceof Error ? onboardingError.message : String(onboardingError),
-        formData
-      }, true, "Failed to complete onboarding. Please try again.");
-
-      // Only log to console in development
-      if (process.env.NODE_ENV === "development") {
-        console.error("Error completing onboarding:", onboardingError);
-      }
-    }
-  }, [completeOnboarding, formData, info, logUserAction, error, router]);
-
-  // Create stable callback functions for navigation
-  const handlePhoneNext = useCallback((data: { name: string; phone: string }) => {
-    handleNext(OnboardingStep.WANTS_CLARITY_CALLS, { name: data.name, phone: data.phone });
-  }, [handleNext]);
-
-  const handleClarityNext = useCallback((wantsClarityCalls: boolean) => {
-    handleNext(OnboardingStep.CALL_TIME, { wantsClarityCalls });
-  }, [handleNext]);
-
-  const handleClarityBack = useCallback(() => {
-    handleBack(OnboardingStep.PHONE);
-  }, [handleBack]);
-
-  const handleCallTimeNext = useCallback((callTime: string) => {
-    handleNext(OnboardingStep.REMINDERS, { callTime });
-  }, [handleNext]);
-
-  const handleCallTimeBack = useCallback(() => {
-    handleBack(OnboardingStep.WANTS_CLARITY_CALLS);
-  }, [handleBack]);
-
-  const handleRemindersNext = useCallback((wantsCallReminders: boolean) => {
-    handleNext(OnboardingStep.SUMMARY, { wantsCallReminders });
-  }, [handleNext]);
-
-  const handleRemindersBack = useCallback(() => {
-    handleBack(OnboardingStep.CALL_TIME);
-  }, [handleBack]);
-
-  const handleSummaryBack = useCallback(() => {
-    handleBack(OnboardingStep.REMINDERS);
-  }, [handleBack]);
-
-  // Render the current step
-  const renderStep = () => {
-    if (isLoading) {
-      return (
-        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your progress...</p>
-        </div>
+      }, 900);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      error(
+        "onboarding",
+        "Failed to complete onboarding",
+        { error: msg, formData },
+        true,
+        "Failed to complete onboarding. Please try again."
       );
-    }
-
-    // Debug current step
-    if (process.env.NODE_ENV === "development") {
-      console.log("Current onboarding step:", Object.keys(OnboardingStep)[currentStep]);
-    }
-    switch (currentStep) {
-      case OnboardingStep.PHONE:
-        return (
-          <PhoneStep
-            key="phone-step"
-            initialValues={{ name: formData.name, phone: formData.phone }}
-            onNext={handlePhoneNext}
-          />
-        );
-
-      case OnboardingStep.WANTS_CLARITY_CALLS:
-        return (
-          <ClarityCalls
-            key="clarity-calls-step"
-            initialValue={formData.wantsClarityCalls}
-            onNext={handleClarityNext}
-            onBack={handleClarityBack}
-          />
-        );
-      case OnboardingStep.CALL_TIME:
-        return (
-          <CallTimeStep
-            key="call-time-step"
-            initialValue={formData.callTime}
-            onNext={handleCallTimeNext}
-            onBack={handleCallTimeBack}
-          />
-        );
-      case OnboardingStep.REMINDERS:
-        return (
-          <RemindersStep
-            key="reminders-step"
-            initialValue={formData.wantsCallReminders}
-            onNext={handleRemindersNext}
-            onBack={handleRemindersBack}
-          />
-        );
-      case OnboardingStep.SUMMARY:
-        return (
-          <SummaryStep
-            key="summary-step"
-            data={formData}
-            onBack={handleSummaryBack}
-            onComplete={handleComplete}
-          />
-        );
-      case OnboardingStep.COMPLETED:
-        return (
-          <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md text-center">
-            <div className="mb-4 text-green-500">
-              <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold mb-4">Onboarding Complete!</h2>
-            <p className="mb-6 text-gray-600">
-              Thank you for completing the onboarding process. You will be redirected to payment.
-            </p>
-            <div className="animate-pulse">
-              <div className="h-2 bg-blue-200 rounded"></div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
+      setIsSubmitting(false);
     }
   };
+
+  // 6) UI
+  if (isLoading) {
+    return (
+      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
+        <p className="mt-4 text-gray-600">Loading your information…</p>
+      </div>
+    );
+  }
+
+  if (isSubmitting) {
+    return (
+      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md text-center">
+        <div className="mb-4 text-green-500">
+          <svg
+            className="h-16 w-16 mx-auto"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Onboarding Complete</h2>
+        <p className="mb-6 text-gray-600">Redirecting you to payment…</p>
+        <div className="animate-pulse">
+          <div className="h-2 bg-blue-200 rounded" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <OnboardingErrorBoundary>
       <div className="min-h-screen bg-gray-50 py-12">
-        <div className="max-w-md mx-auto mb-8">
-          <div className="flex justify-between items-center">
-            {[
-              "Contact",
-              "Clarity Calls",
-              "Call Time",
-              "Reminders",
-              "Summary",
-            ].map((step, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${isLoading
-                    ? "bg-gray-200 text-gray-500"
-                    : index <= currentStep
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-500"
-                    }`}
-                >
-                  {isLoading ? (
-                    <div className="animate-pulse h-3 w-3 bg-gray-300 rounded-full"></div>
-                  ) : (
-                    index + 1
-                  )}
-                </div>
-                <span
-                  className={`text-xs mt-1 ${isLoading
-                    ? "text-gray-400"
-                    : index <= currentStep
-                      ? "text-blue-500"
-                      : "text-gray-500"
-                    }`}
-                >
-                  {step}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+          <h2 className="text-2xl font-bold mb-2">Complete Your Onboarding</h2>
+          <p className="mb-6 text-gray-600">
+            Please provide the following information to complete your account setup.
+          </p>
 
-        {renderStep()}
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Contact Information */}
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-3">Contact Information</h3>
+
+              <div className="mb-4">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  autoComplete="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="John Doe"
+                />
+                {formErrors.name && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  autoComplete="tel"
+                  inputMode="tel"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="+1 (123) 456‑7890"
+                />
+                {formErrors.phone && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.phone}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Call Preferences */}
+            <div className="mb-6">
+              <h3 className="text-lg font-medium mb-3">Call Preferences</h3>
+
+              <div className="mb-4">
+                <label htmlFor="callTime" className="block text-sm font-medium text-gray-700 mb-1">
+                  Preferred Call Time (24‑hour format)
+                </label>
+                <input
+                  type="time"
+                  id="callTime"
+                  name="callTime"
+                  value={formData.callTime}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {formErrors.callTime && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.callTime}</p>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="wantsClarityCalls"
+                    name="wantsClarityCalls"
+                    checked={formData.wantsClarityCalls}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-900">
+                    I want clarity calls before scheduled tasks
+                  </span>
+                </label>
+              </div>
+
+              <div className="mb-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="wantsCallReminders"
+                    name="wantsCallReminders"
+                    checked={formData.wantsCallReminders}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="text-sm text-gray-900">
+                    I want call reminders for scheduled calls
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Complete Onboarding
+            </button>
+          </form>
+        </div>
       </div>
     </OnboardingErrorBoundary>
   );
