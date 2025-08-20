@@ -1,12 +1,29 @@
 "use client";
 
-import PaymentButton from "@/components/payments/TestPaymentButton";
+import { useAction } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Lock, Check } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 export default function PaymentPage() {
-  const searchParams = useSearchParams();
+  const pay = useAction(api.stripe.pay);
+  const [isLoading, setIsLoading] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [hoverCTA, setHoverCTA] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Check if payment was cancelled
@@ -15,88 +32,193 @@ export default function PaymentPage() {
     }
   }, [searchParams]);
 
+  const handlePay = async () => {
+    try {
+      setIsLoading(true);
+      setShowError(false);
+
+      // Get URL from pay action (using empty object to match API)
+      const url = await pay({});
+      if (!url) {
+        console.error("No URL returned from pay action");
+        setShowError(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      window.location.href = url;
+    } catch (err) {
+      console.error("Payment action failed:", err);
+      setShowError(true);
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-md mx-auto px-4">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-10 max-w-screen-sm">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Complete Your Setup</h1>
-          <p className="mt-2 text-gray-600">
-            You&apos;re almost there! Just one more step to unlock full access.
+        <header className="flex justify-between items-center mb-12">
+          <div className="font-semibold text-xl text-foreground">
+            Alara
+          </div>
+          <div className="flex gap-6">
+            <Link
+              href="/faq"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              FAQ
+            </Link>
+            <Link
+              href="/contact"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Contact
+            </Link>
+          </div>
+        </header>
+
+        {/* Hero */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-semibold tracking-tight mb-3 text-foreground">
+            Start your month for $10.
+          </h1>
+          <p className="text-base text-muted-foreground">
+            One plan. Cancel anytime. Full refund if it's not for you.
           </p>
         </div>
 
-        {/* Payment Card */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Payment Error Alert */}
-          {showError && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
+        {/* Error Alert */}
+        {showError && (
+          <div className="mb-6">
+            <Alert variant="destructive">
+              <AlertTitle>Something went wrong</AlertTitle>
+              <AlertDescription>
+                We couldn't start checkout. Please try again.
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {/* Plan Card */}
+        <div className="transition-all duration-200">
+          <Card className="border rounded-2xl shadow-lg/5">
+            <CardHeader className="p-6">
+              <div className="flex justify-between items-center">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-foreground">$10</span>
+                  <span className="text-muted-foreground">/&nbsp;month</span>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">
-                    Your previous payment was cancelled. No worries, you can try again when you&apos;re ready.
-                  </p>
-                </div>
+                <Badge
+                  className="rounded px-2 py-0.5 text-xs font-medium bg-amber-500 text-foreground"
+                >
+                  Pilot
+                </Badge>
               </div>
+            </CardHeader>
+
+            <CardContent className="p-6 pt-0">
+              <ul className="space-y-4">
+                <li className="flex items-start">
+                  <Check size={18} className="mr-2 shrink-0 mt-0.5 text-emerald-500" />
+                  <span className="text-sm text-muted-foreground">
+                    One plan, no hidden fees
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <Check size={18} className="mr-2 shrink-0 mt-0.5 text-emerald-500" />
+                  <span className="text-sm text-muted-foreground">
+                    Cancel anytime
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <Check size={18} className="mr-2 shrink-0 mt-0.5 text-emerald-500" />
+                  <span className="text-sm text-muted-foreground">
+                    Full refund if not satisfied
+                  </span>
+                </li>
+              </ul>
+            </CardContent>
+
+            <CardFooter className="flex flex-col p-6 gap-4">
+              <Button
+                className="w-full h-12 rounded-xl"
+                disabled={isLoading}
+                onClick={handlePay}
+                aria-busy={isLoading ? "true" : "false"}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Taking you to checkout...
+                  </span>
+                ) : "Activate my plan"}
+              </Button>
+
+              <Link
+                href="/faq"
+                className="text-center text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                View FAQ
+              </Link>
+
+              <div className="text-xs flex items-center justify-center gap-2 mt-2 text-muted-foreground">
+                <Lock size={14} />
+                <span>Secure checkout by Stripe</span>
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+
+        {/* Mini FAQ (Optional & Collapsible) */}
+        <div className="mt-10">
+          <Separator className="mb-6" />
+
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-1 text-foreground">Cancel anytime?</h3>
+              <p className="text-sm text-muted-foreground">Yes, one click.</p>
             </div>
-          )}
 
-          {/* Pricing Header */}
-          <div className="bg-blue-600 px-6 py-8 text-center text-white">
-            <h2 className="text-2xl font-bold">Try Alara Today</h2>
-            <div className="mt-4 flex items-center justify-center">
-              <span className="text-4xl font-extrabold">$8</span>
-              <span className="ml-1 text-xl font-medium">CAD</span>
+            <div>
+              <h3 className="font-medium mb-1 text-foreground">Refund?</h3>
+              <p className="text-sm text-muted-foreground">Yes, full refund in the pilot.</p>
             </div>
-            <p className="mt-2 text-blue-100">One-time payment for full access</p>
-          </div>
 
-          {/* Features */}
-          <div className="px-6 py-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">What you&apos;ll get:</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Full access to Alara&apos;s features</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Try the product with no commitment</span>
-              </li>
-              <li className="flex items-start">
-                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-700">Secure payment processing</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Payment Button */}
-          <div className="px-6 py-6">
-            <PaymentButton />
-            <p className="mt-4 text-xs text-center text-gray-500">
-              By proceeding, you agree to our Terms of Service and Privacy Policy.
-              Your payment is processed securely through Stripe.
-            </p>
+            <div>
+              <h3 className="font-medium mb-1 text-foreground">After pay?</h3>
+              <p className="text-sm text-muted-foreground">Immediate setup, auto-redirect to app.</p>
+            </div>
           </div>
         </div>
 
-        {/* Help Text */}
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Need help? <a href="#" className="text-blue-600 hover:underline">Contact our support team</a>
-          </p>
-        </div>
+        {/* Footer */}
+        <footer className="mt-12 pt-6 border-t border-border">
+          <div className="flex justify-center gap-6">
+            <Link
+              href="/terms"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Privacy
+            </Link>
+            <Link
+              href="/contact"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Contact
+            </Link>
+          </div>
+        </footer>
       </div>
     </div>
   );
