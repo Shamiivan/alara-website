@@ -1,9 +1,15 @@
+import { useSearchParams, useRouter } from "next/navigation";
+import { useConvex, useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEventLogger } from "@/lib/eventLogger";
+import { Sign } from "crypto";
 
-export function SignInWithGoogle() {
+interface SignInWithGoogleProps {
+  returnUrl?: string;
+}
+export function SignInWithGoogle({ returnUrl = "/dashboard" }: SignInWithGoogleProps) {
   const { signIn } = useAuthActions();
   const [isHovered, setIsHovered] = useState(false);
   const { info, error, logUserAction } = useEventLogger();
@@ -12,9 +18,11 @@ export function SignInWithGoogle() {
     try {
       info("auth", "Google sign-in initiated");
       logUserAction("Google sign-in button clicked", "auth");
-
-      await signIn("google");
-
+      // check the return URL
+      if (returnUrl !== '/dashboard') {
+        localStorage.setItem('auth_returnTo', returnUrl);
+      }
+      await signIn("google",);
       info("auth", "Google sign-in completed successfully");
     } catch (signInError) {
       error("auth", "Google sign-in failed", {
@@ -42,6 +50,6 @@ export function SignInWithGoogle() {
         </g>
       </svg>
       <span className="text-base font-semibold text-gray-800">Continue with Google</span>
-    </Button>
+    </Button >
   );
 }

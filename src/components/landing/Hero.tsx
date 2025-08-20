@@ -7,7 +7,7 @@ const Hero = () => {
 
 
   const handleFindFirstStep = () => {
-    router.push("/onboarding");
+    router.push("dashboard");
   };
   return (
     <section className="w-full overflow-hidden flex flex-col items-center justify-center bg-[hsl(var(--background))] px-4 sm:px-6 pt-24 pb-16 sm:pt-32 sm:pb-24">

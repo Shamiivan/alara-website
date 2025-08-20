@@ -2,7 +2,7 @@
 
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 
@@ -23,8 +23,6 @@ export function LogoutButton({
     setIsLoggingOut(true);
     try {
       await signOut();
-      // Redirect to login page after successful logout
-      router.push("/auth/login");
     } catch (error) {
       console.error("Error signing out:", error);
       setIsLoggingOut(false);
