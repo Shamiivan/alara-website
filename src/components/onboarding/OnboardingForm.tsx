@@ -347,7 +347,7 @@ export default function OnboardingForm() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-primary-dark">Woohoo! You're all set! ✨</h2>
+        <h2 className="text-2xl font-bold mb-2 text-primary-dark">Woohoo! You&apos;re all set! ✨</h2>
         <p className="mb-6 text-muted-foreground">
           We’ve saved your preferences and you’re ready to start.
           To join the pilot group, activate your plan ($10/month). This helps us keep the service running while we grow together.
@@ -410,7 +410,7 @@ export default function OnboardingForm() {
 
           <h2 className="text-2xl font-bold mb-2 text-[#1E1B4B] relative z-10">Hey there, new friend! <span className="inline-block animate-bounce">✨</span></h2>
           <p className="mb-6 text-[#6B7280] relative z-10">
-            Just a sprinkle of info and we'll be off on our adventure together!
+            Just a sprinkle of info and we&apos;ll be off on our adventure together!
           </p>
 
           <form onSubmit={handleSubmit} noValidate>
@@ -480,7 +480,7 @@ export default function OnboardingForm() {
                 {formErrors.phone ? (
                   <p id="phone-error" className="text-sm text-[#EF4444]" aria-live="polite">{formErrors.phone}</p>
                 ) : (
-                  <p id="phone-help" className="text-xs text-[#6B7280]">Don't worry! We're not phone spammers. Promise on our pet unicorn. 🦄</p>
+                  <p id="phone-help" className="text-xs text-[#6B7280]">Don&apos;t worry! We&apos;re not phone spammers. Promise on our pet unicorn. 🦄</p>
                 )}
               </div>
 
@@ -488,7 +488,7 @@ export default function OnboardingForm() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <label htmlFor="callTime" className="block text-sm font-medium text-foreground flex items-center flex-wrap">
-                    <span>When's your magic hour?</span>
+                    <span>When&apos;s your magic hour?</span>
                     <span className="ml-1 text-[#6D28D9]">⏰</span>
                   </label>
                 </div>
@@ -517,7 +517,7 @@ export default function OnboardingForm() {
                 ) : (
                   <p id="time-help" className="text-xs text-[#6B7280]">
                     {showHourEasterEgg ?
-                      <span className="text-[#8B5CF6] font-medium">Ooh, right on the hour! You're a punctual wizard! ✨</span> :
+                      <span className="text-[#8B5CF6] font-medium">Ooh, right on the hour! You&apos;re a punctual wizard! ✨</span> :
                       "When Future-You will be sipping tea and ready for a chat."}
                   </p>
                 )}
