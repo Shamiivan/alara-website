@@ -480,14 +480,6 @@ export default function OnboardingForm() {
                     <span>When's your magic hour?</span>
                     <span className="ml-1 text-[#6D28D9]">⏰</span>
                   </label>
-                  <button
-                    type="button"
-                    className="text-xs text-[#6D28D9] hover:text-[#1E1B4B] focus:outline-none"
-                    aria-label="What's this call for?"
-                    title="We'll call at this time to quickly check in and answer any questions you have."
-                  >
-                    What's this call for?
-                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -532,7 +524,7 @@ export default function OnboardingForm() {
                     className="h-5 w-5 mt-0.5 text-[#6D28D9] focus:ring-[#6D28D9] rounded"
                   />
                   <span className="text-sm text-foreground">
-                    Send a friendly guide to help me before I jump in! 🧭
+                    Daily Kick off calls? Yes, please! ☕
                   </span>
                 </label>
 
@@ -546,7 +538,7 @@ export default function OnboardingForm() {
                     className="h-5 w-5 mt-0.5 text-[#6D28D9] focus:ring-[#6D28D9] rounded"
                   />
                   <span className="text-sm text-foreground">
-                    Give me a gentle "Hey, remember that cool thing?" reminder ⏰
+                    Gentle Check-in call, only if you want it! 🤗
                   </span>
                 </label>
               </div>
@@ -580,8 +572,7 @@ export default function OnboardingForm() {
                   type="button"
                   className="text-sm text-[#6B7280] hover:text-[#6D28D9] focus:outline-none focus:underline transition-all duration-300 transform hover:scale-110 inline-flex items-center flex-wrap justify-center"
                 >
-                  <span className="mr-1">Feeling stuck? Wave for help!</span>
-                  <span className="animate-wave inline-block">👋</span>
+                  <span className="mr-1">Feeling stuck? send us an email at support@tryalara.stream !</span>
                 </button>
               </div>
             </div>
