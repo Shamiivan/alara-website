@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import AudioPlayer from "./AudioPlayer";
 import { useRouter } from "next/navigation";
@@ -5,50 +7,84 @@ import { useRouter } from "next/navigation";
 const Hero = () => {
   const router = useRouter();
 
-
   const handleFindFirstStep = () => {
-    router.push("dashboard");
+    router.push("/dashboard");
   };
+
   return (
-    <section className="w-full overflow-hidden flex flex-col items-center justify-center bg-[hsl(var(--background))] px-4 sm:px-6 pt-24 pb-16 sm:pt-32 sm:pb-24">
-      <div className="w-full max-w-2xl mx-auto text-center">
-        {/* Main content with increased spacing */}
-        <div className="mb-12 sm:mb-16 fade-in">
-          {/* Headline - simplified and focused on overwhelm */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-6 sm:mb-8 leading-[1.2] sm:leading-[1.1]">
-            ✨ Overwhelmed by Productivity Apps?
+    /**
+     * Full‑bleed background fix:
+     * - w-screen ensures the section spans the viewport width
+     * - left-1/2 / -translate-x-1/2 centers the w-screen element even inside a max-w container
+     * - isolation + overflow-hidden avoid bleed side-effects on siblings
+     */
+    <section
+      className="
+        relative isolate overflow-hidden
+        left-1/2 -translate-x-1/2 w-screen
+        bg-[hsl(var(--background))]
+        [background-image:linear-gradient(to_bottom,theme(colors.indigo.50/60%),transparent)]
+        dark:[background-image:linear-gradient(to_bottom,theme(colors.indigo.950/40%),transparent)]
+        px-4 sm:px-6 pt-24 pb-16 sm:pt-32 sm:pb-24
+      "
+    >
+      {/* Soft decorative blob, subtle + performant */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-x-0 -top-16 mx-auto h-64 w-[90%] max-w-5xl
+          rounded-[48px] blur-3xl
+          bg-[hsl(var(--primary)/0.08)]
+          dark:bg-[hsl(var(--primary)/0.12)]
+        "
+      />
+
+      {/* Content container */}
+      <div className="relative mx-auto w-full max-w-3xl text-center">
+        {/* Headline */}
+        <div className="mb-10 sm:mb-12 fade-in">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1]">
+            Feel overwhelmed by productivity apps?
           </h1>
-          {/* Subheadline - focused on finding clarity */}
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-8 sm:mb-10 max-w-xl mx-auto leading-relaxed">
-            Most productivity apps make you busier.
-            We’re building a voice-first companion that turns what’s on your mind into one clear step, with gentle check-ins and easy adjustments.
+
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
+            W &apos re building a voice‑first companion that turns what’s on your mind into one clear step, with gentle
+            check‑ins and easy adjustments—so you stay aligned, not just busy.
           </p>
         </div>
 
-        {/* CTA Button - updated text and styling */}
-        <div className="mb-8 sm:mb-10 fade-in flex justify-center">
+        {/* Primary CTA */}
+        <div className="mb-8 sm:mb-10 fade-in flex justify-center gap-3">
           <Button
             onClick={handleFindFirstStep}
             size="lg"
-            className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary-dark))] text-white px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium rounded-xl shadow-sm transition-all hover:shadow-md hover:scale-[1.01] duration-300"
+            className="
+              bg-[hsl(var(--primary))]
+              hover:bg-[hsl(var(--primary)/0.9)]
+              text-primary-foreground
+              px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium
+              rounded-xl shadow-sm transition-transform duration-250
+              hover:shadow-md hover:scale-[1.01] focus-visible:scale-[1.01]
+            "
           >
-            Lets find your first step →
+            Find your first step →
           </Button>
         </div>
 
-        {/* Audio player with flex centering */}
+        {/* Proof via audio (short, optional) */}
         <div className="flex justify-center mb-8 sm:mb-10 fade-in">
-          <AudioPlayer />
+          <AudioPlayer aria-label="Hear a 20-second example of planning a clear first step" />
         </div>
 
-        <div className="w-full max-w-xl mx-auto py-5 opacity-90 fade-in">
-          <div className="relative flex flex-col items-center">
-            <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--primary-light)/0.1)] to-transparent rounded-3xl"></div>
-            <div className="relative z-10 p-8 text-center">
-              <p className="text-lg sm:text-xl italic text-foreground/80 mb-6">
-                &ldquo;It&apos;s like having a calm friend who helps you see through the noise and find your next step.&rdquo;
+        {/* Social proof / positioning */}
+        <div className="w-full max-w-xl mx-auto py-5 opacity-95 fade-in">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-3xl bg-[hsl(var(--primary)/0.06)] dark:bg-[hsl(var(--primary)/0.09)]" />
+            <blockquote className="relative z-10 p-6 sm:p-8 text-center">
+              <p className="text-lg sm:text-xl text-foreground/85 italic">
+                “It feels like a calm friend who cuts through the noise and helps you start.”
               </p>
-            </div>
+            </blockquote>
           </div>
         </div>
       </div>
