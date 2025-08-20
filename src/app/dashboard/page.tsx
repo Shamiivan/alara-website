@@ -5,7 +5,6 @@ import { api } from "../../../convex/_generated/api";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
-import { useRoutes } from "@/lib/useRoutes";
 
 // Add CSS for animations
 const styles = {
@@ -23,39 +22,10 @@ export default function Dashboard() {
   const userStatus = useQuery(api.user.checkUserStatus);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { isLoading: routeLoading, shouldRedirect, redirectTo, isAuthorized, userStatus: routeUserStatus } = useRoutes();
   const [loading, setLoading] = useState(true);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
 
   // Debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("Dashboard - User data:", user);
-      console.log("Dashboard - User status from query:", userStatus);
-      console.log("Dashboard - Route status:", {
-        routeLoading,
-        shouldRedirect,
-        redirectTo,
-        isAuthorized,
-        routeUserStatus
-      });
-      console.log("Dashboard - Search params:", Object.fromEntries(searchParams.entries()));
-    }
-  }, [user, userStatus, routeLoading, shouldRedirect, redirectTo, isAuthorized, routeUserStatus, searchParams]);
-
-  useEffect(() => {
-    // Handle redirects based on route configuration
-    if (!routeLoading && shouldRedirect && redirectTo) {
-      console.log("Dashboard - Redirecting to:", redirectTo, "Route status:", {
-        routeLoading,
-        shouldRedirect,
-        isAuthorized,
-        routeUserStatus
-      });
-      router.push(redirectTo);
-    }
-  }, [shouldRedirect, redirectTo, routeLoading, router, routeUserStatus, isAuthorized]);
-
   useEffect(() => {
     // Check for payment success parameter
     const paymentStatus = searchParams.get('payment');
@@ -78,24 +48,6 @@ export default function Dashboard() {
       return () => clearTimeout(timer);
     }
   }, [searchParams, user, userStatus]);
-
-  useEffect(() => {
-    // Simple loading state
-    if (user !== undefined && !routeLoading) {
-      setLoading(false);
-    }
-  }, [user, routeLoading]);
-
-  if (loading || routeLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -70,7 +70,7 @@ export default function OnboardingForm() {
         if (updatedFormData.phone) {
           step = OnboardingStep.WANTS_CLARITY_CALLS;
 
-          if (updatedFormData.wantsClarityCalls !== undefined) {
+          if (typeof updatedFormData.wantsClarityCalls === "boolean") {
             step = OnboardingStep.CALL_TIME;
 
             if (updatedFormData.callTime) {

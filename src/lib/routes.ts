@@ -86,7 +86,7 @@ const routes: RouteConfig[] = [
     path: '/payment',
     label: 'Payment',
     requiresAuth: true,
-    requiresOnboarding: true,
+    requiresOnboarding: false,
     showInNav: false,
   },
   {
