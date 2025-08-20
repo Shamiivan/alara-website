@@ -281,7 +281,7 @@ export default function OnboardingForm() {
 
       redirectTimeoutRef.current = setTimeout(() => {
         router.push("/payment");
-      }, 1000);
+      }, 4000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       error(
@@ -301,27 +301,31 @@ export default function OnboardingForm() {
 
     switch (fieldStatuses[fieldName]) {
       case "valid":
-        return `${baseClasses} border-[#10B981] bg-[#10B981]/10 focus:ring-2 focus:ring-[#10B981]/30 placeholder:text-[#6B7280]/60 transform hover:scale-[1.01] hover:shadow-sm animate-fadeIn`;
+        return `${baseClasses} border-[#10B981] bg-[#10B981]/10 focus:ring-2 focus:ring-[#10B981]/30 placeholder:text-[#6B7280]/60 transform hover:scale-[1.01] hover:shadow-md shadow-sm shadow-emerald-100 animate-fadeIn`;
       case "invalid":
-        return `${baseClasses} border-[#EF4444] bg-[#EF4444]/5 focus:ring-2 focus:ring-[#EF4444]/30 placeholder:text-[#6B7280]/60 animate-wiggle`;
+        return `${baseClasses} border-[#EF4444] bg-[#EF4444]/5 focus:ring-2 focus:ring-[#EF4444]/30 placeholder:text-[#6B7280]/60 animate-wiggle shadow-sm shadow-red-100`;
       default:
-        return `${baseClasses} border-[#E5E7EB] focus:ring-2 focus:ring-[#4338CA]/30 hover:border-[#4338CA]/50 placeholder:text-[#6B7280]/60 hover:shadow-sm transform hover:translate-y-[-2px]`;
+        return `${baseClasses} border-[#E5E7EB] bg-white/80 focus:ring-2 focus:ring-[#4338CA]/30 hover:border-[#4338CA]/50 placeholder:text-[#6B7280]/60 hover:shadow-md shadow-sm shadow-indigo-50 transform hover:translate-y-[-2px]`;
     }
   };
 
   // 6) UI
   if (isLoading) {
     return (
-      <div className="max-w-[420px] mx-auto p-6 bg-white rounded-lg shadow-md text-center border border-primary-light/30">
+      <div className="max-w-[420px] mx-auto p-6 bg-white/90 backdrop-blur-sm rounded-lg shadow-[0_4px_15px_rgba(109,40,217,0.2)] text-center border border-primary-light/30">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
         <p className="mt-4 text-muted-foreground">Warming things up…</p>
+        <div className="absolute -z-10 blur-3xl opacity-30 bg-indigo-200 w-32 h-32 rounded-full -top-10 -right-10"></div>
       </div>
     );
   }
 
   if (showSuccess) {
     return (
-      <div className="max-w-[420px] mx-auto p-6 sm:p-8 bg-white rounded-lg shadow-lg text-center bg-primary-light/20 border-2 border-[#6D28D9]/30 transform transition-all duration-500 animate-fadeIn">
+      <div className="max-w-[420px] mx-auto p-6 sm:p-8 bg-white/90 backdrop-blur-sm rounded-lg shadow-[0_8px_25px_rgba(109,40,217,0.25)] text-center bg-primary-light/20 border-2 border-[#6D28D9]/30 transform transition-all duration-500 animate-fadeIn relative overflow-hidden">
+        {/* Quirky background elements */}
+        <div className="absolute -right-12 -top-12 w-24 h-24 bg-purple-100 rounded-full opacity-40 blur-xl"></div>
+        <div className="absolute -left-8 -bottom-10 w-20 h-20 bg-blue-100 rounded-full opacity-30 blur-lg"></div>
         {/* Success confetti effect - mobile optimized */}
         <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
           <div className="absolute -left-4 top-0 w-2 h-6 sm:h-8 bg-[#FFD700] rounded-full animate-subtle-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -359,8 +363,12 @@ export default function OnboardingForm() {
 
   return (
     <OnboardingErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-b from-primary-light/5 to-primary-light/20 py-8 px-4">
-        <div className="max-w-[420px] mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md border border-primary-light/30 transform transition-all duration-300 hover:shadow-lg">
+      <div className="pt-24 pb-12 px-4 bg-gradient-to-b from-primary-light/10 via-white/40 to-primary-light/15">
+        <div className="max-w-[420px] mx-auto p-4 sm:p-6 bg-white/90 backdrop-blur-sm rounded-lg shadow-[0_4px_20px_rgba(109,40,217,0.15)] border border-primary-light/30 transform transition-all duration-300 hover:shadow-xl relative overflow-hidden">
+          {/* Quirky background elements */}
+          <div className="absolute -right-12 -top-12 w-24 h-24 bg-purple-100 rounded-full opacity-40 blur-xl"></div>
+          <div className="absolute -left-8 -bottom-10 w-20 h-20 bg-blue-100 rounded-full opacity-30 blur-lg"></div>
+          <div className="absolute right-1/4 bottom-0 w-2 h-16 bg-purple-200 opacity-20 rotate-12 rounded-full"></div>
           {/* Progress indicators - Journey theme - Mobile friendly */}
           <div className="flex justify-center items-center mb-6 relative px-2">
             <div className="absolute w-full h-1 bg-[#E5E7EB]/40 rounded-full"></div>
@@ -397,8 +405,8 @@ export default function OnboardingForm() {
             })}
           </div>
 
-          <h2 className="text-2xl font-bold mb-2 text-[#1E1B4B]">Hey there, new friend! ✨</h2>
-          <p className="mb-6 text-[#6B7280]">
+          <h2 className="text-2xl font-bold mb-2 text-[#1E1B4B] relative z-10">Hey there, new friend! <span className="inline-block animate-bounce">✨</span></h2>
+          <p className="mb-6 text-[#6B7280] relative z-10">
             Just a sprinkle of info and we'll be off on our adventure together!
           </p>
 
@@ -513,7 +521,7 @@ export default function OnboardingForm() {
               </div>
 
               {/* Checkbox options */}
-              <div className="space-y-3 pt-2 bg-[#E4E4FE]/10 p-3 sm:p-4 rounded-lg border border-[#E4E4FE]/30 transition-all duration-300 hover:bg-[#E4E4FE]/20">
+              <div className="space-y-3 pt-2 bg-gradient-to-br from-[#E4E4FE]/20 to-[#F9F9FF] p-3 sm:p-4 rounded-lg border border-[#E4E4FE]/50 transition-all duration-300 hover:bg-[#E4E4FE]/30 shadow-sm hover:shadow-md">
                 <label className="flex items-start gap-3">
                   <input
                     type="checkbox"
@@ -550,7 +558,7 @@ export default function OnboardingForm() {
                 aria-busy={isSubmitting}
                 className="w-full bg-[#4338CA] text-[#FFFFFF] py-3 px-4 rounded-lg hover:bg-[#3730A3] transition-all duration-300
                            disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#4338CA] focus:ring-offset-2
-                           mt-6 text-base font-medium shadow-sm hover:shadow-md transform hover:-translate-y-1
+                           mt-6 text-base font-medium shadow-md hover:shadow-lg transform hover:-translate-y-1
                            relative overflow-hidden group"
               >
                 {isSubmitting ? (
@@ -570,7 +578,7 @@ export default function OnboardingForm() {
               <div className="text-center mt-4">
                 <button
                   type="button"
-                  className="text-sm text-[#6B7280] hover:text-[#6D28D9] focus:outline-none focus:underline transition-all duration-300 transform hover:scale-110 inline-flex items-center flex-wrap justify-center"
+                  className="text-sm text-[#6B7280] hover:text-[#6D28D9] focus:outline-none focus:underline transition-all duration-300 transform hover:scale-110 inline-flex items-center flex-wrap justify-center shadow-sm hover:shadow-md px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm"
                 >
                   <span className="mr-1">Feeling stuck? send us an email at support@tryalara.stream !</span>
                 </button>
