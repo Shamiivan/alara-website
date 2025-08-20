@@ -31,17 +31,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const { signOut } = useAuthActions();
   const router = useRouter();
 
-  // Log for debugging hydration issues
-  console.log('[UserMenu] Rendering with user:', {
-    id: user.id,
-    name: user.name,
-    email: user.email
-  }, 'isClient:', isClient);
 
   // Mark component as hydrated - always call hooks in the same order
   useEffect(() => {
     setIsClient(true);
-    console.log('[UserMenu] Component hydrated');
   }, []);
 
   // Close menu when clicking outside - always call hooks in the same order

@@ -27,13 +27,6 @@ const routes: RouteConfig[] = [
     showInNav: false,
   },
   {
-    id: 'calls',
-    path: '/calls',
-    label: 'Calls',
-    isPublic: true,
-    showInNav: true,
-  },
-  {
     id: 'pricing',
     path: '/pricing',
     label: 'Pricing',
@@ -161,7 +154,7 @@ export function getUserNavItems() {
 
 export function getUserMenuItems() {
   const menuItems = routes
-    .filter(route => route.showInUserMenu)
+    .filter(route => route.showInUserMenu && !['profile', 'settings', 'help'].includes(route.id))
     .map(({ id, path, label, icon, variant }) => ({
       id,
       label,
@@ -172,9 +165,7 @@ export function getUserMenuItems() {
 
   // Add dividers and logout
   return [
-    ...menuItems.slice(0, 2),
-    { id: 'divider-1', divider: true },
-    ...menuItems.slice(2),
+    ...menuItems,
     { id: 'divider-2', divider: true },
     { id: 'signout', label: 'Sign Out', icon: LogOut, variant: 'danger' as const }
   ];
