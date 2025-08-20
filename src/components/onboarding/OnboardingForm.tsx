@@ -172,7 +172,7 @@ export default function OnboardingForm() {
           error = "Our carrier pigeons need a valid number to reach you! 🐦";
           status = "invalid";
         } else if (!phoneRegex.test(value.trim())) {
-          error = "Hmm, our magical phone spell didn't work. Try another format? (+, spaces, dashes all work!)";
+          error = "Hmm, phone didn't work. Try another format? (+, spaces, dashes all work!)";
           status = "invalid";
         }
         break;
@@ -218,7 +218,7 @@ export default function OnboardingForm() {
       newStatuses.phone = "invalid";
       ok = false;
     } else if (!phoneRegex.test(formData.phone.trim())) {
-      next.phone = "Hmm, our magical phone spell didn't work. Try another format? (+, spaces, dashes all work!)";
+      next.phone = "Hmm,does not look right. Try another format? (+, spaces, dashes all work!)";
       newStatuses.phone = "invalid";
       ok = false;
     } else {
@@ -440,7 +440,7 @@ export default function OnboardingForm() {
               {/* Phone */}
               <div className="space-y-2">
                 <label htmlFor="phone" className="block text-sm font-medium text-foreground flex items-center flex-wrap">
-                  <span>Your magical contact spell</span>
+                  <span>What number should we use to call you</span>
                   <span className="ml-1 text-[#6D28D9]">📱</span>
                 </label>
                 <div className="relative">
