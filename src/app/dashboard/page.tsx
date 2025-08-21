@@ -5,6 +5,7 @@ import { api } from "../../../convex/_generated/api";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { CallButton } from "@/components/calls/CallButton";
 
 export default function Dashboard() {
   const user = useQuery(api.user.getCurrentUser);
@@ -158,7 +159,7 @@ export default function Dashboard() {
 
   const primaryBtn: React.CSSProperties = {
     width: "100%",
-    backgroundColor: TOKENS.primary,
+    backgroundColor: TOKENS.cardBg,
     color: "#FFFFFF",
     padding: "10px 14px",
     borderRadius: 10,
@@ -326,15 +327,35 @@ export default function Dashboard() {
           <aside className="fade-in" style={cardStyle}>
             <h2 style={h2Style}>Quick Actions</h2>
 
-            <button
-              className="tap"
-              style={primaryBtn}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = TOKENS.primaryHover)}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.backgroundColor = TOKENS.primary)}
-              onClick={() => router.push("/dashboard")} // preserves your original “start” intent
-            >
-              Start Using Alara
-            </button>
+
+            <div style={{ height: 10 }} />
+
+            {user?.phone ? (
+              <CallButton
+                phoneNumber={user.phone}
+                userName={user?.name || "Friend"}
+                agentName="Alara"
+                className="tap"
+                style={secondaryBtn}
+                playful="extra"
+                showHint={true}
+              >
+                Call Me Now
+              </CallButton>
+            ) : (
+              <button
+                className="tap"
+                style={{
+                  ...secondaryBtn,
+                  opacity: 0.6,
+                  cursor: "not-allowed"
+                }}
+                disabled={true}
+                title="Please complete onboarding to add your phone number"
+              >
+                Add your phone number to call
+              </button>
+            )}
 
             <div style={{ height: 10 }} />
 
