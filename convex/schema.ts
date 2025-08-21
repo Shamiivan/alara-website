@@ -6,6 +6,7 @@ import { title } from "process";
 import { user } from "@elevenlabs/elevenlabs-js/api";
 import { userInfo } from "os";
 import { create } from "domain";
+import { createDecipheriv } from "crypto";
 
 
 const schema = defineSchema({
@@ -156,6 +157,28 @@ const schema = defineSchema({
     .index("by_timestamp", ["timestamp"])
     .index("by_source", ["source"])
     .index("by_user_unresolved", ["userId", "resolved"]),
+
+
+  // feature flags used to roll back or 
+  featureFlags: defineTable({
+    userId: v.id("users"),
+    flags: v.object({
+      calendar_v1: v.boolean(),
+    }),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
+
+
+  // telemetry data
+  telemetry: defineTable({
+    userId: v.id("users"),
+    event: v.string(),
+    context: v.optional(v.any()), // JSON object with additional context
+    error: v.optional(v.any()),
+    createdAt: v.number(),
+  }).index("by_user", ["userId"])
+    .index("by_event_time", ["createdAt"]),
 });
 
 export default schema;

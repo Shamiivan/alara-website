@@ -17,6 +17,7 @@ import type * as auth from "../auth.js";
 import type * as calls from "../calls.js";
 import type * as calls_node from "../calls_node.js";
 import type * as events from "../events.js";
+import type * as feature_flags from "../feature/flags.js";
 import type * as http from "../http.js";
 import type * as payments from "../payments.js";
 import type * as stripe from "../stripe.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   calls: typeof calls;
   calls_node: typeof calls_node;
   events: typeof events;
+  "feature/flags": typeof feature_flags;
   http: typeof http;
   payments: typeof payments;
   stripe: typeof stripe;
