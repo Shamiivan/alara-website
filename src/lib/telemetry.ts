@@ -19,4 +19,8 @@ export function useTelemetry() {
     }
   };
   return { logEvent };
-}
+};
+
+export type TelemetryEvent =
+  | "calendar_connect_clicked"
+  | "oauth_success"
