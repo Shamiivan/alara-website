@@ -22,6 +22,7 @@ import type * as http from "../http.js";
 import type * as payments from "../payments.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
+import type * as telemetry from "../telemetry.js";
 import type * as user from "../user.js";
 
 /**
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   stripe: typeof stripe;
   tasks: typeof tasks;
+  telemetry: typeof telemetry;
   user: typeof user;
 }>;
 export declare const api: FilterApi<
