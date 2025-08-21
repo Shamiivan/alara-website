@@ -1,7 +1,7 @@
 import { mutation, query } from "../_generated/server"
 import { v } from "convex/values"
 
-export const get = query({
+export const getFeatureFlagsByUser = query({
   args: {
     userId: v.id("users"),
   },
