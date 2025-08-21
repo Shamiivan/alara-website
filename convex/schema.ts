@@ -162,9 +162,7 @@ const schema = defineSchema({
   // feature flags used to roll back or 
   featureFlags: defineTable({
     userId: v.id("users"),
-    flags: v.object({
-      calendar_v1: v.boolean(),
-    }),
+    flags: v.record(v.string(), v.union(v.boolean(), v.string(), v.number())), // Flexible key-value pairs
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
