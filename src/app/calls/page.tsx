@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAction, useQuery } from "convex/react";
@@ -18,8 +18,11 @@ export default function CallsPage() {
   const [selectedCallId, setSelectedCallId] = useState<Id<"calls"> | null>(null);
   const [isAutoRefreshing, setIsAutoRefreshing] = useState(true);
 
-  // Fetch user calls
-  const userCalls = useQuery(api.calls.getUserCalls, {}) || [];
+  // Fetch user and user calls
+  const user = useQuery(api.user.getCurrentUser);
+  const userCallsResult = useQuery(api.calls.getUserCalls, {});
+  // Use useMemo for derived state that depends on userCallsResult
+  const userCalls = useMemo(() => userCallsResult || [], [userCallsResult]);
 
   // Fetch conversation for selected call
   const selectedConversation = useQuery(
@@ -91,11 +94,19 @@ export default function CallsPage() {
     setIsLoading(true);
     setMessage(null);
 
+    // Check if user is available
+    if (!user || !user._id) {
+      setMessage({ type: 'error', text: 'User not authenticated' });
+      setIsLoading(false);
+      return;
+    }
+
     try {
       console.log('Starting call...');
 
       // Call the Convex function instead of the API route
       const result = await initiateCall({
+        userId: user._id,
         toNumber: "+15146909416",
         userName: "Ivan"
       });

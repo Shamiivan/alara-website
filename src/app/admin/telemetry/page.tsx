@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Id } from "../../../../convex/_generated/dataModel";
 
 // Key events to track for counters
@@ -150,7 +149,13 @@ function EventsTable({
   events,
   onUserFilter
 }: {
-  events: any[];
+  events: Array<{
+    _id: string;
+    createdAt: number;
+    event: string;
+    userId: Id<"users">;
+    context?: Record<string, unknown>;
+  }>;
   onUserFilter: (userId: Id<"users">) => void
 }) {
   return (

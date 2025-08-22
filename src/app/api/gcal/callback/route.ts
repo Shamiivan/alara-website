@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { api } from "@/../convex/_generated/api";
 import { fetchMutation, fetchQuery } from "convex/nextjs"; // Next App Router helper
-import { convexAuth, getAuthUserId } from "@convex-dev/auth/server"; // to get current user
+// import removed - unused
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 
 export async function GET(req: NextRequest) {

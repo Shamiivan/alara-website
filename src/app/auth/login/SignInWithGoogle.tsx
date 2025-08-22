@@ -1,10 +1,7 @@
-import { useSearchParams, useRouter } from "next/navigation";
-import { useConvex, useConvexAuth } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useEventLogger } from "@/lib/eventLogger";
-import { Sign } from "crypto";
 
 interface SignInWithGoogleProps {
   returnUrl?: string;

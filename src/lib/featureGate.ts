@@ -3,10 +3,15 @@ import { api } from "../../convex/_generated/api";
 
 
 export function useCalendarV1Enabled(userId: string) {
-  // get the user ID
-  if (!userId) return false;
+  // Call hooks unconditionally at the top level
   const user = useQuery(api.user.getCurrentUser);
-  if (!user || !user._id) return false;
-  const flags = useQuery(api.feature.flags.getFeatureFlagsByUser, { userId: user._id });
-  return Boolean(flags?.calendar_v1);
+  // Use "skip" pattern instead of conditional hook call
+  const flagsResult = useQuery(
+    api.feature.flags.getFeatureFlagsByUser,
+    user && user._id ? { userId: user._id } : "skip"
+  );
+
+  // Handle conditional logic after all hooks are called
+  if (!userId || !user || !user._id) return false;
+  return Boolean(flagsResult?.calendar_v1);
 }

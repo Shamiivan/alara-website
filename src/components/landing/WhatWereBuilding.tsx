@@ -1,12 +1,14 @@
 "use client"
 
 import { MessageSquare, SunMoon, Bell, Sparkles, Heart, Coffee, Smile } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 
 const WhatWereBuilding = () => {
   const card4Ref = useRef<HTMLDivElement>(null);
   const [activeEmoji, setActiveEmoji] = useState<string>("✨");
-  const emojis = ["✨", "🌈", "🦄", "🎉", "💫", "🌟", "🪄", "🧸"];
+
+  // Use useMemo to prevent recreation of emojis array on each render
+  const emojis = useMemo(() => ["✨", "🌈", "🦄", "🎉", "💫", "🌟", "🪄", "🧸"], []);
 
   // Function to cycle through emojis for the closing line
   useEffect(() => {

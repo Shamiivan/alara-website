@@ -1,12 +1,10 @@
 "use client";
 
-import React, { use, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAction, useQuery } from "convex/react";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../../convex/_generated/api";
 import { PhoneIcon } from "lucide-react";
 import { Id } from "../../../convex/_generated/dataModel";
-import { set } from "@elevenlabs/elevenlabs-js/core/schemas";
 
 interface CallButtonProps {
   phoneNumber: string;
@@ -43,7 +41,6 @@ export function CallButton({
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "calling" | "success" | "error">("idle");
   const [confettiKey, setConfettiKey] = useState(0);
-  const [user, setUser] = useState<Id<"users"> | null | undefined>(null);
   // Convex action
   const initiateCall = useAction(api.calls_node.initiateCall);
   const currentUser = useQuery(api.user.getCurrentUser);
