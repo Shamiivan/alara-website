@@ -1,4 +1,4 @@
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, action, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
@@ -198,6 +198,7 @@ export const updateCallWithElevenLabsResponse = mutation({
 export const storeConversation = mutation({
   args: {
     callId: v.optional(v.id("calls")),
+    userId: v.optional(v.id("users")),
     conversationId: v.string(),
     transcript: v.array(v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
@@ -215,11 +216,11 @@ export const storeConversation = mutation({
   handler: async (ctx, args) => {
     try {
       // Get the authenticated user ID
-      const userId = await getAuthUserId(ctx);
+
       // Insert conversation record
       const conversationId = await ctx.db.insert("conversations", {
         callId: args.callId,
-        userId: userId ? userId : undefined,
+        userId: args.userId,
         conversationId: args.conversationId,
         transcript: args.transcript,
         metadata: args.metadata,
@@ -247,40 +248,27 @@ export const storeConversation = mutation({
   },
 });
 
-// Get conversation by call ID
-export const getConversationByCallId = query({
+
+
+export const getCallByElevenLabsCallId = internalQuery({
   args: {
-    callId: v.id("calls"),
+    elevenLabsCallId: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { elevenLabsCallId }) => {
     try {
-      // Get the authenticated user ID
-      const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        return null;
-      }
-
-      // Verify the call belongs to the user
-      const call = await ctx.db.get(args.callId);
-      if (!call || call.userId !== userId) {
-        return null;
-      }
-
-      // Get the conversation
-      const conversation = await ctx.db
-        .query("conversations")
-        .withIndex("by_call", (q) => q.eq("callId", args.callId))
+      // Get the call from the database
+      const call = await ctx.db
+        .query("calls")
+        .withIndex("by_eleven_labs_call_id", (q) => q.eq("elevenLabsCallId", elevenLabsCallId))
         .unique();
 
-      return conversation;
+      return call;
     } catch (error) {
-      console.error("[getConversationByCallId] Error:", error);
+      console.error("[getCallByElevenLabsCallId] Error:", error);
       return null;
     }
   },
 });
-
-
 
 // The initiateCall action has been moved to calls_node.ts to use the Node.js runtime
 

@@ -64,12 +64,14 @@ const schema = defineSchema({
     startTimeUnix: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_eleven_labs_call_id", ["elevenLabsCallId"]),
 
   // NEW TABLE FOR CONVERSATION TRANSCRIPTS
   conversations: defineTable({
     callId: v.optional(v.id("calls")),
-    userId: v.id("users"),
+    elevenLabsCallId: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
     conversationId: v.string(), // From ElevenLabs
     transcript: v.array(v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
@@ -87,7 +89,7 @@ const schema = defineSchema({
   })
     .index("by_call", ["callId"])
     .index("by_user", ["userId"])
-    .index("by_conversation_id", ["conversationId"]),
+    .index("by_eleven_labs_call_id", ["elevenLabsCallId"]),
 
   // new audio 
   tasks: defineTable({

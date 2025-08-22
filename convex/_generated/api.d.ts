@@ -17,6 +17,7 @@ import type * as auth from "../auth.js";
 import type * as calendar from "../calendar.js";
 import type * as calls from "../calls.js";
 import type * as calls_node from "../calls_node.js";
+import type * as conversation from "../conversation.js";
 import type * as events from "../events.js";
 import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
@@ -44,6 +45,7 @@ declare const fullApi: ApiFromModules<{
   calendar: typeof calendar;
   calls: typeof calls;
   calls_node: typeof calls_node;
+  conversation: typeof conversation;
   events: typeof events;
   "feature/flags": typeof feature_flags;
   google: typeof google;

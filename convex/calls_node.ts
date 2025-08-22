@@ -365,14 +365,20 @@ export const initiateReminderCall = action({
 // Action to fetch conversation data from ElevenLabs API
 export const handleElevenLabsWebhookTemp = action({
   args: {
-    conversationData: v.any()
+    payload: v.any()
   },
-  handler: async (ctx, { conversationData }) => {
+  handler: async (ctx, { payload }) => {
     try {
-
-      if (!conversationData || !Array.isArray(conversationData.transcript)) {
-        console.error("Invalid conversation data from ElevenLabs:", conversationData);
-        throw new Error("Invalid conversation data: missing or invalid transcript array");
+      const conversationData = payload;
+      const callId = payload.metadata.phone_call.call_sid;
+      console.log("call Id:", callId);
+      const callRow = await ctx.runQuery(internal.calls.getCallByElevenLabsCallId, {
+        elevenLabsCallId: callId
+      });
+      // get the call from eleven lab
+      if (!callRow) {
+        console.error("Call not found for ElevenLabs call ID:", callId);
+        throw new Error("Call not found");
       }
 
       console.log("Conversation data fetched successfully");
@@ -451,6 +457,8 @@ export const handleElevenLabsWebhookTemp = action({
 
       // Store the conversation in the database
       await ctx.runMutation(api.calls.storeConversation, {
+        callId: callRow._id,
+        userId: callRow.userId ? callRow.userId : undefined,
         conversationId: conversation.conversationId,
         transcript: conversation.transcript,
         metadata: conversation.metadata,
@@ -468,6 +476,7 @@ export const handleElevenLabsWebhookTemp = action({
     } catch (error) {
       // Log error
       console.error("Error fetching conversation from ElevenLabs:", error);
+      console.error("Conversation data:", payload);
       throw error;
     }
   },
