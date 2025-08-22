@@ -1,13 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useMutation } from "convex/react";
+import React from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Calendar, Clock, Plus, X } from 'lucide-react';
+import { Plus, X, Calendar, Clock } from "lucide-react";
 
 interface TaskFormProps {
   userId?: Id<"users">;
@@ -15,208 +12,224 @@ interface TaskFormProps {
   onCancel?: () => void;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ userId, onSuccess, onCancel }) => {
-  const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [dueTime, setDueTime] = useState('');
-  const [reminderMinutes, setReminderMinutes] = useState(5);
-  const [errors, setErrors] = useState<{ title?: string; date?: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-
+export default function TaskForm({ userId, onSuccess, onCancel }: TaskFormProps) {
   const createTask = useMutation(api.tasks.create_task);
+  const user = useQuery(api.user.getCurrentUser);
 
-  // Set default date to tomorrow
+  const [title, setTitle] = React.useState("");
+  const [dueDate, setDueDate] = React.useState("");
+  const [dueTime, setDueTime] = React.useState("");
+  const [reminderMinutes, setReminderMinutes] = React.useState(5);
+  const [errors, setErrors] = React.useState<{ title?: string; date?: string }>({});
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [ok, setOk] = React.useState(false);
+
   React.useEffect(() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    setDueDate(tomorrow.toISOString().split('T')[0]);
-    setDueTime('12:00');
+    const t = new Date();
+    t.setDate(t.getDate() + 1);
+    setDueDate(t.toISOString().split("T")[0]);
+    setDueTime("12:00");
   }, []);
 
-  const validateForm = (): boolean => {
-    const newErrors: { title?: string; date?: string } = {};
-
-    if (!title.trim()) {
-      newErrors.title = 'Task name is required';
-    }
-
-    if (!dueDate) {
-      newErrors.date = 'Due date is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const validate = () => {
+    const e: { title?: string; date?: string } = {};
+    if (!title.trim()) e.title = "Task name is required";
+    if (!dueDate) e.date = "Due date is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+  const submit = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    if (!validate()) return;
     setIsSubmitting(true);
-
     try {
-      // Combine date and time
-      const dateTimeString = `${dueDate}T${dueTime}:00`;
-      const dueDateTime = new Date(dateTimeString);
-
+      const dt = new Date(`${dueDate}T${dueTime || "12:00"}:00`);
+      if (!user) throw new Error("User not found");
       await createTask({
         title: title.trim(),
-        due: dueDateTime.toISOString(),
+        due: dt.toISOString(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        status: 'scheduled',
-        source: 'manual',
-        userId: userId,
-        reminderMinutesBefore: reminderMinutes
+        status: "scheduled",
+        source: "manual",
+        userId: user._id,
+        reminderMinutesBefore: reminderMinutes,
       });
-
-      // Show success message
-      setShowSuccess(true);
-
-      // Reset form
-      setTitle('');
-
-      // Call success callback after a short delay
+      setOk(true);
+      setTitle("");
       setTimeout(() => {
-        setShowSuccess(false);
-        if (onSuccess) {
-          onSuccess();
-        }
-      }, 1500);
-    } catch (error) {
-      console.error('Error creating task:', error);
+        setOk(false);
+        onSuccess?.();
+      }, 1200);
+    } catch (e) {
+      console.error(e);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="p-6 shadow-task">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Add New Task</h3>
+    <div className="form">
+      <div className="form__head">
+        <h3>Add a new task</h3>
         {onCancel && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <button className="icon" onClick={onCancel} title="Close">
+            <X size={16} />
+          </button>
         )}
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          {/* Task Title */}
-          <div>
-            <label htmlFor="task-title" className="block text-sm font-medium text-muted-foreground mb-1">
-              Task Name*
-            </label>
-            <Input
-              id="task-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="What needs to be done?"
-              className={errors.title ? "border-destructive" : ""}
+      <form onSubmit={submit} className="grid">
+        <label className="field">
+          <span className="label">Task name*</span>
+          <input
+            className={`input ${errors.title ? "input--err" : ""}`}
+            placeholder="What needs to be done?"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+          {errors.title && <span className="hint hint--err">{errors.title}</span>}
+        </label>
+
+        <div className="row">
+          <label className="field">
+            <span className="label"><Calendar size={14} /> Due date*</span>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className={`input ${errors.date ? "input--err" : ""}`}
             />
-            {errors.title && (
-              <p className="mt-1 text-sm text-destructive">{errors.title}</p>
-            )}
-          </div>
+            {errors.date && <span className="hint hint--err">{errors.date}</span>}
+          </label>
 
-          {/* Due Date and Time */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="due-date" className="block text-sm font-medium text-muted-foreground mb-1">
-                <Calendar className="inline-block w-4 h-4 mr-1" />
-                Due Date*
-              </label>
-              <Input
-                id="due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className={errors.date ? "border-destructive" : ""}
-              />
-              {errors.date && (
-                <p className="mt-1 text-sm text-destructive">{errors.date}</p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="due-time" className="block text-sm font-medium text-muted-foreground mb-1">
-                <Clock className="inline-block w-4 h-4 mr-1" />
-                Time
-              </label>
-              <Input
-                id="due-time"
-                type="time"
-                value={dueTime}
-                onChange={(e) => setDueTime(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Reminder Time */}
-          <div>
-            <label htmlFor="reminder-minutes" className="block text-sm font-medium text-muted-foreground mb-1">
-              Reminder (minutes before due time)
-            </label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="reminder-minutes"
-                type="number"
-                min="1"
-                max="1440"
-                value={reminderMinutes}
-                onChange={(e) => setReminderMinutes(parseInt(e.target.value) || 5)}
-                className="w-24"
-              />
-              <span className="text-sm text-muted-foreground">minutes before</span>
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              You&apos;ll receive a reminder {reminderMinutes} {reminderMinutes === 1 ? 'minute' : 'minutes'} before the task is due
-            </p>
-          </div>
-
-          {/* Submit Button */}
-          <div className="pt-2">
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating...
-                </span>
-              ) : (
-                <span className="flex items-center">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Task
-                </span>
-              )}
-            </Button>
-          </div>
+          <label className="field">
+            <span className="label"><Clock size={14} /> Time</span>
+            <input
+              type="time"
+              value={dueTime}
+              onChange={e => setDueTime(e.target.value)}
+              className="input"
+            />
+          </label>
         </div>
+
+        <label className="field">
+          <span className="label">Reminder (minutes before)</span>
+          <div className="inline">
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              value={reminderMinutes}
+              onChange={e => setReminderMinutes(parseInt(e.target.value) || 5)}
+              className="input input--num"
+            />
+            <span className="note">You’ll get a gentle nudge {reminderMinutes} min before.</span>
+          </div>
+        </label>
+
+        <button className="btn" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <span className="spin" />
+          ) : (
+            <>
+              <Plus size={16} /> Add Task
+            </>
+          )}
+        </button>
+
+        {ok && <div className="ok">Task created — nice move! 🌱</div>}
       </form>
 
-      {/* Success Message */}
-      {showSuccess && (
-        <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-md text-center animate-fade-in">
-          Task created successfully!
-        </div>
-      )}
-    </Card>
-  );
-};
+      <style jsx>{`
+        :root {
+          --indigo: #4f46e5;
+          --lavender: #e0e7ff;
+          --purple: #a78bfa;
+          --teal: #14b8a6;
+          --success: #10b981;
+          --error: #ef4444;
 
-export default TaskForm;
+          --bg-elev: #121225;
+          --text: #eef0ff;
+          --muted: #9aa0c3;
+          --divider: #232347;
+        }
+
+        .form {
+          background: rgba(18,18,37,0.92);
+          border: 1px solid var(--divider);
+          border-radius: 14px;
+          padding: 16px;
+        }
+        .form__head {
+          display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+        }
+        h3 { margin: 0; font-size: 16px; }
+        .icon { background: transparent; border: 1px solid var(--divider); color: var(--muted); border-radius: 10px; width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer; }
+
+        .grid { display: grid; gap: 12px; }
+        .row { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+        @media (max-width: 640px){ .row { grid-template-columns: 1fr; } }
+
+        .field { display: grid; gap: 6px; }
+        .label { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+        .input {
+          background: #0f0f20;
+          color: var(--text);
+          border: 1px solid #26264a;
+          border-radius: 12px;
+          padding: 10px 12px;
+          outline: none;
+          transition: box-shadow 180ms ease, border-color 180ms ease;
+        }
+        .input:focus { box-shadow: 0 0 0 3px rgba(79,70,229,0.35); border-color: var(--indigo); }
+        .input--err { border-color: var(--error); }
+        .input--num { width: 96px; }
+        .inline { display: flex; align-items: center; gap: 10px; }
+        .note { font-size: 12px; color: var(--muted); }
+
+        .hint { font-size: 12px; }
+        .hint--err { color: #ff9d9d; }
+
+        .btn {
+          margin-top: 4px;
+          appearance: none;
+          border: none;
+          border-radius: 12px;
+          padding: 10px 14px;
+          font-weight: 700;
+          color: white;
+          background: linear-gradient(180deg, #4f46e5, #3b35d9);
+          box-shadow: 0 8px 20px rgba(79,70,229,0.35), inset 0 -1px 0 rgba(255,255,255,0.08);
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .btn:disabled { opacity: 0.7; cursor: default; }
+
+        .ok {
+          margin-top: 10px;
+          background: rgba(16,185,129,0.12);
+          color: #d1ffe9;
+          border: 1px solid rgba(16,185,129,0.45);
+          border-radius: 10px;
+          padding: 8px 10px;
+          text-align: center;
+          animation: pop 300ms ease;
+        }
+
+        .spin {
+          width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: white; border-radius: 50%; display: inline-block;
+          animation: spin 700ms linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pop { from { transform: scale(0.98); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+      `}</style>
+    </div>
+  );
+}
