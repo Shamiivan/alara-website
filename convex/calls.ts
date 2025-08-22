@@ -19,30 +19,11 @@ export const createCall = mutation({
     try {
       // Get the authenticated user ID directly
       const userId = await getAuthUserId(ctx);
-
-      // For testing purposes, create a test user if not authenticated
-      let effectiveUserId = userId;
-      if (!effectiveUserId) {
-        // Look for a test user or create one
-        const testUsers = await ctx.db
-          .query("users")
-          .filter(q => q.eq(q.field("name"), "Test User"))
-          .collect();
-
-        if (testUsers.length > 0) {
-          effectiveUserId = testUsers[0]._id;
-        } else {
-          // Create a test user
-          effectiveUserId = await ctx.db.insert("users", {
-            name: "Test User",
-            email: "test@example.com",
-          });
-        }
-      }
+      if (!userId) throw new Error("Not authenticated");
 
       // Create call record
       const callId = await ctx.db.insert("calls", {
-        userId: effectiveUserId,
+        userId: userId,
         toNumber: args.toNumber,
         status: args.status || "initiated",
         agentId: args.agentId,
@@ -235,15 +216,10 @@ export const storeConversation = mutation({
     try {
       // Get the authenticated user ID
       const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
-
-
       // Insert conversation record
       const conversationId = await ctx.db.insert("conversations", {
         callId: args.callId,
-        userId: userId,
+        userId: userId ? userId : undefined,
         conversationId: args.conversationId,
         transcript: args.transcript,
         metadata: args.metadata,
