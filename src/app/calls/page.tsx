@@ -23,7 +23,7 @@ export default function CallsPage() {
 
   // Fetch conversation for selected call
   const selectedConversation = useQuery(
-    api.calls.getConversationByCallId,
+    api.conversation.getConversationByCallId,
     selectedCallId ? { callId: selectedCallId } : "skip"
   );
 

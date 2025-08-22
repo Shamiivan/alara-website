@@ -17,6 +17,7 @@ import type * as auth from "../auth.js";
 import type * as calendar from "../calendar.js";
 import type * as calls from "../calls.js";
 import type * as calls_node from "../calls_node.js";
+import type * as conversation from "../conversation.js";
 import type * as events from "../events.js";
 import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
@@ -28,6 +29,7 @@ import type * as telemetry from "../telemetry.js";
 import type * as types_flags from "../types/flags.js";
 import type * as user from "../user.js";
 import type * as utils_crypto from "../utils/crypto.js";
+import type * as utils_extractor from "../utils/extractor.js";
 import type * as utils_getUser from "../utils/getUser.js";
 import type * as utils_verify from "../utils/verify.js";
 
@@ -44,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   calendar: typeof calendar;
   calls: typeof calls;
   calls_node: typeof calls_node;
+  conversation: typeof conversation;
   events: typeof events;
   "feature/flags": typeof feature_flags;
   google: typeof google;
@@ -55,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "types/flags": typeof types_flags;
   user: typeof user;
   "utils/crypto": typeof utils_crypto;
+  "utils/extractor": typeof utils_extractor;
   "utils/getUser": typeof utils_getUser;
   "utils/verify": typeof utils_verify;
 }>;

@@ -1,4 +1,4 @@
-import { query, mutation, action } from "./_generated/server";
+import { query, mutation, action, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
@@ -7,6 +7,7 @@ export const createCall = mutation({
   args: {
     toNumber: v.string(),
     agentId: v.string(),
+    userId: v.id("users"),
     agentPhoneNumberId: v.string(),
     elevenLabsCallId: v.optional(v.string()),
     status: v.union(
@@ -18,31 +19,10 @@ export const createCall = mutation({
   handler: async (ctx, args) => {
     try {
       // Get the authenticated user ID directly
-      const userId = await getAuthUserId(ctx);
-
-      // For testing purposes, create a test user if not authenticated
-      let effectiveUserId = userId;
-      if (!effectiveUserId) {
-        // Look for a test user or create one
-        const testUsers = await ctx.db
-          .query("users")
-          .filter(q => q.eq(q.field("name"), "Test User"))
-          .collect();
-
-        if (testUsers.length > 0) {
-          effectiveUserId = testUsers[0]._id;
-        } else {
-          // Create a test user
-          effectiveUserId = await ctx.db.insert("users", {
-            name: "Test User",
-            email: "test@example.com",
-          });
-        }
-      }
 
       // Create call record
       const callId = await ctx.db.insert("calls", {
-        userId: effectiveUserId,
+        userId: args.userId,
         toNumber: args.toNumber,
         status: args.status || "initiated",
         agentId: args.agentId,
@@ -217,6 +197,7 @@ export const updateCallWithElevenLabsResponse = mutation({
 export const storeConversation = mutation({
   args: {
     callId: v.optional(v.id("calls")),
+    userId: v.optional(v.id("users")),
     conversationId: v.string(),
     transcript: v.array(v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
@@ -234,16 +215,11 @@ export const storeConversation = mutation({
   handler: async (ctx, args) => {
     try {
       // Get the authenticated user ID
-      const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
-
 
       // Insert conversation record
       const conversationId = await ctx.db.insert("conversations", {
         callId: args.callId,
-        userId: userId,
+        userId: args.userId,
         conversationId: args.conversationId,
         transcript: args.transcript,
         metadata: args.metadata,
@@ -271,40 +247,27 @@ export const storeConversation = mutation({
   },
 });
 
-// Get conversation by call ID
-export const getConversationByCallId = query({
+
+
+export const getCallByElevenLabsCallId = internalQuery({
   args: {
-    callId: v.id("calls"),
+    elevenLabsCallId: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, { elevenLabsCallId }) => {
     try {
-      // Get the authenticated user ID
-      const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        return null;
-      }
-
-      // Verify the call belongs to the user
-      const call = await ctx.db.get(args.callId);
-      if (!call || call.userId !== userId) {
-        return null;
-      }
-
-      // Get the conversation
-      const conversation = await ctx.db
-        .query("conversations")
-        .withIndex("by_call", (q) => q.eq("callId", args.callId))
+      // Get the call from the database
+      const call = await ctx.db
+        .query("calls")
+        .withIndex("by_eleven_labs_call_id", (q) => q.eq("elevenLabsCallId", elevenLabsCallId))
         .unique();
 
-      return conversation;
+      return call;
     } catch (error) {
-      console.error("[getConversationByCallId] Error:", error);
+      console.error("[getCallByElevenLabsCallId] Error:", error);
       return null;
     }
   },
 });
-
-
 
 // The initiateCall action has been moved to calls_node.ts to use the Node.js runtime
 
