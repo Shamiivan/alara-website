@@ -48,7 +48,7 @@ const Hero = () => {
           </h1>
 
           <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed">
-            We're building a voice‑first companion that turns what’s on your mind into one clear step, with gentle
+            We&apos;re building a voice‑first companion that turns what&apos;s on your mind into one clear step, with gentle
             check‑ins and easy adjustments—so you stay aligned, not just busy.
           </p>
         </div>

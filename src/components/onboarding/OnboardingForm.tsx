@@ -349,7 +349,7 @@ export default function OnboardingForm() {
         </div>
         <h2 className="text-2xl font-bold mb-2 text-primary-dark">Woohoo! You&apos;re all set! ✨</h2>
         <p className="mb-6 text-muted-foreground">
-          We’ve saved your preferences remains to pay and you're ready to go!
+          We&apos;ve saved your preferences remains to pay and you&apos;re ready to go!
         </p>
         <div className="relative">
           <div className="h-3 bg-[#E4E4FE] rounded-full overflow-hidden">

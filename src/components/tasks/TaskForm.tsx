@@ -7,12 +7,11 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { Plus, X, Calendar, Clock } from "lucide-react";
 
 interface TaskFormProps {
-  userId?: Id<"users">;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export default function TaskForm({ userId, onSuccess, onCancel }: TaskFormProps) {
+export default function TaskForm({ onSuccess, onCancel }: TaskFormProps) {
   const createTask = useMutation(api.tasks.create_task);
   const user = useQuery(api.user.getCurrentUser);
 

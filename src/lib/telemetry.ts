@@ -8,7 +8,7 @@ export function useTelemetry() {
   const user = useQuery(api.user.getCurrentUser);
   const userId: Id<"users"> | undefined = user?._id;
 
-  const logEvent = async (event: string, context?: any, error?: any) => {
+  const logEvent = async (event: string, context?: Record<string, unknown>, error?: unknown) => {
     if (!userId) return;
     try {
       await createLog({ userId, event, context, error });

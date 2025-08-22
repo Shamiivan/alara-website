@@ -22,7 +22,6 @@ export default function PaymentPage() {
   const pay = useAction(api.stripe.pay);
   const [isLoading, setIsLoading] = useState(false);
   const [showError, setShowError] = useState(false);
-  const [hoverCTA, setHoverCTA] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {

@@ -134,11 +134,10 @@ export default function Dashboard() {
   };
 
   // responsive tweak
-  // (We’ll keep it inline and minimal—no external CSS)
-  const responsiveWrapper: React.CSSProperties = {};
+  // (We'll keep it inline and minimal—no external CSS)
   if (typeof window !== "undefined" && window.innerWidth >= 768) {
-    (gridStyle as any).gridTemplateColumns = "1.2fr 0.8fr";
-    (twoCol as any).gridTemplateColumns = "1fr 1fr";
+    (gridStyle as React.CSSProperties).gridTemplateColumns = "1.2fr 0.8fr";
+    (twoCol as React.CSSProperties).gridTemplateColumns = "1fr 1fr";
   }
 
   const cardStyle: React.CSSProperties = {
@@ -157,18 +156,6 @@ export default function Dashboard() {
     letterSpacing: "-0.01em",
   };
 
-  const primaryBtn: React.CSSProperties = {
-    width: "100%",
-    backgroundColor: TOKENS.cardBg,
-    color: "#FFFFFF",
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: "1px solid transparent",
-    fontWeight: 600,
-    transition: "transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.05), 0 6px 14px rgba(79,70,229,0.25)",
-    cursor: "pointer",
-  };
 
   const secondaryBtn: React.CSSProperties = {
     width: "100%",
