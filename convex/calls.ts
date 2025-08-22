@@ -216,7 +216,7 @@ export const updateCallWithElevenLabsResponse = mutation({
 // Store conversation transcript
 export const storeConversation = mutation({
   args: {
-    callId: v.id("calls"),
+    callId: v.optional(v.id("calls")),
     conversationId: v.string(),
     transcript: v.array(v.object({
       role: v.union(v.literal("user"), v.literal("assistant")),
@@ -239,11 +239,6 @@ export const storeConversation = mutation({
         throw new Error("Not authenticated");
       }
 
-      // Verify the call belongs to the user
-      const call = await ctx.db.get(args.callId);
-      if (!call || call.userId !== userId) {
-        throw new Error("Call not found or not authorized");
-      }
 
       // Insert conversation record
       const conversationId = await ctx.db.insert("conversations", {
@@ -256,15 +251,6 @@ export const storeConversation = mutation({
         hasUserAudio: args.hasUserAudio,
         hasResponseAudio: args.hasResponseAudio,
         createdAt: Date.now(),
-      });
-
-      // Update call record with hasTranscript flag and final status/duration
-      await ctx.db.patch(args.callId, {
-        hasTranscript: true,
-        status: "completed",
-        duration: args.metadata.callDurationSecs,
-        completedAt: Date.now(),
-        startTimeUnix: args.metadata.startTimeUnixSecs,
       });
 
       return { success: true, conversationId };
@@ -318,43 +304,7 @@ export const getConversationByCallId = query({
   },
 });
 
-// Get all user conversations
-export const getUserConversations = query({
-  args: {
-    limit: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    try {
-      // Get the authenticated user ID
-      const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        return [];
-      }
 
-      // Get conversations for the user
-      const conversations = await ctx.db
-        .query("conversations")
-        .withIndex("by_user", (q) => q.eq("userId", userId))
-        .order("desc")
-        .take(args.limit || 20);
-
-      // Get the associated calls for each conversation
-      const callIds = conversations.map(conv => conv.callId);
-      const calls = await Promise.all(
-        callIds.map(callId => ctx.db.get(callId))
-      );
-
-      // Combine conversations with call details
-      return conversations.map((conv, index) => ({
-        ...conv,
-        call: calls[index],
-      }));
-    } catch (error) {
-      console.error("[getUserConversations] Error:", error);
-      return [];
-    }
-  },
-});
 
 // The initiateCall action has been moved to calls_node.ts to use the Node.js runtime
 

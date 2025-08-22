@@ -7,6 +7,8 @@ import { user } from "@elevenlabs/elevenlabs-js/api";
 import { userInfo } from "os";
 import { create } from "domain";
 import { createDecipheriv } from "crypto";
+import Email from "@auth/core/providers/email";
+import { access } from "fs";
 
 
 const schema = defineSchema({
@@ -66,7 +68,7 @@ const schema = defineSchema({
 
   // NEW TABLE FOR CONVERSATION TRANSCRIPTS
   conversations: defineTable({
-    callId: v.id("calls"),
+    callId: v.optional(v.id("calls")),
     userId: v.id("users"),
     conversationId: v.string(), // From ElevenLabs
     transcript: v.array(v.object({
@@ -177,6 +179,18 @@ const schema = defineSchema({
     createdAt: v.number(),
   }).index("by_user", ["userId"])
     .index("by_event_time", ["createdAt"]),
+
+
+  // google tokens
+  googleTokens: defineTable({
+    userId: v.id("users"),
+    userEmail: v.string(),
+    accessToken: v.string(),
+    refreshToken: v.string(),
+    expiresAtMs: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"])
 });
 
 export default schema;

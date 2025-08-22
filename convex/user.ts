@@ -4,24 +4,14 @@ import { isAuthenticated } from "./auth";
 import { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
+import { getUserByCtx } from "./utils/getUser";
 
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
     try {
       // Get the authenticated user ID directly
-      const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        // Log authentication warning but don't throw an error
-        console.warn("[getCurrentUser] User not authenticated");
-        return null;
-      }
-
-      // Get user directly by ID
-      const user = await ctx.db.get(userId);
-
-      console.log("[getCurrentUser] Retrieved user for userId:", userId);
-      return user;
+      return await getUserByCtx(ctx);
     } catch (error) {
       console.error("[getCurrentUser] Error:", error);
       return null;
