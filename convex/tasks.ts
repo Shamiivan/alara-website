@@ -160,7 +160,7 @@ export const create_task = mutation({
     title: v.string(),
     due: v.string(),
     timezone: v.string(),
-    callId: v.id("calls"),
+    callId: v.optional(v.id("calls")),
     status: v.optional(v.string()),
     source: v.optional(v.string()),
     userId: v.id("users"),
@@ -188,6 +188,111 @@ export const create_task = mutation({
       source: source || "manual",
       userId: userId || undefined,
       callId: callId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    // Use the provided reminderMinutesBefore or default to 5 minutes
+    const minutesBefore = reminderMinutesBefore !== undefined ? reminderMinutesBefore : 5;
+
+    // Log the original values for debugging
+    console.log(`[DEBUG] Original due date (ISO): ${due}`);
+    console.log(`[DEBUG] User timezone: ${timezone}`);
+    console.log(`[DEBUG] Parsed due date (UTC): ${dueDate.toISOString()}`);
+
+    // Function to get timezone offset in milliseconds for a specific timezone
+    function getTimezoneOffset(dateStr: string, timeZone: string): number {
+      // Create a date formatter that will output dates in the specified timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false,
+      });
+
+      // Parse the original date
+      const date = new Date(dateStr);
+
+      // Format the date in the target timezone
+      const parts = formatter.formatToParts(date);
+
+      // Extract components from the formatted parts
+      const tzYear = parseInt(parts.find(p => p.type === 'year')?.value || '0');
+      const tzMonth = parseInt(parts.find(p => p.type === 'month')?.value || '0') - 1; // 0-based
+      const tzDay = parseInt(parts.find(p => p.type === 'day')?.value || '0');
+      const tzHour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+      const tzMinute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+      const tzSecond = parseInt(parts.find(p => p.type === 'second')?.value || '0');
+
+      // Create a new date with the timezone-adjusted components
+      const tzDate = new Date(Date.UTC(tzYear, tzMonth, tzDay, tzHour, tzMinute, tzSecond));
+
+      // Calculate the offset (UTC time - timezone time)
+      return date.getTime() - tzDate.getTime();
+    }
+
+    // Calculate the timezone offset
+    const timezoneOffset = getTimezoneOffset(due, timezone);
+    console.log(`[DEBUG] Timezone offset for ${timezone}: ${timezoneOffset} ms (${timezoneOffset / (60 * 60 * 1000)} hours)`);
+
+    // Adjust the reminder time based on the user's timezone
+    // 1. Convert the UTC due date to the user's local time by applying the offset
+    // 2. Calculate the reminder time by subtracting minutes
+    // 3. Convert back to UTC for scheduling
+    const adjustedDueDate = new Date(dueDate.getTime() - timezoneOffset);
+    const localReminderTime = adjustedDueDate.getTime() - minutesBefore * 60 * 1000;
+    const timeOfReminderCall = new Date(localReminderTime + timezoneOffset).getTime();
+
+    console.log(`[DEBUG] Adjusted due date in user's timezone: ${new Date(adjustedDueDate).toISOString()}`);
+    console.log(`[DEBUG] Local reminder time: ${new Date(localReminderTime).toISOString()}`);
+    console.log(`[DEBUG] Final UTC reminder time: ${new Date(timeOfReminderCall).toISOString()}`);
+
+    const callArgs = {
+      taskId: id,
+      userId: userId,
+    };
+    const jobId = await ctx.scheduler.runAt(timeOfReminderCall, internal.tasks.runScheduledReminder, callArgs);
+    console.log(`Scheduled reminder for task ${id} at ${new Date(timeOfReminderCall).toLocaleTimeString()} UTC (${new Date(localReminderTime).toLocaleTimeString()} user local time) with job ID ${jobId}, ${minutesBefore} minutes before due time`);
+
+
+  },
+});
+
+export const createTaskFromWeb = mutation({
+  args: {
+    title: v.string(),
+    due: v.string(),
+    timezone: v.string(),
+    status: v.optional(v.string()),
+    source: v.optional(v.string()),
+    userId: v.id("users"),
+    reminderMinutesBefore: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { title, due, timezone, status, source, userId, reminderMinutesBefore } = args;
+    const now = Date.now();
+
+    // get the due date from this format 2025-08-15T14:18:02.971Z to a number the scheduler can use
+    if (!title || !due || !timezone) {
+      throw new Error("Title, due date, and timezone are required");
+    }
+
+    const dueDate = new Date(due);
+    if (isNaN(dueDate.getTime())) {
+      throw new Error(`Invalid due date: ${due}`);
+    }
+
+    const id = await ctx.db.insert("tasks", {
+      title,
+      due,
+      timezone,
+      status: status || "scheduled",
+      source: source || "manual",
+      userId: userId || undefined,
       createdAt: now,
       updatedAt: now,
     });
