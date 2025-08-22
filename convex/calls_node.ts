@@ -7,6 +7,8 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { api, internal } from "./_generated/api";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { Id } from "./_generated/dataModel";
+import { any } from "@elevenlabs/elevenlabs-js/core/schemas";
+import { createToolCallExtractor } from "./utils/extractor";
 
 // Define return type for initiateCall
 interface InitiateCallResult {
@@ -153,45 +155,40 @@ export const fetchElevenLabsConversation = action({
 
       // Process the conversation data
       let processedTranscript;
-      try {
-        processedTranscript = conversationData.transcript
-          // Filter out items that don't have a message or are just tool calls/results
-          .filter((item: any) => {
-            // Skip null or undefined items
-            if (!item) {
-              console.log("Filtering out null/undefined transcript item");
-              return false;
-            }
-
-            // Keep items that have a message
-            if (item.message) return true;
-
-            // Log items we're filtering out for debugging
-            console.log("Filtering out transcript item without message:", JSON.stringify(item));
+      processedTranscript = conversationData.transcript
+        // Filter out items that don't have a message or are just tool calls/results
+        .filter((item: any) => {
+          // Skip null or undefined items
+          if (!item) {
+            console.log("Filtering out null/undefined transcript item");
             return false;
-          })
-          .map((item: any) => {
-            // Validate and convert role to the expected type
-            let validRole: "user" | "assistant";
-            if (item.role === "agent") {
-              validRole = "assistant";
-            } else if (item.role === "user") {
-              validRole = "user";
-            } else {
-              console.log(`Unknown role "${item.role}" found, defaulting to "assistant"`);
-              validRole = "assistant";
-            }
+          }
 
-            return {
-              role: validRole,
-              timeInCallSecs: item.timeInCallSecs || 0,
-              message: item.message || "",
-            };
-          });
-      } catch (error) {
-        console.error("Error processing transcript:", error);
-        throw new Error(`Failed to process transcript: ${error instanceof Error ? error.message : String(error)}`);
-      }
+          // Keep items that have a message
+          if (item.message) return true;
+
+          // Log items we're filtering out for debugging
+          console.log("Filtering out transcript item without message:", JSON.stringify(item));
+          return false;
+        })
+        .map((item: any) => {
+          // Validate and convert role to the expected type
+          let validRole: "user" | "assistant";
+          if (item.role === "agent") {
+            validRole = "assistant";
+          } else if (item.role === "user") {
+            validRole = "user";
+          } else {
+            console.log(`Unknown role "${item.role}" found, defaulting to "assistant"`);
+            validRole = "assistant";
+          }
+
+          return {
+            role: validRole,
+            timeInCallSecs: item.timeInCallSecs || 0,
+            message: item.message || "",
+          };
+        });
 
       // Ensure we have at least one transcript item
       if (!processedTranscript || processedTranscript.length === 0) {
@@ -227,13 +224,6 @@ export const fetchElevenLabsConversation = action({
         hasAudio: conversation.hasAudio,
         hasUserAudio: conversation.hasUserAudio,
         hasResponseAudio: conversation.hasResponseAudio,
-      });
-
-      // Extract and register tasks from the conversation
-      await ctx.runMutation(api.tasks.registerFromConversation, {
-        callId: args.callId,
-        userId: call.userId,
-        messages: conversationData.transcript || [],
       });
 
       return { success: true };
@@ -389,58 +379,43 @@ export const handleElevenLabsWebhookTemp = action({
       console.log("First transcript item role:", conversationData.transcript?.[0]?.role);
 
       // Process the conversation data
-      let processedTranscript;
-      try {
-        processedTranscript = conversationData.transcript
-          // Filter out items that don't have a message or are just tool calls/results
-          .filter((item: any) => {
-            // Skip null or undefined items
-            if (!item) {
-              console.log("Filtering out null/undefined transcript item");
-              return false;
-            }
-
-            // Keep items that have a message
-            if (item.message) return true;
-
-            // Log items we're filtering out for debugging
-            console.log("Filtering out transcript item without message:", JSON.stringify(item));
+      let processedTranscript = conversationData.transcript
+        // Filter out items that don't have a message or are just tool calls/results
+        .filter((item: any) => {
+          // Skip null or undefined items
+          if (!item) {
+            console.log("Filtering out null/undefined transcript item");
             return false;
-          })
-          .map((item: any) => {
-            // Validate and convert role to the expected type
-            let validRole: "user" | "assistant";
-            if (item.role === "agent") {
-              validRole = "assistant";
-            } else if (item.role === "user") {
-              validRole = "user";
-            } else {
-              console.log(`Unknown role "${item.role}" found, defaulting to "assistant"`);
-              validRole = "assistant";
-            }
+          }
 
-            return {
-              role: validRole,
-              timeInCallSecs: item.timeInCallSecs || 0,
-              message: item.message || "",
-            };
-          });
-      } catch (error) {
-        console.error("Error processing transcript:", error);
-        throw new Error(`Failed to process transcript: ${error instanceof Error ? error.message : String(error)}`);
-      }
+          // Keep items that have a message
+          if (item.message) return true;
 
-      // Ensure we have at least one transcript item
-      if (!processedTranscript || processedTranscript.length === 0) {
-        console.warn("No valid transcript items found after processing");
-        // Create a properly typed fallback transcript
-        processedTranscript = [{
-          role: "assistant" as const,
-          timeInCallSecs: 0,
-          message: "No transcript available"
-        }];
-      }
+          // Log items we're filtering out for debugging
+          console.log("Filtering out transcript item without message:", JSON.stringify(item));
+          return false;
+        })
+        .map((item: any) => {
+          // Validate and convert role to the expected type
+          let validRole: "user" | "assistant";
+          if (item.role === "agent") {
+            validRole = "assistant";
+          } else if (item.role === "user") {
+            validRole = "user";
+          } else {
+            console.log(`Unknown role "${item.role}" found, defaulting to "assistant"`);
+            validRole = "assistant";
+          }
 
+          return {
+            role: validRole,
+            timeInCallSecs: item.timeInCallSecs || 0,
+            message: item.message || "",
+          };
+        });
+
+
+      console.log("Processed transcript:", JSON.stringify(processedTranscript, null, 2));
       const conversation = {
         conversationId: conversationData.conversation_id,
         transcript: processedTranscript,
@@ -487,40 +462,14 @@ export const handleElevenLabsWebhookTemp = action({
           else if (item.role === "user") validRole = "user";
           else validRole = "assistant";
 
-          // normalize toolCalls
-          const toolCalls =
-            (item.tool_calls ?? []).map((tc: any) => ({
-              type: tc.type,                               // "client" | "system"
-              requestId: tc.request_id,
-              toolName: tc.tool_name,                      // expect "create_task"
-              paramsAsJson: tc.params_as_json,             // JSON string
-              toolHasBeenCalled: !!tc.tool_has_been_called,
-              toolDetails: tc.tool_details ?? undefined,   // keep if present
-            })) ?? [];
 
-          // normalize toolResults
-          const toolResults =
-            (item.tool_results ?? []).map((tr: any) => ({
-              requestId: tr.request_id,
-              toolName: tr.tool_name,
-              isError: !!tr.is_error,
-              result: tr.result ?? tr.result_value ?? null,
-              type: tr.type,
-              latencySecs: tr.tool_latency_secs,
-            })) ?? [];
+          const getCreateTaskResults = createToolCallExtractor('create_task');
+          const createTaskResults = getCreateTaskResults(conversationData.transcript);
 
-          // prefer camelCase if present, else snake_case
+          console.log("Create task results:", createTaskResults);
+
           const timeInCallSecs = item.timeInCallSecs ?? item.time_in_call_secs ?? 0;
 
-          return {
-            role: validRole,
-            timeInCallSecs,
-            message: item.message ?? "",
-            toolCalls,
-            toolResults,
-            // helpful when extractTasks needs a fallback timezone
-            _defaultTimezone: defaultTz,
-          };
         });
       return { success: true };
     } catch (error) {
