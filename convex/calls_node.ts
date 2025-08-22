@@ -323,21 +323,21 @@ export const initiateReminderCall = action({
         success: true
       });
 
-      // Wait a short time for the call to be established before fetching the conversation
-      // This is a temporary solution - in a production environment, we should use webhooks
-      // or a polling mechanism to determine when the call is complete
-      setTimeout(async () => {
-        try {
-          if (result.conversationId) {
-            // Fetch and store the conversation data
-            await ctx.runAction(api.calls_node.fetchElevenLabsConversation, {
-              callId: dbCallId
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching conversation after call:", error);
-        }
-      }, 5000);
+      // // Wait a short time for the call to be established before fetching the conversation
+      // // This is a temporary solution - in a production environment, we should use webhooks
+      // // or a polling mechanism to determine when the call is complete
+      // setTimeout(async () => {
+      //   try {
+      //     if (result.conversationId) {
+      //       // Fetch and store the conversation data
+      //       await ctx.runAction(api.calls_node.fetchElevenLabsConversation, {
+      //         callId: dbCallId
+      //       });
+      //     }
+      //   } catch (error) {
+      //     console.error("Error fetching conversation after call:", error);
+      //   }
+      // }, 5000);
 
     } catch (error) {
       // Log error
@@ -466,12 +466,62 @@ export const handleElevenLabsWebhookTemp = action({
         hasUserAudio: conversation.hasUserAudio,
         hasResponseAudio: conversation.hasResponseAudio,
       });
+      // inside handleElevenLabsWebhookTemp.handler right where you build processedTranscript
+      const defaultTz =
+        conversationData?.conversation_initiation_client_data?.dynamic_variables?.user_timezone ??
+        conversationData?.metadata?.timezone ??
+        "UTC";
 
-      // Extract and register tasks from the conversation
-      await ctx.runMutation(api.tasks.registerFromConversation, {
-        messages: conversationData.transcript || [],
-      });
+      processedTranscript = (conversationData.transcript ?? [])
+        .filter((item: any) => {
+          if (!item) return false;
+          if (item.message) return true;
+          // also keep rows that have tool_calls/results even if message is null
+          if ((item.tool_calls && item.tool_calls.length) || (item.tool_results && item.tool_results.length)) return true;
+          return false;
+        })
+        .map((item: any) => {
+          // role mapping
+          let validRole: "user" | "assistant";
+          if (item.role === "agent") validRole = "assistant";
+          else if (item.role === "user") validRole = "user";
+          else validRole = "assistant";
 
+          // normalize toolCalls
+          const toolCalls =
+            (item.tool_calls ?? []).map((tc: any) => ({
+              type: tc.type,                               // "client" | "system"
+              requestId: tc.request_id,
+              toolName: tc.tool_name,                      // expect "create_task"
+              paramsAsJson: tc.params_as_json,             // JSON string
+              toolHasBeenCalled: !!tc.tool_has_been_called,
+              toolDetails: tc.tool_details ?? undefined,   // keep if present
+            })) ?? [];
+
+          // normalize toolResults
+          const toolResults =
+            (item.tool_results ?? []).map((tr: any) => ({
+              requestId: tr.request_id,
+              toolName: tr.tool_name,
+              isError: !!tr.is_error,
+              result: tr.result ?? tr.result_value ?? null,
+              type: tr.type,
+              latencySecs: tr.tool_latency_secs,
+            })) ?? [];
+
+          // prefer camelCase if present, else snake_case
+          const timeInCallSecs = item.timeInCallSecs ?? item.time_in_call_secs ?? 0;
+
+          return {
+            role: validRole,
+            timeInCallSecs,
+            message: item.message ?? "",
+            toolCalls,
+            toolResults,
+            // helpful when extractTasks needs a fallback timezone
+            _defaultTimezone: defaultTz,
+          };
+        });
       return { success: true };
     } catch (error) {
       // Log error
