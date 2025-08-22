@@ -160,13 +160,14 @@ export const create_task = mutation({
     title: v.string(),
     due: v.string(),
     timezone: v.string(),
+    callId: v.id("calls"),
     status: v.optional(v.string()),
     source: v.optional(v.string()),
-    userId: v.optional(v.id("users")),
+    userId: v.id("users"),
     reminderMinutesBefore: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { title, due, timezone, status, source, userId, reminderMinutesBefore } = args;
+    const { title, due, timezone, status, source, callId, userId, reminderMinutesBefore } = args;
     const now = Date.now();
 
     // get the due date from this format 2025-08-15T14:18:02.971Z to a number the scheduler can use
@@ -186,6 +187,7 @@ export const create_task = mutation({
       status: status || "scheduled",
       source: source || "manual",
       userId: userId || undefined,
+      callId: callId,
       createdAt: now,
       updatedAt: now,
     });
@@ -251,6 +253,7 @@ export const create_task = mutation({
 
     const callArgs = {
       taskId: id,
+      userId: userId,
     };
     const jobId = await ctx.scheduler.runAt(timeOfReminderCall, internal.tasks.runScheduledReminder, callArgs);
     console.log(`Scheduled reminder for task ${id} at ${new Date(timeOfReminderCall).toLocaleTimeString()} UTC (${new Date(localReminderTime).toLocaleTimeString()} user local time) with job ID ${jobId}, ${minutesBefore} minutes before due time`);
@@ -272,8 +275,9 @@ export const getTaskById = query({
 export const runScheduledReminder = internalMutation({
   args: {
     taskId: v.id("tasks"),
+    userId: v.id("users"),
   },
-  handler: async (ctx, { taskId }) => {
+  handler: async (ctx, { taskId, userId }) => {
     console.log(`Running scheduled reminder for task ${taskId}`);
     const task = await ctx.db.get(taskId);
     if (!task) {
@@ -340,6 +344,7 @@ export const runScheduledReminder = internalMutation({
       0, // 0 is for now
       api.calls_node.initiateReminderCall,
       {
+        userId: userId,
         toNumber: user.phone,
         userName: user.name,
         taskName: task.title,

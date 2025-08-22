@@ -7,6 +7,7 @@ export const createCall = mutation({
   args: {
     toNumber: v.string(),
     agentId: v.string(),
+    userId: v.id("users"),
     agentPhoneNumberId: v.string(),
     elevenLabsCallId: v.optional(v.string()),
     status: v.union(
@@ -18,12 +19,10 @@ export const createCall = mutation({
   handler: async (ctx, args) => {
     try {
       // Get the authenticated user ID directly
-      const userId = await getAuthUserId(ctx);
-      if (!userId) throw new Error("Not authenticated");
 
       // Create call record
       const callId = await ctx.db.insert("calls", {
-        userId: userId,
+        userId: args.userId,
         toNumber: args.toNumber,
         status: args.status || "initiated",
         agentId: args.agentId,

@@ -106,6 +106,8 @@ export function createToolCallExtractor(toolName: string): (transcript: Transcri
               callIndex,
               timestamp: message.time_in_call_secs,
               role: message.role,
+              parsedParams,
+              parsedDetails,
             });
           }
         });

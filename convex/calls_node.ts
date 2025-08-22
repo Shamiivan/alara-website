@@ -9,6 +9,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { Id } from "./_generated/dataModel";
 import { any } from "@elevenlabs/elevenlabs-js/core/schemas";
 import { createToolCallExtractor } from "./utils/extractor";
+import { user } from "@elevenlabs/elevenlabs-js/api";
 
 // Define return type for initiateCall
 interface InitiateCallResult {
@@ -22,6 +23,7 @@ interface InitiateCallResult {
 // Action to initiate a call via ElevenLabs API
 export const initiateCall = action({
   args: {
+    userId: v.id("users"),
     toNumber: v.string(),
     userName: v.optional(v.string()),
     timezone: v.optional(v.string()),
@@ -59,6 +61,7 @@ export const initiateCall = action({
 
       // Create a call record in the database
       const dbCallId: Id<"calls"> = await ctx.runMutation(api.calls.createCall, {
+        userId: args.userId,
         toNumber: args.toNumber,
         agentId: agentId,
         agentPhoneNumberId: agentPhoneNumberId,
@@ -247,6 +250,7 @@ export const fetchElevenLabsConversation = action({
 
 export const initiateReminderCall = action({
   args: {
+    userId: v.id("users"),
     toNumber: v.string(),
     userName: v.optional(v.string()),
     taskName: v.optional(v.string()),
@@ -296,6 +300,7 @@ export const initiateReminderCall = action({
 
       // Create a call record in the database
       const dbCallId = await ctx.runMutation(api.calls.createCall, {
+        userId: args.userId,
         toNumber: args.toNumber,
         agentId: agentId,
         agentPhoneNumberId: agentPhoneNumberId,
@@ -361,7 +366,7 @@ export const handleElevenLabsWebhookTemp = action({
     try {
       const conversationData = payload;
       const callId = payload.metadata.phone_call.call_sid;
-      console.log("call Id:", callId);
+
       const callRow = await ctx.runQuery(internal.calls.getCallByElevenLabsCallId, {
         elevenLabsCallId: callId
       });
@@ -461,21 +466,31 @@ export const handleElevenLabsWebhookTemp = action({
           if (item.role === "agent") validRole = "assistant";
           else if (item.role === "user") validRole = "user";
           else validRole = "assistant";
-
-
-          const getCreateTaskResults = createToolCallExtractor('create_task');
-          const createTaskResults = getCreateTaskResults(conversationData.transcript);
-
-          console.log("Create task results:", createTaskResults);
-
-          const timeInCallSecs = item.timeInCallSecs ?? item.time_in_call_secs ?? 0;
-
         });
-      return { success: true };
+      if (!callId) throw new Error("Call ID is required, can not create tasks");
+      if (!callRow.userId) throw new Error("User ID is required, can not create tasks");
+
+      const getCreateTaskResults = createToolCallExtractor('create_task');
+      const toolCalls = getCreateTaskResults(conversationData.transcript);
+
+      console.log("Create task results:", toolCalls);
+      for (const toolCall of toolCalls) {
+        console.log("User Id");
+        await ctx.runMutation(api.tasks.create_task, {
+          title: toolCall.parsedParams.title,
+          due: toolCall.parsedParams.due,
+          timezone: defaultTz,
+          source: "call",
+          userId: callRow.userId,
+          reminderMinutesBefore: 5,
+          callId: callRow._id,
+        });
+      }
+
+
     } catch (error) {
       // Log error
       console.error("Error fetching conversation from ElevenLabs:", error);
-      console.error("Conversation data:", payload);
       throw error;
     }
   },
