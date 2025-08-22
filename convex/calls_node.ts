@@ -73,22 +73,6 @@ export const initiateCall = action({
         success: true
       });
 
-      // Wait a short time for the call to be established before fetching the conversation
-      // This is a temporary solution - in a production environment, you might use webhooks
-      // or a polling mechanism to determine when the call is complete
-      setTimeout(async () => {
-        try {
-          if (result.conversationId) {
-            // Fetch and store the conversation data
-            await ctx.runAction(api.calls_node.fetchElevenLabsConversation, {
-              callId: dbCallId
-            });
-          }
-        } catch (error) {
-          console.error("Error fetching conversation after call:", error);
-        }
-      }, 5000); // Wait 5 seconds before fetching - adjust as needed
-
       // Return success response with call details
       return {
         success: true,
@@ -373,6 +357,117 @@ export const initiateReminderCall = action({
       // We don't need to update call status here since we don't have a callId
       // if there was an error before creating the call
 
+      throw error;
+    }
+  },
+});
+
+// Action to fetch conversation data from ElevenLabs API
+export const handleElevenLabsWebhookTemp = action({
+  args: {
+    conversationData: v.any()
+  },
+  handler: async (ctx, { conversationData }) => {
+    try {
+
+      if (!conversationData || !Array.isArray(conversationData.transcript)) {
+        console.error("Invalid conversation data from ElevenLabs:", conversationData);
+        throw new Error("Invalid conversation data: missing or invalid transcript array");
+      }
+
+      console.log("Conversation data fetched successfully");
+      console.log("Transcript length:", conversationData.transcript.length);
+
+      // Add detailed logging of the transcript data structure
+      console.log("ElevenLabs transcript structure:", JSON.stringify(conversationData.transcript, null, 2));
+      console.log("First transcript item role:", conversationData.transcript?.[0]?.role);
+
+      // Process the conversation data
+      let processedTranscript;
+      try {
+        processedTranscript = conversationData.transcript
+          // Filter out items that don't have a message or are just tool calls/results
+          .filter((item: any) => {
+            // Skip null or undefined items
+            if (!item) {
+              console.log("Filtering out null/undefined transcript item");
+              return false;
+            }
+
+            // Keep items that have a message
+            if (item.message) return true;
+
+            // Log items we're filtering out for debugging
+            console.log("Filtering out transcript item without message:", JSON.stringify(item));
+            return false;
+          })
+          .map((item: any) => {
+            // Validate and convert role to the expected type
+            let validRole: "user" | "assistant";
+            if (item.role === "agent") {
+              validRole = "assistant";
+            } else if (item.role === "user") {
+              validRole = "user";
+            } else {
+              console.log(`Unknown role "${item.role}" found, defaulting to "assistant"`);
+              validRole = "assistant";
+            }
+
+            return {
+              role: validRole,
+              timeInCallSecs: item.timeInCallSecs || 0,
+              message: item.message || "",
+            };
+          });
+      } catch (error) {
+        console.error("Error processing transcript:", error);
+        throw new Error(`Failed to process transcript: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
+      // Ensure we have at least one transcript item
+      if (!processedTranscript || processedTranscript.length === 0) {
+        console.warn("No valid transcript items found after processing");
+        // Create a properly typed fallback transcript
+        processedTranscript = [{
+          role: "assistant" as const,
+          timeInCallSecs: 0,
+          message: "No transcript available"
+        }];
+      }
+
+      const conversation = {
+        conversationId: conversationData.conversation_id,
+        transcript: processedTranscript,
+        metadata: {
+          startTimeUnixSecs: conversationData.metadata?.startTimeUnixSecs || Math.floor(Date.now() / 1000),
+          callDurationSecs: conversationData.metadata?.callDurationSecs || 0,
+        },
+        hasAudio: conversationData.hasAudio || false,
+        hasUserAudio: conversationData.hasUserAudio || false,
+        hasResponseAudio: conversationData.hasResponseAudio || false,
+      };
+
+      console.log("Successfully fetched conversation from ElevenLabs");
+
+      // Store the conversation in the database
+      await ctx.runMutation(api.calls.storeConversation, {
+        conversationId: conversation.conversationId,
+        transcript: conversation.transcript,
+        metadata: conversation.metadata,
+        hasAudio: conversation.hasAudio,
+        hasUserAudio: conversation.hasUserAudio,
+        hasResponseAudio: conversation.hasResponseAudio,
+      });
+
+      // Extract and register tasks from the conversation
+      await ctx.runMutation(api.tasks.registerFromConversation, {
+        messages: conversationData.transcript || [],
+      });
+
+      return { success: true };
+    } catch (error) {
+      // Log error
+      console.error("Error fetching conversation from ElevenLabs:", error);
       throw error;
     }
   },

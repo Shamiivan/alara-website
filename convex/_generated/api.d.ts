@@ -21,14 +21,15 @@ import type * as events from "../events.js";
 import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
 import type * as http from "../http.js";
-import type * as lib_crypto from "../lib/crypto.js";
-import type * as lib_getUser from "../lib/getUser.js";
 import type * as payments from "../payments.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
 import type * as types_flags from "../types/flags.js";
 import type * as user from "../user.js";
+import type * as utils_crypto from "../utils/crypto.js";
+import type * as utils_getUser from "../utils/getUser.js";
+import type * as utils_verify from "../utils/verify.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -47,14 +48,15 @@ declare const fullApi: ApiFromModules<{
   "feature/flags": typeof feature_flags;
   google: typeof google;
   http: typeof http;
-  "lib/crypto": typeof lib_crypto;
-  "lib/getUser": typeof lib_getUser;
   payments: typeof payments;
   stripe: typeof stripe;
   tasks: typeof tasks;
   telemetry: typeof telemetry;
   "types/flags": typeof types_flags;
   user: typeof user;
+  "utils/crypto": typeof utils_crypto;
+  "utils/getUser": typeof utils_getUser;
+  "utils/verify": typeof utils_verify;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

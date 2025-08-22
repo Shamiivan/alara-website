@@ -4,7 +4,7 @@ import { isAuthenticated } from "./auth";
 import { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
-import { getUserByCtx } from "./lib/getUser";
+import { getUserByCtx } from "./utils/getUser";
 
 export const getCurrentUser = query({
   args: {},

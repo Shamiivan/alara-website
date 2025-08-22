@@ -68,7 +68,7 @@ const schema = defineSchema({
 
   // NEW TABLE FOR CONVERSATION TRANSCRIPTS
   conversations: defineTable({
-    callId: v.id("calls"),
+    callId: v.optional(v.id("calls")),
     userId: v.id("users"),
     conversationId: v.string(), // From ElevenLabs
     transcript: v.array(v.object({
