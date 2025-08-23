@@ -4,7 +4,6 @@ import { internal, api } from "./_generated/api";
 import { auth } from "./auth";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { get } from "http";
-import { getEmailFromIdToken } from "./utils/google";
 import { JwtPayload } from "./types/google";
 import { use } from "react";
 
