@@ -34,7 +34,7 @@ const schema = defineSchema({
     paidAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
-    .index("email", ["email"])
+    .index("by_email", ["email"])
     .index("by_phone", ["phone"]),
 
   calls: defineTable({
