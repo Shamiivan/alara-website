@@ -290,3 +290,21 @@ export const markUserPaid = internalMutation({
     }
   },
 });
+
+export const getUserByEmail = query({
+  args: {
+    email: v.string(),
+  },
+  handler: async (ctx, { email }) => {
+    try {
+      const user = await ctx.db.query("users")
+        .withIndex("by_email", (q) => q.eq("email", email))
+        .unique();
+      console.log("[getUserByEmail] Found user by email:", email, user);
+      return user;
+    } catch (error) {
+      console.error("[getUserByEmail] Error:", error);
+      throw new Error("Failed to retrieve user");
+    }
+  },
+});
