@@ -1,12 +1,5 @@
 "use client";
-
 import * as React from "react";
-
-/**
- * Alara Buttons — self-contained, no external CSS.
- * Charming micro-interactions inspired by Kevin Hale’s
- * “tiny delights” (relationship > interface).
- */
 
 type Size = "sm" | "md" | "lg";
 type Variant = "primary" | "secondary" | "tertiary" | "link";
