@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LinkButton, PrimaryButton, SecondaryButton, TertiaryButton } from "@/components/ui/CustomButton";
+import { useRouter } from "next/navigation";
 
 /**
  * Alara Navbar — Kevin Hale philosophy + Alara design guidelines
@@ -34,6 +36,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
 
   // Close on route change
@@ -95,7 +98,9 @@ export default function Navbar() {
             {/* Right cluster: Help + CTA (desktop) */}
             <div className="hidden md:flex items-center gap-3">
               <HelpLink />
-              <CTA href="/dashboard">Start 30‑day pilot</CTA>
+              <PrimaryButton onClick={() => router.push("/dashboard")}>
+                Start 30‑day pilot
+              </PrimaryButton>
             </div>
 
             {/* Mobile menu button */}
@@ -136,9 +141,12 @@ export default function Navbar() {
                 <HelpLink mobile />
               </li>
               <li className="pt-1">
-                <CTA href="/dashboard" mobile>
+                <PrimaryButton
+                  onClick={() => router.push("/dashboard")}
+                  className="w-full text-left"
+                >
                   Start 30‑day pilot
-                </CTA>
+                </PrimaryButton>
               </li>
             </ul>
           </div>

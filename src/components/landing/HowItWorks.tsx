@@ -41,7 +41,7 @@ const HowItWorks = () => {
                 Check-in Call <span className="text-[hsl(var(--muted-foreground))]">(when the tasks are scheduled)</span>
               </h3>
               <p className="text-base text-muted-foreground mb-2">
-                A quick call to see how it&apos;s going. Are you on track? Did something change? Should we adjust?
+                A quick call to see how it&apos;s going.
               </p>
               {/* list of question remove the bullet point  */}
               {/* make the list align center */}
@@ -74,7 +74,7 @@ const HowItWorks = () => {
               <div className="absolute -inset-0.5 bg-gradient-to-r from-[hsl(var(--primary)/0.6)] via-[hsl(var(--secondary)/0.7)] to-[hsl(var(--primary)/0.6)] rounded-full blur-sm opacity-60 group-hover:opacity-90 transition-all duration-500"></div>
 
               <Button asChild size="lg" className="relative text-base sm:text-lg font-semibold px-8 py-4 h-auto rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--secondary))] hover:from-[hsl(var(--secondary))] hover:to-[hsl(var(--primary))] shadow-md hover:shadow-lg transition-all duration-300 border border-white/10">
-                <Link href="/onboarding" className="flex items-center gap-2">
+                <Link href="/dashboard" className="flex items-center gap-2">
                   <span>Join the Pilot</span>
                   <CheckCircle className="w-5 h-5" />
                 </Link>
