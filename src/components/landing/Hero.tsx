@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import AudioPlayer from "./AudioPlayer";
 import { useRouter } from "next/navigation";
+import { PrimaryButton, SecondaryButton, TertiaryButton } from "../ui/CustomButton";
 
 const Hero = () => {
   const router = useRouter();
@@ -18,6 +19,8 @@ const Hero = () => {
      * - left-1/2 / -translate-x-1/2 centers the w-screen element even inside a max-w container
      * - isolation + overflow-hidden avoid bleed side-effects on siblings
      */
+
+
     <section
       className="
         relative isolate overflow-hidden
@@ -32,7 +35,7 @@ const Hero = () => {
       <div
         aria-hidden="true"
         className="
-          pointer-events-none absolute inset-x-0 -top-16 mx-auto h-64 w-[90%] max-w-5xl
+          pointer-events-none absolute inset-x-0 -top-16 mx-auto h-64 w-[100%] max-w-5xl
           rounded-[48px] blur-3xl
           bg-[hsl(var(--primary)/0.08)]
           dark:bg-[hsl(var(--primary)/0.12)]
@@ -53,27 +56,19 @@ const Hero = () => {
           </p>
         </div>
 
-        {/* Primary CTA */}
-        <div className="mb-8 sm:mb-10 fade-in flex justify-center gap-3">
-          <Button
-            onClick={handleFindFirstStep}
+        <div className="mb-8 sm:mb-10 fade-in flex flex-col sm:flex-row justify-center gap-3">
+          <PrimaryButton
             size="lg"
-            className="
-              bg-[hsl(var(--primary))]
-              hover:bg-[hsl(var(--primary)/0.9)]
-              text-primary-foreground
-              px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg font-medium
-              rounded-xl shadow-sm transition-transform duration-250
-              hover:shadow-md hover:scale-[1.01] focus-visible:scale-[1.01]
-            "
+            onClick={() => router.push("/dashboard")}
+            hint="Money Back Guarantee"
           >
-            Find your first step →
-          </Button>
-        </div>
+            Find my first step
+          </PrimaryButton>
 
-        {/* Proof via audio (short, optional) */}
-        <div className="flex justify-center mb-8 sm:mb-10 fade-in">
-          <AudioPlayer aria-label="Hear a 20-second example of planning a clear first step" />
+          {/* Proof via audio (short, optional) */}
+          <div className="flex justify-center mb-8 sm:mb-10 fade-in">
+            <AudioPlayer aria-label="Hear a 20-second example of planning a clear first step" />
+          </div>
         </div>
 
         {/* Social proof / positioning */}

@@ -2,8 +2,10 @@
 
 import { MessageSquare, SunMoon, Bell, Sparkles, Heart, Coffee, Smile } from "lucide-react";
 import { useEffect, useRef, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 const WhatWereBuilding = () => {
+  const router = useRouter();
   const card4Ref = useRef<HTMLDivElement>(null);
   const [activeEmoji, setActiveEmoji] = useState<string>("✨");
 
@@ -176,7 +178,9 @@ const WhatWereBuilding = () => {
 
         {/* Join the Pilot Button */}
         <div className="text-center">
-          <button className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-light))] hover:from-[hsl(var(--primary-light))] hover:to-[hsl(var(--primary))] text-white font-medium py-3 px-8 rounded-full transition-all transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2 mx-auto">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary-light))] hover:from-[hsl(var(--primary-light))] hover:to-[hsl(var(--primary))] text-white font-medium py-3 px-8 rounded-full transition-all transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2 mx-auto">
             <span>Join the Pilot</span>
             <Heart className="w-4 h-4" />
           </button>
