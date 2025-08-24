@@ -34,7 +34,7 @@ const schema = defineSchema({
     paidAt: v.optional(v.number()),
   })
     .index("by_token", ["tokenIdentifier"])
-    .index("by_email", ["email"])
+    .index("email", ["email"])  // using this format to match what @convex-dev/auth expects
     .index("by_phone", ["phone"]),
 
   calls: defineTable({

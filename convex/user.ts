@@ -298,7 +298,7 @@ export const getUserByEmail = query({
   handler: async (ctx, { email }) => {
     try {
       const user = await ctx.db.query("users")
-        .withIndex("by_email", (q) => q.eq("email", email))
+        .withIndex("email", (q) => q.eq("email", email))
         .unique();
       console.log("[getUserByEmail] Found user by email:", email, user);
       return user;
