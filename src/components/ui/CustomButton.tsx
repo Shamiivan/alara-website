@@ -41,31 +41,12 @@ function StyleInjector() {
     if (injected) return;
     injected = true;
     const css = `
-    @keyframes subtle-bounce {
-      0%, 100% { transform: translateY(0) }
-      50% { transform: translateY(-1px) }
-    }
-    @keyframes sparkle-sheen {
-      0% { transform: translateX(-120%) }
-      100% { transform: translateX(120%) }
-    }
-    @keyframes corner-in {
-      0% { transform: scale(0.6); opacity: 0 }
-      100% { transform: scale(1); opacity: 1 }
-    }
-    @keyframes underline-slide {
-      0% { transform: scaleX(0); opacity: 0.6 }
-      100% { transform: scaleX(1); opacity: 1 }
-    }
-    @keyframes arrow-nudge {
-      0% { transform: translateX(0) }
-      50% { transform: translateX(2px) }
-      100% { transform: translateX(0) }
-    }
-    @keyframes calm-ripple {
-      0% { opacity: 0.0; transform: scale(0.85) }
-      100% { opacity: 0.0; transform: scale(1.25) }
-    }
+    @keyframes subtle-bounce { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-1px) } }
+    @keyframes sparkle-sheen { 0% { transform: translateX(-120%) } 100% { transform: translateX(120%) } }
+    @keyframes corner-in { 0% { transform: scale(0.6); opacity: 0 } 100% { transform: scale(1); opacity: 1 } }
+    @keyframes underline-slide { 0% { transform: scaleX(0); opacity: 0.6 } 100% { transform: scaleX(1); opacity: 1 } }
+    @keyframes arrow-nudge { 0% { transform: translateX(0) } 50% { transform: translateX(2px) } 100% { transform: translateX(0) } }
+    @keyframes calm-ripple { 0% { opacity: 0.0; transform: scale(0.85) } 100% { opacity: 0.0; transform: scale(1.25) } }
     .btn-pressable { transition: transform 150ms ease }
     .btn-pressable:hover { transform: translateY(-1px) }
     .btn-pressable:active { transform: translateY(0) }
@@ -154,8 +135,9 @@ function variantStyle(variant: Variant, disabled?: boolean): React.CSSProperties
 }
 
 /* ---------- Interactive hookups (hover states) ---------- */
+/* OPTION A: widen ref type to allow null */
 function useInteractive(
-  ref: React.RefObject<HTMLButtonElement>,
+  ref: React.RefObject<HTMLButtonElement | null>,
   variant: Variant,
   disabled?: boolean
 ) {
@@ -199,7 +181,6 @@ function useInteractive(
 
 /* ---------- Charming adornments per variant ---------- */
 function PrimaryCharm() {
-  // moving shimmer bar + tiny sparkle svg
   return (
     <>
       {/* sheen */}
@@ -227,9 +208,7 @@ function PrimaryCharm() {
         />
       </span>
       <style>{`
-        button:hover .primary-sheen {
-          animation: sparkle-sheen 800ms ease;
-        }
+        button:hover .primary-sheen { animation: sparkle-sheen 800ms ease; }
       `}</style>
 
       {/* sparkle dot */}
@@ -239,12 +218,7 @@ function PrimaryCharm() {
         height="12"
         viewBox="0 0 24 24"
         fill="none"
-        style={{
-          position: "absolute",
-          right: 10,
-          top: 8,
-          opacity: 0.85,
-        }}
+        style={{ position: "absolute", right: 10, top: 8, opacity: 0.85 }}
       >
         <path
           d="M12 2l2.2 5.6L20 10l-5.6 2.2L12 18l-2.2-5.8L4 10l5.8-2.4L12 2z"
@@ -256,7 +230,6 @@ function PrimaryCharm() {
 }
 
 function SecondaryCharm() {
-  // four tiny corner notches animate in
   const notch: React.CSSProperties = {
     position: "absolute",
     width: 10,
@@ -288,9 +261,7 @@ function SecondaryCharm() {
         />
       </span>
       <style>{`
-        button:hover .notch { 
-          animation: corner-in 220ms ease both; 
-        }
+        button:hover .notch { animation: corner-in 220ms ease both; }
         button:hover .notch.tr { animation-delay: 40ms }
         button:hover .notch.bl { animation-delay: 80ms }
         button:hover .notch.br { animation-delay: 120ms }
@@ -300,7 +271,6 @@ function SecondaryCharm() {
 }
 
 function TertiaryCharm() {
-  // calm ripple aura on hover
   return (
     <>
       <span
@@ -325,7 +295,6 @@ function TertiaryCharm() {
 }
 
 function LinkCharm() {
-  // animated underline + arrow nudge
   return (
     <>
       <span
@@ -343,20 +312,12 @@ function LinkCharm() {
           opacity: 0.9,
         }}
       />
-      <span
-        aria-hidden
-        className="link-arrow"
-        style={{ display: "inline-flex", marginLeft: 6 }}
-      >
+      <span aria-hidden className="link-arrow" style={{ display: "inline-flex", marginLeft: 6 }}>
         →
       </span>
       <style>{`
-        .link-host:hover .link-underline { 
-          animation: underline-slide 220ms ease forwards 
-        }
-        .link-host:hover .link-arrow { 
-          animation: arrow-nudge 360ms ease 
-        }
+        .link-host:hover .link-underline { animation: underline-slide 220ms ease forwards }
+        .link-host:hover .link-arrow { animation: arrow-nudge 360ms ease }
       `}</style>
     </>
   );
@@ -380,7 +341,10 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const d = dims(size);
     const btnRef = React.useRef<HTMLButtonElement | null>(null);
+
+    // keep ref exposure as-is
     React.useImperativeHandle(ref, () => btnRef.current as HTMLButtonElement);
+
     useInteractive(btnRef, variant, disabled);
 
     const base: React.CSSProperties = {
@@ -393,7 +357,6 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
       animation: pulse ? "subtle-bounce 1100ms ease-in-out infinite" : undefined,
     };
 
-    // class helpers for charms
     const hostClass =
       variant === "tertiary"
         ? "btn-pressable ghost-host"
@@ -445,10 +408,10 @@ export const PrimaryButton = (p: Omit<ButtonProps, "variant">) => (
 );
 export const SecondaryButton = (p: Omit<ButtonProps, "variant">) => (
   <ReusableButton variant="secondary" {...p} />
-); // outline only
+);
 export const TertiaryButton = (p: Omit<ButtonProps, "variant">) => (
   <ReusableButton variant="tertiary" {...p} />
-); // ghost
+);
 export const LinkButton = (p: Omit<ButtonProps, "variant">) => (
   <ReusableButton variant="link" {...p} />
-); // text + underline
+);
