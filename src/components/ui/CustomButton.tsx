@@ -248,7 +248,7 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
       setNode(el);
       // forward the ref to parent
       if (typeof ref === "function") ref(el);
-      else if (ref && "current" in (ref as any)) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = el;
+      else if (ref && typeof ref === 'object' && 'current' in ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = el;
     }, [ref]);
 
     useInteractive(node, variant, disabled);

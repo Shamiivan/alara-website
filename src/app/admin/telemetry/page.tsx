@@ -15,7 +15,7 @@ const IMPORTANT_EVENTS = ["oauth_success", "freebusy_ok", "events_created", "err
 export default function TelemetryPage() {
   const [eventFilter, setEventFilter] = useState("");
   const [userFilter, setUserFilter] = useState<Id<"users"> | null>(null);
-  const [limit, setLimit] = useState(200);
+  const limit = 200;
 
   // Reset filters
   const resetFilters = () => {

@@ -1,5 +1,4 @@
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useEventLogger } from "@/lib/eventLogger";
 import { PrimaryButton } from "@/components/ui/CustomButton";

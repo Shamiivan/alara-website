@@ -1,16 +1,12 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import AudioPlayer from "./AudioPlayer";
 import { useRouter } from "next/navigation";
-import { PrimaryButton, SecondaryButton, TertiaryButton } from "../ui/CustomButton";
+import { PrimaryButton } from "../ui/CustomButton";
 
 const Hero = () => {
   const router = useRouter();
 
-  const handleFindFirstStep = () => {
-    router.push("/dashboard");
-  };
 
   return (
     /**

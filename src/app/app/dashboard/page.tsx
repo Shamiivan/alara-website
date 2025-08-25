@@ -76,19 +76,6 @@ export default function DashboardPage() {
     width: "100%",
   };
 
-  const headerStyle: React.CSSProperties = {
-    backgroundColor: TOKENS.cardBg,
-    borderBottom: `1px solid ${TOKENS.border}`,
-  };
-
-  const headerInnerStyle: React.CSSProperties = {
-    maxWidth: 1120,
-    margin: "0 auto",
-    padding: "16px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  };
 
   const titleStyle: React.CSSProperties = {
     fontSize: 20,
