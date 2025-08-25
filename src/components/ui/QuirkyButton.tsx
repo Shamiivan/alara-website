@@ -46,7 +46,7 @@ export const QuirkyButton = ({
 }: {
   children: React.ReactNode;
   hint?: string;
-  onClick?: () => void;
+  onClick?: () => void | undefined;
 }) => {
   React.useEffect(injectCSS, []);
 
