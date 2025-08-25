@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LinkButton, PrimaryButton, SecondaryButton, TertiaryButton } from "@/components/ui/CustomButton";
+import { PrimaryButton } from "@/components/ui/CustomButton";
 import { useRouter } from "next/navigation";
 
 /**
@@ -225,22 +225,6 @@ function HelpLink({ mobile = false }: { mobile?: boolean }) {
   );
 }
 
-function CTA({ href, children, mobile = false }: { href: string; children: React.ReactNode; mobile?: boolean }) {
-  const sizing = mobile ? "w-full h-11 px-4" : "h-9 px-4";
-  return (
-    <Link
-      href={href}
-      className={`inline-flex items-center justify-center rounded-xl font-medium ${sizing} transition-transform focus:outline-none focus-visible:ring-2 active:translate-y-[1px]`}
-      style={{
-        background: `linear-gradient(135deg, ${COLORS.indigo}, ${COLORS.purple})`,
-        color: COLORS.white,
-        boxShadow: "0 8px 24px rgba(79,70,229,0.35)",
-      }}
-    >
-      {children}
-    </Link>
-  );
-}
 
 // ---- utils ----
 function hexWithAlpha(hex: string, alpha: number) {
