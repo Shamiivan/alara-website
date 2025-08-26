@@ -13,4 +13,8 @@ export const TOKENS = {
   warn: "#F59E0B",
   radius: 12,
   shadow: "0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.06)",
+  error: "#EF4444",
+  errorBg: "rgba(239,68,68,0.12)",
+  inputBg: "#FFFFFF",
+
 };
