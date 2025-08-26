@@ -44,3 +44,4 @@ STRIPE_WEBHOOK_SECURITY.md
 old/*
 data.json
 data2.json
+.kilocode/mcp.json
