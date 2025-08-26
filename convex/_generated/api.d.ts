@@ -13,6 +13,8 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as admin_schedule from "../admin/schedule.js";
+import type * as admin_user from "../admin/user.js";
 import type * as auth from "../auth.js";
 import type * as calendar from "../calendar.js";
 import type * as calls from "../calls.js";
@@ -23,6 +25,7 @@ import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
 import type * as http from "../http.js";
 import type * as payments from "../payments.js";
+import type * as scheduledCall from "../scheduledCall.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
@@ -43,6 +46,8 @@ import type * as utils_verify from "../utils/verify.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "admin/schedule": typeof admin_schedule;
+  "admin/user": typeof admin_user;
   auth: typeof auth;
   calendar: typeof calendar;
   calls: typeof calls;
@@ -53,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   google: typeof google;
   http: typeof http;
   payments: typeof payments;
+  scheduledCall: typeof scheduledCall;
   stripe: typeof stripe;
   tasks: typeof tasks;
   telemetry: typeof telemetry;

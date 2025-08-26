@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { CallButton } from "@/components/calls/CallButton";
+import NextCallCard from "@/components/dashboard/NextCallCard";
 
 export default function Dashboard() {
   const user = useQuery(api.user.getCurrentUser);
@@ -308,6 +309,16 @@ export default function Dashboard() {
                 </div>
               </>
             )}
+          </section>
+
+          <section className="fade-in" style={cardStyle}>
+            <NextCallCard
+              initialUtc={user?.callTimeUtc ?? null}
+              initialTimeZone={user?.timezone ?? null}
+              onSave={async ({ }) => {
+                // Handle save logic here
+              }}
+            />
           </section>
 
           {/* Right: Actions */}

@@ -300,7 +300,6 @@ export const getUserByEmail = query({
       const user = await ctx.db.query("users")
         .withIndex("email", (q) => q.eq("email", email))
         .unique();
-      console.log("[getUserByEmail] Found user by email:", email, user);
       return user;
     } catch (error) {
       console.error("[getUserByEmail] Error:", error);
@@ -308,3 +307,30 @@ export const getUserByEmail = query({
     }
   },
 });
+
+
+export const updateCallTime = mutation({
+  args: {
+    callTime: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    // Update the user's call time and time zone
+    await ctx.db.patch(userId, {
+      callTimeUtc: args.callTime,
+    });
+
+    // run mutation to create scheduled call
+    await ctx.runMutation(api.scheduledCall.create, {
+      userId,
+      scheduledAtUtc: Date.parse(args.callTime),
+      retryCount: 0,
+    });
+    console.log("[updateCallTime] Updated call time for user:", userId);
+  }
+});
+

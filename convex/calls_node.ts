@@ -473,7 +473,6 @@ export const handleElevenLabsWebhookTemp = action({
       const getCreateTaskResults = createToolCallExtractor('create_task');
       const toolCalls = getCreateTaskResults(conversationData.transcript);
 
-      console.log("Create task results:", toolCalls);
       for (const toolCall of toolCalls) {
         console.log("User Id");
         await ctx.runMutation(api.tasks.create_task, {
