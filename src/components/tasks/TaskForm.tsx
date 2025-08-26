@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { Plus, X, Calendar, Clock, Sparkles, Info } from "lucide-react";
 
 // Use your shared tokens + buttons
@@ -235,7 +236,7 @@ export default function TaskForm({ onSuccess, onCancel, compact }: TaskFormProps
         timezone: tz,
         status: "scheduled",
         source: "manual",
-        userId: (user as any)._id,
+        userId: user._id as Id<"users">,
         reminderMinutesBefore: reminderMinutes,
       });
       setOk(true);

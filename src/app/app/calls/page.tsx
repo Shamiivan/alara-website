@@ -77,15 +77,16 @@ export default function CallsPage() {
 
   // Keyboard shortcut: r to refresh selected conversation
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent): void => {
       if ((e.key === "r" || e.key === "R") && selectedCallId) {
         e.preventDefault();
         void handleFetchConversation(selectedCallId);
       }
     };
-    // Fix the type casting with proper event type
-    window.addEventListener("keydown", onKey as EventListener);
-    return () => window.removeEventListener("keydown", onKey as EventListener);
+
+    // Use properly typed event listener
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCallId]);
 
@@ -207,7 +208,7 @@ export default function CallsPage() {
                 </div>
 
                 <p className="mt-2 text-sm" style={{ color: TOKENS.subtext }}>
-                  Quick chat → transcript → gentle nudge. That’s the loop.
+                  Quick chat → transcript → gentle nudge. That&apos;s the loop.
                 </p>
 
                 <div className="mt-4 flex items-center gap-2">
@@ -414,7 +415,7 @@ export default function CallsPage() {
 
                     <div className="mt-4 rounded-[10px] border p-3 text-sm" style={{ borderColor: TOKENS.border, background: TOKENS.bg, color: TOKENS.subtext }}>
                       <MessageSquare className="mr-2 inline h-4 w-4" />
-                      We’ll keep improving transcripts. Spot a mistake? It helps to speak close to the mic <Mic className="mb-0.5 inline h-4 w-4" />
+                      We&apos;ll keep improving transcripts. Spot a mistake? It helps to speak close to the mic <Mic className="mb-0.5 inline h-4 w-4" />
                     </div>
                   </Fragment>
                 )}

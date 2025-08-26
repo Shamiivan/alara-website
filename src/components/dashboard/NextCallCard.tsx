@@ -62,7 +62,6 @@ export default function NextCallCard({
       setTimeStr(time);
       setTimeZone(tzSource);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.callTimeUtc, user?.timezone, initialUtc, pulledTZ]);
 
   const displayLine = useMemo(() => {

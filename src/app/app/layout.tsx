@@ -190,7 +190,7 @@ function NavItem({ href, label, icon, isActive, isCollapsed, style }: NavItemPro
   );
 }
 
-function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
+function Sidebar({ isCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -206,16 +206,16 @@ function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
     "Progress over perfection.",
     "Every task completed is a win worth celebrating.",
     "Focus on one small thing at a time.",
-    "You've got this! One step at a time.",
+    "You&apos;ve got this! One step at a time.",
     "Remember to breathe and take breaks.",
-    "Today's efforts build tomorrow's success."
+    "Today&apos;s efforts build tomorrow&apos;s success."
   ];
 
   // Select a random quote
   useEffect(() => {
     const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
     setQuote(randomQuote);
-  }, []);
+  }, [quotes]);
 
   useEffect(() => {
     // Check for vibration support
@@ -297,7 +297,7 @@ function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
             maxWidth: "220px"
           }}
         >
-          <p className="text-sm">"{quote}"</p>
+          <p className="text-sm">&quot;{quote}&quot;</p>
           <div
             className="absolute -top-2 left-4 h-2 w-4 rotate-45 bg-white border-t border-l"
             style={{ borderColor: TOKENS.border }}
@@ -389,7 +389,7 @@ function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
         <div className="font-semibold mb-1.5 flex items-center gap-2" style={{ color: TOKENS.text }}>
           <Sparkles size={14} className="text-amber-500" /> Tip
         </div>
-        Keep it simple: pick one clear step. We'll check in later.
+        Keep it simple: pick one clear step. We&apos;ll check in later.
       </div>
     </>
   );
@@ -524,18 +524,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     document.addEventListener("dblclick", handleDoubleClick);
 
     // Keyboard shortcut for quick task
-    const handleKeydown = (e: globalThis.KeyboardEvent) => {
+    const handleKeydown = (e: globalThis.KeyboardEvent): void => {
       if (e.key === 't' && !e.ctrlKey && !e.metaKey &&
         !(e.target instanceof HTMLInputElement) &&
         !(e.target instanceof HTMLTextAreaElement)) {
         // Show tip about keyboard shortcut
-        setCurrentTip("Press 'T' to quickly add a new task! (Coming soon)");
+        setCurrentTip("Press &apos;T&apos; to quickly add a new task! (Coming soon)");
         setShowTip(true);
         setTimeout(() => setShowTip(false), 3000);
       }
     };
 
-    document.addEventListener("keydown", handleKeydown as EventListener);
+    document.addEventListener("keydown", handleKeydown);
 
     // Cursor spotlight effect
     const handleMouseMove = (e: MouseEvent) => {
@@ -560,7 +560,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener("resize", checkMobile);
       document.removeEventListener("dblclick", handleDoubleClick);
-      document.removeEventListener("keydown", handleKeydown as EventListener);
+      document.removeEventListener("keydown", handleKeydown);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseenter', handleMouseEnter);
       document.removeEventListener('mouseleave', handleMouseLeave);
@@ -652,7 +652,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               onClick={() => setShowTip(false)}
               className="ml-auto -mt-1 -mr-1 p-1 rounded-full hover:bg-gray-100"
             >
-              <X size={14} />
+              <X size={20} />
             </button>
           </div>
         </div>

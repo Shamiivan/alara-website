@@ -9,10 +9,9 @@ export interface ButtonProps
   hint?: string;
   size?: Size;
   variant?: Variant;
-  /** If true, the button won’t stretch. Default is false (stretches). */
+  /** If true, the button won't stretch. Default is false (stretches). */
   inline?: boolean;
-  /** kept for backward compat but no longer needed */
-  fullWidth?: boolean;
+  // fullWidth prop has been deprecated in favor of 'inline'
   pulse?: boolean;
 }
 
@@ -238,7 +237,6 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = "md",
       variant = "primary",
       inline = false,      // NEW: default stretch
-      fullWidth,           // kept for compat; ignored
       pulse,
       disabled,
       style,

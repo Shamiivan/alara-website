@@ -129,7 +129,7 @@ export function TaskForm({ onSuccess, onCancel }: { onSuccess?: () => void; onCa
         timezone: tz,
         status: "scheduled",
         source: "manual",
-        userId: (user as any)._id,
+        userId: user._id as Id<"users">,
         reminderMinutesBefore: reminderMinutes,
       });
       setOk(true);
@@ -213,7 +213,8 @@ export default function TodoApp() {
 
   const [showForm, setShowForm] = React.useState(false);
   const [nudge, setNudge] = React.useState<string | null>(null);
-  const [freshKey, setFreshKey] = React.useState<Id<"tasks"> | null>(null);
+  // This state is used elsewhere for highlighting newly added tasks
+  const [freshKey] = React.useState<Id<"tasks"> | null>(null);
   // Add missing state variables for animations
   const [completedAnimation, setCompletedAnimation] = React.useState<Id<"tasks"> | null>(null);
   const [deleteAnimation, setDeleteAnimation] = React.useState<Id<"tasks"> | null>(null);
@@ -231,8 +232,11 @@ export default function TodoApp() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Store tasks in a stable reference for useMemo
+  const tasksList = tasks as ConvexTask[];
+
   const todos: Todo[] = React.useMemo(() => {
-    const list = (tasks as ConvexTask[]).map(t => ({
+    const list = tasksList.map(t => ({
       _id: t._id,
       _creationTime: t._creationTime,
       title: t.title,
@@ -248,7 +252,7 @@ export default function TodoApp() {
       const bd = b.due ? new Date(b.due).getTime() : Number.POSITIVE_INFINITY;
       if (ad !== bd) return ad - bd; return b._creationTime - a._creationTime;
     });
-  }, [tasks]);
+  }, [tasksList]);
 
   const total = todos.length; const done = todos.filter(t => t.completed).length; const pct = total ? Math.round((done / total) * 100) : 0;
 

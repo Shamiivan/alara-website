@@ -176,11 +176,17 @@ export function getDefaultTimeZone(): string {
   }
 }
 
+// Type for Intl with optional supportedValuesOf method
+type IntlWithSupportedValues = {
+  supportedValuesOf(key: string): string[];
+};
+
 /** Compact list of time zones with modern API fallback */
 export function getAllTimeZones(): string[] {
   // Keep small and predictable; you can swap for a full list later if needed
-  if ((Intl as any).supportedValuesOf) {
-    const vals = (Intl as any).supportedValuesOf("timeZone") as string[];
+  const extendedIntl = Intl as unknown as IntlWithSupportedValues;
+  if (extendedIntl.supportedValuesOf) {
+    const vals = extendedIntl.supportedValuesOf("timeZone");
     if (Array.isArray(vals) && vals.length) return vals;
   }
   return [
