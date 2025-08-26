@@ -4,9 +4,10 @@ import * as React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import { Plus, X, Calendar, Clock, CheckCircle2, Circle, Trash2, Sparkles } from "lucide-react";
+import { Plus, X, Calendar, Clock, CheckCircle2, Circle, Trash2, Sparkles, CheckSquare } from "lucide-react";
 import { TOKENS } from "@/components/tokens";
 import { PrimaryButton } from "@/components/ui/CustomButton";
+import { cn } from "@/lib/utils";
 
 /**
  * -------------------------------------------------------------
@@ -213,12 +214,22 @@ export default function TodoApp() {
   const [showForm, setShowForm] = React.useState(false);
   const [nudge, setNudge] = React.useState<string | null>(null);
   const [freshKey, setFreshKey] = React.useState<Id<"tasks"> | null>(null);
+  // Add missing state variables for animations
+  const [completedAnimation, setCompletedAnimation] = React.useState<Id<"tasks"> | null>(null);
+  const [deleteAnimation, setDeleteAnimation] = React.useState<Id<"tasks"> | null>(null);
+  const [shouldAnimate, setShouldAnimate] = React.useState(false);
 
   type Priority = "low" | "medium" | "high";
   interface ConvexTask { _id: Id<"tasks">; _creationTime: number; title: string; due: string; timezone: string; status?: string; source?: string; }
   interface Todo { _id: Id<"tasks">; _creationTime: number; title: string; completed: boolean; due: string; timezone: string; priority: Priority; status?: string; }
 
-  React.useEffect(() => { Motion.injectOnce(); }, []);
+  // Initialize animations and motion helpers
+  React.useEffect(() => {
+    Motion.injectOnce();
+    // Allow animations after first render
+    const timer = setTimeout(() => setShouldAnimate(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const todos: Todo[] = React.useMemo(() => {
     const list = (tasks as ConvexTask[]).map(t => ({
@@ -242,26 +253,105 @@ export default function TodoApp() {
   const total = todos.length; const done = todos.filter(t => t.completed).length; const pct = total ? Math.round((done / total) * 100) : 0;
 
   async function toggle(id: Id<'tasks'>, next: boolean, title: string) {
-    await updateTask({ id, status: next ? "completed" : "scheduled" });
+    // Set animation state before API call for immediate feedback
     if (next) {
-      const msg = celebrate(title); setNudge(msg); setTimeout(() => setNudge(null), 1000);
+      setCompletedAnimation(id);
+      // Haptic feedback if available
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    }
+
+    await updateTask({ id, status: next ? "completed" : "scheduled" });
+
+    if (next) {
+      const msg = celebrate(title);
+      setNudge(msg);
+
+      // Clear animations after a delay
+      setTimeout(() => {
+        setNudge(null);
+        setCompletedAnimation(null);
+      }, 1500);
     }
   }
-  const remove = (id: Id<'tasks'>) => deleteTask({ id });
+
+  const remove = async (id: Id<'tasks'>) => {
+    // Animate before actual deletion
+    setDeleteAnimation(id);
+
+    // Small delay for animation before actual deletion
+    setTimeout(async () => {
+      await deleteTask({ id });
+      setDeleteAnimation(null);
+    }, 300);
+  };
 
   return (
-    <div style={{ padding: 8 }}>
+    <div style={{ padding: "8px 4px" }}>
       <StyleInjector />
 
-      {/* Header */}
-      <header className="fade-in" style={{ display: "grid", gridTemplateColumns: "1fr auto", alignItems: "end", gap: 12, margin: "4px 4px 10px" }}>
+      {/* Header - Enhanced with animations and better mobile layout */}
+      <header
+        className="fade-in"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          alignItems: "end",
+          gap: 12,
+          margin: "4px 0 16px",
+          padding: "0 4px"
+        }}
+      >
         <div style={{ display: "grid", gap: 8 }}>
-          <div className="chip" style={{ fontWeight: 600 }}><Sparkles size={16} /> {done ? `${done} done` : `Let's capture one tiny win`}</div>
-          <div className="progress" aria-hidden><div className="progress__bar" style={{ width: `${pct}%` }} /></div>
+          <div
+            className={`chip ${shouldAnimate ? "pulse-subtle" : ""}`}
+            style={{
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              maxWidth: "fit-content"
+            }}
+          >
+            <Sparkles size={16} className={shouldAnimate ? "wiggle-effect" : ""} />
+            {done ? (
+              <span className="flex items-center gap-1">
+                <span className="font-bold">{done}</span> completed
+              </span>
+            ) : (
+              "Let's capture one tiny win"
+            )}
+          </div>
+
+          <div className="progress" aria-hidden style={{ overflow: "hidden", borderRadius: "999px" }}>
+            <div
+              className="progress__bar"
+              style={{
+                width: `${pct}%`,
+                transition: "width 0.5s ease-out"
+              }}
+            />
+          </div>
         </div>
+
         <div>
           {!showForm && (
-            <button className="btn-ghost" onClick={() => setShowForm(true)}><Plus size={16} /> Add task</button>
+            <button
+              className="btn-ghost hover-lift"
+              onClick={() => setShowForm(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 14px", // Larger touch target for mobile
+                borderRadius: "10px",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <Plus size={16} />
+              <span style={{ fontWeight: 500 }}>Add task</span>
+            </button>
           )}
         </div>
       </header>
@@ -278,39 +368,170 @@ export default function TodoApp() {
         <div className="soft slide-down" style={{ margin: "0 4px 10px", padding: 10, textAlign: "center" }}>{nudge}</div>
       )}
 
-      {/* Empty state */}
+      {/* Empty state - Enhanced with delightful animations */}
       {todos.length === 0 && !showForm && (
-        <div className="card fade-in" style={{ borderStyle: "dashed", padding: "22px 16px", textAlign: "center", color: "#64748B" }}>
-          <h3 style={{ margin: 0 }}>Ready when you are</h3>
-          <p style={{ margin: "6px 0 0" }}>Tap <b>Add task</b>. Tiny steps welcome.</p>
+        <div
+          className="card fade-in hover-lift"
+          style={{
+            borderStyle: "dashed",
+            padding: "28px 20px",
+            textAlign: "center",
+            color: "#64748B",
+            borderRadius: "14px",
+            transition: "all 0.3s ease"
+          }}
+        >
+          <div className={`${shouldAnimate ? "float-effect" : ""}`}>
+            <div
+              className="mx-auto mb-3 flex items-center justify-center rounded-full"
+              style={{
+                width: "48px",
+                height: "48px",
+                background: TOKENS.accent,
+                boxShadow: "0 2px 10px rgba(79, 70, 229, 0.15)"
+              }}
+            >
+              <CheckSquare size={22} style={{ color: TOKENS.primary }} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: "18px", color: TOKENS.text }}>Ready when you are</h3>
+            <p style={{ margin: "10px 0 0" }}>
+              Tap <b style={{ color: TOKENS.primary }}>Add task</b> to get started.
+              <br className="hidden sm:block" /> Tiny steps are welcome.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* List */}
-      <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, display: "grid", gap: 10 }}>
-        {todos.map(t => (
-          <li key={t._id} className={`card pop-in`} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "start", padding: 12 }}>
-            <button className="btn-ghost" aria-pressed={t.completed} aria-label={t.completed ? "Mark as not done" : "Mark as done"} onClick={() => toggle(t._id, !t.completed, t.title)} style={{ height: 32, width: 32, display: "grid", placeItems: "center" }}>
-              {t.completed ? <CheckCircle2 size={20} color="#16A34A" /> : <Circle size={20} />}
+      {/* List - Enhanced with animations and mobile-friendly design */}
+      <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, display: "grid", gap: 12 }}>
+        {todos.map((t, index) => (
+          <li
+            key={t._id}
+            className={cn(
+              "card",
+              shouldAnimate ? "hover-lift" : "",
+              deleteAnimation === t._id ? "fade-out" : "",
+              freshKey === t._id ? "highlight-in" : ""
+            )}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr auto",
+              gap: 12,
+              alignItems: "start",
+              padding: "14px 12px",
+              borderRadius: "12px",
+              opacity: deleteAnimation === t._id ? 0 : 1,
+              transform: deleteAnimation === t._id ? 'translateX(-20px)' : 'none',
+              transition: 'opacity 0.3s ease, transform 0.3s ease',
+              // Staggered entrance animation
+              animationDelay: shouldAnimate ? `${index * 50}ms` : '0ms',
+            }}
+          >
+            <button
+              className={cn(
+                "btn-ghost",
+                completedAnimation === t._id ? "scale-110" : ""
+              )}
+              aria-pressed={t.completed}
+              aria-label={t.completed ? "Mark as not done" : "Mark as done"}
+              onClick={() => toggle(t._id, !t.completed, t.title)}
+              style={{
+                height: 40, // Larger touch target
+                width: 40, // Larger touch target
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "10px",
+                transition: "all 0.2s ease",
+                transform: completedAnimation === t._id ? 'scale(1.1)' : 'scale(1)'
+              }}
+            >
+              {t.completed ? (
+                <CheckCircle2
+                  size={22}
+                  color="#16A34A"
+                  className={completedAnimation === t._id ? "pulse-subtle" : ""}
+                />
+              ) : (
+                <Circle size={22} />
+              )}
             </button>
 
             <div style={{ minWidth: 0 }}>
-              {/* chips row */}
+              {/* chips row - improved styling */}
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
-                <span className={`chip ${t.priority === 'high' ? 'chip--warn' : ''}`}>
-                  {priorityEmoji(t.priority)} {t.priority}
+                <span
+                  className={`chip ${t.priority === 'high' ? 'chip--warn' : ''}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "4px 8px",
+                    borderRadius: "999px",
+                    fontSize: "12px"
+                  }}
+                >
+                  <span aria-hidden>{priorityEmoji(t.priority)}</span> {t.priority}
                 </span>
+
                 {t.due && (
-                  <span className="chip" title="Due">
+                  <span
+                    className="chip"
+                    title="Due"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
                     <Clock size={14} /> {formatDue(t.due)}
                   </span>
                 )}
               </div>
-              <p style={{ margin: "2px 0 8px", fontSize: 15, lineHeight: 1.35 }} className={t.completed ? "title-line" : undefined}>{t.title}</p>
-              <div className="muted" style={{ fontSize: 12 }}>{getTimeAgo(t._creationTime)}</div>
+
+              <p
+                style={{
+                  margin: "4px 0 8px",
+                  fontSize: 15,
+                  lineHeight: 1.4,
+                  fontWeight: t.completed ? 400 : 500,
+                  transition: "text-decoration 0.3s ease, opacity 0.3s ease",
+                  opacity: t.completed ? 0.8 : 1
+                }}
+                className={t.completed ? "title-line" : undefined}
+              >
+                {t.title}
+              </p>
+
+              <div
+                className="muted"
+                style={{
+                  fontSize: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{
+                    background: t.completed ? "#10B981" : "#94A3B8",
+                    opacity: 0.7
+                  }}
+                />
+                {getTimeAgo(t._creationTime)}
+              </div>
             </div>
 
-            <button className="icon-btn" onClick={() => remove(t._id)} aria-label="Delete task">
+            <button
+              className="icon-btn"
+              onClick={() => remove(t._id)}
+              aria-label="Delete task"
+              style={{
+                height: 36, // Larger touch target
+                width: 36, // Larger touch target
+                transition: "all 0.2s ease"
+              }}
+            >
               <Trash2 size={18} />
             </button>
           </li>

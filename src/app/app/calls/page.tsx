@@ -120,28 +120,56 @@ export default function CallsPage() {
     }
   }, [fetchConversation]);
 
+  // Add state to track animations and user interactions
+  const [animateIn, setAnimateIn] = useState(false);
+  const [sparkleCall, setSparkleCall] = useState(false);
+
+  // Enable animations after component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => setAnimateIn(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Add a fun animation when starting a call
+  const handleCallButtonClick = useCallback(() => {
+    setSparkleCall(true);
+    setTimeout(() => setSparkleCall(false), 1200);
+    handleStartCall();
+  }, [handleStartCall]);
+
   return (
     <TooltipProvider>
-      <div className="min-h-screen p-6" style={{ background: TOKENS.bg }}>
-        <div className="mx-auto max-w-6xl space-y-6">
-          {/* Header */}
-          <header className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold" style={{ color: TOKENS.text }}>Calls</h1>
-              <p className="mt-1 text-sm" style={{ color: TOKENS.subtext }}>
-                You’re one call away from clarity. We’ll handle the follow‑through — you just press the button.
+      <div className="min-h-screen px-4 py-4 sm:p-6" style={{ background: TOKENS.bg }}>
+        <div className="mx-auto max-w-6xl space-y-4 sm:space-y-6">
+          {/* Header with staggered animation */}
+          <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+            <div
+              style={{
+                opacity: animateIn ? 1 : 0,
+                transform: animateIn ? 'translateY(0)' : 'translateY(10px)',
+                transition: 'opacity 0.4s ease, transform 0.4s ease'
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: TOKENS.text }}>Calls</h1>
+                <Phone size={20} className="text-indigo-500" style={{ opacity: 0.8 }} />
+              </div>
+              <p className="mt-1 text-sm sm:text-base" style={{ color: TOKENS.subtext }}>
+                You're one call away from clarity. We'll handle the follow‑through — you just press the button.
               </p>
             </div>
+
             {toast && (
               <div
                 role="status"
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm shadow",
-                  toast.type === "success" ? "border" : "border"
+                  "rounded-md px-3 py-2 text-sm shadow-sm border",
+                  "transition-all duration-300 ease-in-out",
+                  toast.type === "success" ? "pop-in" : "wiggle-effect"
                 )}
                 style={{
                   borderColor: TOKENS.border,
-                  background: toast.type === "success" ? (TOKENS.successBg || "rgba(16,185,129,.12)") : (TOKENS.warnBg || "rgba(245,158,11,.12)"),
+                  background: toast.type === "success" ? (TOKENS.successBg) : (TOKENS.warnBg),
                   color: toast.type === "success" ? (TOKENS.text) : (TOKENS.text),
                 }}
               >
@@ -150,7 +178,12 @@ export default function CallsPage() {
             )}
           </header>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3"
+            style={{
+              opacity: animateIn ? 1 : 0,
+              transition: 'opacity 0.5s ease 0.2s'
+            }}
+          >
             {/* Left: Make a Call + Recent Calls */}
             <section className="space-y-6 md:col-span-1">
               {/* Make a Call */}
@@ -183,15 +216,41 @@ export default function CallsPage() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        className="min-w-[130px]"
-                        onClick={handleStartCall}
+                        className={cn(
+                          "min-w-[130px] relative overflow-hidden transition-all",
+                          sparkleCall ? "scale-105" : "",
+                          "hover-lift"
+                        )}
+                        onClick={handleCallButtonClick}
                         disabled={isLoading}
+                        style={{
+                          transform: sparkleCall ? 'scale(1.05)' : 'scale(1)',
+                          transition: 'transform 0.2s ease-out',
+                        }}
                       >
+                        {/* Sparkle animation overlay */}
+                        {sparkleCall && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Sparkles
+                              className="h-5 w-5 text-white"
+                              style={{
+                                animation: 'pulse 0.6s ease-in-out infinite alternate',
+                                position: 'absolute',
+                                left: '50%',
+                                top: '50%',
+                                transform: 'translate(-50%, -50%) scale(1.2)',
+                              }}
+                            />
+                          </span>
+                        )}
+
                         <Phone className="mr-2 h-4 w-4" />
-                        {isLoading ? "Calling…" : "Start Call"}
+                        <span className={sparkleCall ? "opacity-80" : ""}>
+                          {isLoading ? "Calling…" : "Start Call"}
+                        </span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>We’ll ring you and keep notes for you ✨</TooltipContent>
+                    <TooltipContent>We'll ring you and keep notes for you ✨</TooltipContent>
                   </Tooltip>
                 </div>
 
@@ -249,8 +308,20 @@ export default function CallsPage() {
                               </div>
                               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs" style={{ color: TOKENS.subtext }}>
                                 <span>Started: {fmt(c.initiatedAt)}</span>
-                                {c.duration ? <span>· Duration: {Math.round((c.duration ?? 0) / 1000)}s</span> : null}
-                                {c.errorMessage && <span className="truncate">· Error: {c.errorMessage}</span>}
+                                {c.duration ? (
+                                  <span className="flex items-center">
+                                    <span className="mx-1 w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <Clock className="mr-1 h-3 w-3" />
+                                    {Math.round((c.duration ?? 0) / 1000)}s
+                                  </span>
+                                ) : null}
+                                {c.errorMessage && (
+                                  <span className="flex items-center text-amber-600">
+                                    <span className="mx-1 w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <AlertTriangle className="mr-1 h-3 w-3" />
+                                    <span className="truncate">{c.errorMessage}</span>
+                                  </span>
+                                )}
                               </div>
                             </div>
                             {c.status === "completed" && !c.hasTranscript && (
@@ -315,11 +386,15 @@ export default function CallsPage() {
                           key={i}
                           className={cn(
                             "max-w-[80%] rounded-[12px] border p-3",
-                            m.role === "assistant" ? "ml-auto" : ""
+                            m.role === "assistant" ? "ml-auto" : "",
+                            "hover-lift transition-all duration-150"
                           )}
                           style={{
                             borderColor: TOKENS.border,
                             background: m.role === "assistant" ? (TOKENS.accent) : TOKENS.bg,
+                            opacity: animateIn ? 1 : 0,
+                            transform: animateIn ? 'translateY(0)' : 'translateY(8px)',
+                            transition: `opacity 0.4s ease ${i * 100 + 300}ms, transform 0.4s ease ${i * 100 + 300}ms`,
                           }}
                         >
                           <div className="mb-1 flex items-center gap-2 text-xs" style={{ color: TOKENS.subtext }}>
@@ -361,36 +436,115 @@ function Status({ s }: { s: string }) {
 }
 
 function EmptyCalls() {
+  // Add subtle animation to empty state
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <div className="rounded-[10px] border p-6 text-center" style={{ borderColor: TOKENS.border, background: TOKENS.bg }}>
-      <Phone className="mx-auto h-6 w-6" />
+    <div
+      className="rounded-[10px] border p-6 text-center hover-lift"
+      style={{
+        borderColor: TOKENS.border,
+        background: TOKENS.bg,
+        transition: 'all 0.3s ease'
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="relative inline-block">
+        <Phone
+          className={cn("mx-auto h-6 w-6", hovered ? "text-indigo-500 float-effect" : "")}
+          style={{ transition: 'color 0.3s ease' }}
+        />
+        {hovered && (
+          <span
+            className="absolute -top-1 -right-1 h-2 w-2 bg-indigo-500 rounded-full pulse-subtle"
+            aria-hidden="true"
+          />
+        )}
+      </div>
       <p className="mt-2 font-medium" style={{ color: TOKENS.text }}>No calls yet</p>
       <p className="mt-1 text-sm" style={{ color: TOKENS.subtext }}>
-        Your first call is a tiny step — and it counts. We’ll cheer you on.
+        Your first call is a tiny step — and it counts. We'll cheer you on.
       </p>
     </div>
   );
 }
 
 function EmptyConversation() {
+  // Add state for interactive elements
+  const [animate, setAnimate] = useState(false);
+
+  // Trigger animation periodically for a subtle pulse
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimate(true);
+      setTimeout(() => setAnimate(false), 1000);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="flex h-full min-h-[360px] items-center justify-center rounded-[10px] border" style={{ borderColor: TOKENS.border, background: TOKENS.bg }}>
-      <div className="text-center">
-        <Sparkles className="mx-auto h-6 w-6" />
-        <p className="mt-2 font-medium" style={{ color: TOKENS.text }}>Pick a call to see the conversation</p>
-        <p className="mt-1 text-sm" style={{ color: TOKENS.subtext }}>We’ll fetch transcripts automatically when they’re ready.</p>
+    <div
+      className="flex h-full min-h-[360px] items-center justify-center rounded-[10px] border"
+      style={{
+        borderColor: TOKENS.border,
+        background: TOKENS.bg,
+        transition: 'all 0.3s ease'
+      }}
+    >
+      <div className="text-center p-4 sm:p-6 max-w-sm">
+        <div className="relative inline-block mb-2">
+          <Sparkles
+            className={cn(
+              "mx-auto h-6 w-6 text-indigo-500",
+              animate ? "scale-110" : ""
+            )}
+            style={{
+              transition: 'transform 0.5s ease',
+              transform: animate ? 'scale(1.2)' : 'scale(1)'
+            }}
+          />
+          <span className="absolute top-0 right-0 h-2 w-2 bg-indigo-400 rounded-full pulse-subtle" />
+        </div>
+        <p className="mt-2 font-medium text-lg" style={{ color: TOKENS.text }}>
+          Pick a call to see the conversation
+        </p>
+        <p className="mt-2 text-sm" style={{ color: TOKENS.subtext }}>
+          We'll fetch transcripts automatically when they're ready.
+        </p>
       </div>
     </div>
   );
 }
 
 function Loader({ label = "Loading…" }: { label?: string }) {
+  // More engaging loader with subtle animation
   return (
     <div className="flex h-full min-h-[360px] items-center justify-center">
-      <div className="animate-pulse rounded-[10px] border p-4" style={{ borderColor: TOKENS.border, background: TOKENS.bg }}>
-        <div className="h-4 w-48 rounded bg-black/10" />
-        <div className="mt-2 h-3 w-72 rounded bg-black/10" />
-        <div className="mt-2 h-3 w-64 rounded bg-black/10" />
+      <div className="rounded-[12px] border p-5 shadow-sm"
+        style={{
+          borderColor: TOKENS.border,
+          background: TOKENS.bg,
+          animation: 'pulse 2s infinite ease-in-out'
+        }}
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-5 w-5 rounded-full bg-indigo-400/40"
+            style={{ animation: 'pulse 1.5s infinite ease-in-out' }}
+          />
+          <div className="h-4 w-48 rounded bg-black/10"
+            style={{ animation: 'pulse 1.5s infinite ease-in-out' }}
+          />
+        </div>
+        <div className="mt-2 h-3 w-72 rounded bg-black/10"
+          style={{ animation: 'pulse 1.5s infinite ease-in-out 0.2s' }}
+        />
+        <div className="mt-2 h-3 w-64 rounded bg-black/10"
+          style={{ animation: 'pulse 1.5s infinite ease-in-out 0.4s' }}
+        />
+        <div className="mt-2 h-3 w-32 rounded bg-black/10"
+          style={{ animation: 'pulse 1.5s infinite ease-in-out 0.6s' }}
+        />
         <p className="sr-only">{label}</p>
       </div>
     </div>

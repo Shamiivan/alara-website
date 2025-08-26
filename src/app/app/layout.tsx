@@ -81,9 +81,17 @@ function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  // Add haptic feedback support
+  const [canVibrate, setCanVibrate] = useState(false);
 
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
+    // Check for vibration support
+    if ('vibrate' in navigator) {
+      setCanVibrate(true);
+    }
+
+    // Mobile detection with a slightly larger breakpoint for better experience
+    const handler = () => setIsMobile(window.innerWidth < 800);
     handler();
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
@@ -93,7 +101,13 @@ function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
     if (isMobile) setShowMobileMenu(false);
   }, [pathname, isMobile]);
 
-  const toggleMobileMenu = () => setShowMobileMenu((s) => !s);
+  const toggleMobileMenu = () => {
+    setShowMobileMenu((s) => !s);
+    // Add subtle haptic feedback if supported
+    if (canVibrate) {
+      navigator.vibrate(5);
+    }
+  };
 
   const navItems = [
     { href: "/app/dashboard", label: "Dashboard", icon: <Home size={20} /> },
@@ -195,28 +209,59 @@ function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Hamburger */}
+      {/* Mobile Hamburger - improved position and styling */}
       {isMobile && (
         <button
           onClick={toggleMobileMenu}
-          className="fixed top-4 left-4 z-40 p-2 rounded-md shadow-sm"
-          style={{ background: TOKENS.cardBg, border: `1px solid ${TOKENS.border}` }}
+          className="fixed top-4 left-4 z-40 p-3 rounded-full shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
+          style={{
+            background: TOKENS.cardBg,
+            border: `1px solid ${TOKENS.border}`,
+            boxShadow: TOKENS.shadow
+          }}
           aria-label="Open menu"
         >
-          <Menu size={20} />
+          <Menu size={20} color={TOKENS.primary} />
         </button>
       )}
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer - improved animations and interactions */}
       {isMobile && (
-        <div className={cn("fixed inset-0 z-50 flex transition-transform duration-300 ease-in-out", showMobileMenu ? "translate-x-0" : "-translate-x-full")}
-          role="dialog" aria-modal="true" aria-label="Navigation">
-          <div className="w-[280px] h-full shadow-lg flex flex-col p-4" style={{ background: TOKENS.cardBg }}>
+        <div
+          className={cn(
+            "fixed inset-0 z-50 flex",
+            "transition-all duration-300 ease-in-out",
+            showMobileMenu ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation"
+        >
+          {/* Backdrop with blur effect */}
+          <div
+            className={cn(
+              "absolute inset-0 bg-black/30 backdrop-blur-sm",
+              "transition-opacity duration-300",
+              showMobileMenu ? "opacity-100" : "opacity-0"
+            )}
+            onClick={toggleMobileMenu}
+            aria-hidden="true"
+          />
+
+          {/* Drawer panel with improved animation */}
+          <div
+            className={cn(
+              "w-[85%] max-w-[320px] h-full shadow-lg flex flex-col p-5",
+              "transition-transform duration-300 ease-out",
+              showMobileMenu ? "translate-x-0" : "-translate-x-full"
+            )}
+            style={{
+              background: TOKENS.cardBg,
+              borderRight: `1px solid ${TOKENS.border}`
+            }}
+          >
             {sidebarContent}
           </div>
-          {showMobileMenu && (
-            <button className="flex-1 bg-black/30 backdrop-blur-sm" onClick={toggleMobileMenu} aria-label="Close menu" />
-          )}
         </div>
       )}
 
@@ -270,13 +315,39 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <style jsx global>{`
         :root { --ring: var(--focus-ring); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @keyframes wiggle { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(1deg); } 75% { transform: rotate(-1deg); } }
+        
         .fade-in { animation: fadeInUp 320ms ease forwards; }
-        @media (prefers-reduced-motion: reduce) { .fade-in { animation: none; } }
+        .pulse-subtle { animation: pulse 2s ease-in-out infinite; }
+        .float-effect { animation: float 3s ease-in-out infinite; }
+        .wiggle-effect { animation: wiggle 2s ease-in-out infinite; }
+        
+        /* Enhanced mobile interaction styles */
+        button, a { touch-action: manipulation; }
+        
+        @media (hover: hover) {
+          .hover-lift { transition: transform 0.2s ease; }
+          .hover-lift:hover { transform: translateY(-2px); }
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+          .fade-in, .pulse-subtle, .float-effect, .wiggle-effect { animation: none; }
+        }
       `}</style>
 
       <div className="flex min-h-screen">
         <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
-        <main id="main" className={cn("flex-1 transition-all duration-300 ease-in-out fade-in p-6")}>{children}</main>
+        <main
+          id="main"
+          className={cn(
+            "flex-1 transition-all duration-300 ease-in-out fade-in",
+            "p-4 sm:p-5 md:p-6" // Mobile-first responsive padding
+          )}
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -16,16 +16,8 @@ interface CallButtonProps {
   playful?: "subtle" | "extra"; // sparkles on idle
 }
 
-const TOKENS = {
-  text: "#0F172A",
-  subtext: "#475569",
-  border: "#E2E8F0",
-  focus: "#A5B4FC",
-  primary: "#4F46E5",
-  success: "#10B981",
-  error: "#EF4444",
-  accent: "#E0E7FF",
-};
+// Import global tokens instead of local definition
+import { TOKENS } from "@/components/tokens";
 
 export function CallButton({
   phoneNumber,
@@ -40,25 +32,61 @@ export function CallButton({
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "calling" | "success" | "error">("idle");
   const [confettiKey, setConfettiKey] = useState(0);
+  const [buttonScale, setButtonScale] = useState(1);
+  const [hoverState, setHoverState] = useState(false);
+  const [canVibrate, setCanVibrate] = useState(false);
+
   // Convex action
   const initiateCall = useAction(api.calls_node.initiateCall);
   const currentUser = useQuery(api.user.getCurrentUser);
 
+  // Check for vibration support on mount
+  useEffect(() => {
+    if ('vibrate' in navigator) {
+      setCanVibrate(true);
+    }
+  }, []);
+
   const handleCall = async () => {
     try {
+      // Visual and haptic feedback on click
+      setButtonScale(0.95);
+      setTimeout(() => setButtonScale(1), 150);
+
+      // Haptic feedback if available
+      if (canVibrate) {
+        navigator.vibrate(15);
+      }
+
       setIsLoading(true);
       setStatus("calling");
+
       if (!currentUser) throw new Error("Not authenticated");
       const result = await initiateCall({ userId: currentUser!._id, toNumber: phoneNumber, userName });
+
       if (result && result.success) {
         setStatus("success");
         setConfettiKey((k) => k + 1); // restart confetti
+
+        // Success vibration pattern
+        if (canVibrate) {
+          navigator.vibrate([20, 30, 40]);
+        }
       } else {
         setStatus("error");
+        // Error vibration
+        if (canVibrate) {
+          navigator.vibrate([50, 100, 50]);
+        }
       }
     } catch (err) {
       console.error("Call failed:", err);
       setStatus("error");
+
+      // Error vibration
+      if (canVibrate) {
+        navigator.vibrate([50, 100, 50]);
+      }
     } finally {
       setIsLoading(false);
       setTimeout(() => setStatus("idle"), 2400);
@@ -98,8 +126,20 @@ export function CallButton({
         10% { opacity: 1; }
         100% { transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity: 0; }
       }
+      @keyframes gentlePulse {
+        0%, 100% { opacity: 0.9; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.03); }
+      }
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
       @media (prefers-reduced-motion: reduce) {
-        .pulse-ring, .sparkle, .confetti-piece { animation: none !important; }
+        .pulse-ring, .sparkle, .confetti-piece, .shimmer, .bounce-effect { animation: none !important; }
       }
     `;
     document.head.appendChild(styleEl);
@@ -123,6 +163,23 @@ export function CallButton({
         alignItems: "stretch",
       }}
     >
+      {/* Background glow effect for success */}
+      {status === "success" && (
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: -4,
+            borderRadius: 14,
+            background: `radial-gradient(circle, ${TOKENS.successBg || "rgba(16,185,129,0.2)"} 0%, transparent 70%)`,
+            opacity: 0.8,
+            animation: "gentlePulse 1.5s ease-in-out infinite",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+      )}
+
       {/* Decorative pulse while dialing */}
       {status === "calling" && (
         <span
@@ -131,7 +188,7 @@ export function CallButton({
           style={{
             position: "absolute",
             inset: 0,
-            borderRadius: 10,
+            borderRadius: 12,
             border: `2px solid ${TOKENS.accent}`,
             animation: "pulseRing 900ms ease-out infinite",
             pointerEvents: "none",
@@ -140,7 +197,22 @@ export function CallButton({
         />
       )}
 
-      {/* BUTTON — transparent background (even on hover), solid border */}
+      {/* Error shake effect */}
+      {status === "error" && (
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: -2,
+            borderRadius: 12,
+            border: `1px solid ${TOKENS.errorBg || "rgba(239,68,68,0.2)"}`,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+      )}
+
+      {/* BUTTON — with improved interactions */}
       <button
         onClick={handleCall}
         disabled={isDisabled}
@@ -158,27 +230,84 @@ export function CallButton({
         style={{
           zIndex: 1,
           opacity: isDisabled ? 0.75 : 1,
+          transform: `scale(${buttonScale})`,
+          transition: "all 0.2s ease-out, transform 0.15s ease-out, opacity 0.3s ease",
+          padding: "10px 16px", // Larger padding for better touch targets
+          borderRadius: 12,     // Slightly more rounded for modern feel
+          border: `2px solid ${status === "error" ? TOKENS.error : status === "success" ? TOKENS.success : TOKENS.primary}`,
+          color: status === "error" ? TOKENS.error : status === "success" ? TOKENS.success : TOKENS.primary,
+          background: hoverState ? `${TOKENS.accent}40` : "transparent", // Subtle background on hover
+          position: "relative",
+          overflow: "hidden", // For shimmer effect
+          cursor: isDisabled ? "default" : "pointer",
           ...style,
         }}
         onMouseEnter={(e) => {
-          // keep transparent on hover
-          (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+          setHoverState(true);
+          // Add subtle hover effect
+          if (!isDisabled) {
+            e.currentTarget.style.transform = `scale(${buttonScale * 1.02})`;
+          }
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent";
+          setHoverState(false);
+          // Reset hover effect
+          e.currentTarget.style.transform = `scale(${buttonScale})`;
+        }}
+        onMouseDown={(e) => {
+          // Add press effect
+          if (!isDisabled) {
+            e.currentTarget.style.transform = `scale(${buttonScale * 0.97})`;
+          }
+        }}
+        onMouseUp={(e) => {
+          // Reset press effect
+          if (!isDisabled) {
+            e.currentTarget.style.transform = hoverState ? `scale(${buttonScale * 1.02})` : `scale(${buttonScale})`;
+          }
         }}
         onFocus={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 0 2px ${TOKENS.focus}`;
+          e.currentTarget.style.boxShadow = `0 0 0 3px ${TOKENS.focus}`;
         }}
         onBlur={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+        onTouchStart={() => {
+          // Haptic feedback on touch if available
+          if (canVibrate && !isDisabled) {
+            navigator.vibrate(5);
+          }
         }}
       >
-        {/* Icon (color reflects state) */}
-        <span style={{ display: "inline-flex", alignItems: "center", marginRight: 8 }}>
+        {/* Shimmer effect on idle hover */}
+        {status === "idle" && hoverState && (
+          <span
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: `linear-gradient(90deg, transparent, ${TOKENS.accent}30, transparent)`,
+              backgroundSize: "200% 100%",
+              animation: "shimmer 2s infinite linear",
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
+          />
+        )}
+        {/* Icon (color reflects state) - enhanced with animations */}
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            marginRight: 10,
+            position: "relative",
+            zIndex: 1
+          }}
+          className={status === "success" ? "bounce-effect" : ""}
+        >
           <PhoneIcon
-            width={16}
-            height={16}
+            width={18}
+            height={18}
             style={{
               color:
                 status === "error"
@@ -186,11 +315,18 @@ export function CallButton({
                   : status === "success"
                     ? TOKENS.success
                     : "currentColor",
+              animation: status === "success" ? "bounce 1s ease infinite" : "none",
+              transform: status === "calling" ? "rotate(10deg)" : "none",
+              transition: "transform 0.3s ease, color 0.3s ease"
             }}
           />
         </span>
 
-        <span style={{ fontWeight: 700 }}>{labelText}</span>
+        <span style={{
+          fontWeight: 700,
+          position: "relative",
+          zIndex: 1
+        }}>{labelText}</span>
 
         {/* Subtle progress line at bottom while ringing */}
         {status === "calling" && (
@@ -212,15 +348,34 @@ export function CallButton({
         )}
       </button>
 
-      {/* Hint line */}
+      {/* Hint line with enhanced styling */}
       {showHint && (
-        <div style={{ marginTop: 4, fontSize: 12, color: TOKENS.subtext, lineHeight: 1.2 }}>
-          Usually under 2 minutes
+        <div
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            color: TOKENS.subtext,
+            lineHeight: 1.2,
+            opacity: status === "idle" ? 1 : 0.7,
+            transition: "opacity 0.3s ease",
+            textAlign: "center"
+          }}
+        >
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{
+                background: status === "success" ? TOKENS.success : TOKENS.primary,
+                opacity: 0.7
+              }}
+            />
+            Usually under 2 minutes
+          </span>
         </div>
       )}
 
-      {/* Optional idle sparkles (playful=extra) */}
-      {playful === "extra" && status === "idle" && <Sparkles />}
+      {/* Enhanced sparkles - show on both idle and extra modes */}
+      {(playful === "extra" || (playful === "subtle" && hoverState)) && status === "idle" && <Sparkles />}
 
       {/* Confetti on success */}
       {status === "success" && <ConfettiBurst key={confettiKey} />}
