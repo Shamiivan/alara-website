@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause } from 'lucide-react';
-import { QuirkyButton, ZenQuirkyButton } from '../ui/QuirkyButton';
-import { SecondaryButton, TertiaryButton } from '../ui/CustomButton';
+import { QuirkyButton } from '../ui/QuirkyButton';
 
 const AudioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);

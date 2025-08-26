@@ -62,7 +62,7 @@ function parseTime(timeStr: string): { hours: number; minutes: number } {
     const match = timeStr.match(pattern);
     if (match) {
       let hours = parseInt(match[1]);
-      let minutes = match[2] ? parseInt(match[2]) : 0;
+      const minutes = match[2] ? parseInt(match[2]) : 0;
       const ampm = match[3];
 
       // Convert to 24-hour format if needed
@@ -97,9 +97,6 @@ function convertToUTC(localDate: Date, timezone: string): number {
     const minutes = localDate.getMinutes().toString().padStart(2, '0');
 
     const dateTimeString = `${year}-${month}-${day}T${hours}:${minutes}:00`;
-
-    // Use Intl.DateTimeFormat to handle timezone conversion
-    const dateInTimezone = new Date(dateTimeString);
 
     // Get the timezone offset for this specific date
     const tempDate = new Date(dateTimeString + 'Z'); // Assume UTC first

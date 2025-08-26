@@ -63,9 +63,8 @@ export default function AdminNextCallCard({
   }, []);
 
   const allTimeZones = useMemo(() => {
-    // @ts-ignore - supportedValuesOf isn't in older TS lib DOM types
+    // Check for browser support of Intl.supportedValuesOf
     if (Intl.supportedValuesOf) {
-      // @ts-ignore
       const vals = Intl.supportedValuesOf("timeZone") as string[];
       return vals?.length
         ? vals
@@ -317,9 +316,12 @@ export default function AdminNextCallCard({
     try {
       await createCall({ email, callTime: utcISO });
       setToast({ kind: "success", msg: `Scheduled call for ${email}` });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[AdminNextCallCard] createCall error:", err);
-      setToast({ kind: "error", msg: err?.message || "Failed to schedule call." });
+      setToast({
+        kind: "error",
+        msg: err instanceof Error ? err.message : "Failed to schedule call."
+      });
     } finally {
       setSaving(false);
     }
@@ -376,7 +378,7 @@ export default function AdminNextCallCard({
         </span>
       </div>
       <div style={subStyle}>
-        Choose a time in the user's local timezone (right column). We'll convert it to UTC.
+        Choose a time in the user&apos;s local timezone (right column). We&apos;ll convert it to UTC.
       </div>
 
       <div style={rowStyle}>
