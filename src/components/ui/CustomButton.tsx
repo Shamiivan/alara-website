@@ -82,14 +82,14 @@ function baseCommon(disabled?: boolean): React.CSSProperties {
     position: "relative",
     overflow: "hidden",
 
-    /* make width behavior sane */
-    display: "flex",         // block-level, width applies
+    /* sane width behavior (stretches by default) */
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "100%",           // fill parent width by default
-    flex: "1 1 auto",        // expand in flex rows/cols
-    minWidth: 0,             // allow shrinking in tight grids
-    alignSelf: "stretch",    // stretch within flex parents
+    width: "100%",
+    flex: "1 1 auto",
+    minWidth: 0,
+    alignSelf: "stretch",
   };
 }
 
@@ -279,8 +279,14 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
           ? "btn-pressable link-host"
           : "btn-pressable";
 
+    // 🔧 Wrapper fix: when inline, don't force a 100% width container.
+    const Wrapper: React.ElementType = inline ? "span" : "div";
+    const wrapperStyle: React.CSSProperties = inline
+      ? { display: "inline-block", maxWidth: "100%" }
+      : { width: "100%" };
+
     return (
-      <div style={{ width: "100%" }}>
+      <Wrapper style={wrapperStyle}>
         <StyleInjector />
         <button
           ref={attachRef}
@@ -302,14 +308,14 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
               marginTop: 6,
               fontSize: 12,
               color: TOKENS.subtext,
-              textAlign: "left",
-              width: "100%",
+              textAlign: inline ? "center" : "left",
+              width: inline ? "auto" : "100%",
             }}
           >
             {hint}
           </div>
         ) : null}
-      </div>
+      </Wrapper>
     );
   }
 );
