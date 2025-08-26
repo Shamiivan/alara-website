@@ -59,7 +59,7 @@ const Hero = () => {
 
             inline={true}
             size="lg"
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/app")}
             hint="Money Back Guarantee"
 
           >
