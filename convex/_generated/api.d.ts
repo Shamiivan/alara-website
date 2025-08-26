@@ -23,6 +23,7 @@ import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
 import type * as http from "../http.js";
 import type * as payments from "../payments.js";
+import type * as scheduledCall from "../scheduledCall.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
@@ -53,6 +54,7 @@ declare const fullApi: ApiFromModules<{
   google: typeof google;
   http: typeof http;
   payments: typeof payments;
+  scheduledCall: typeof scheduledCall;
   stripe: typeof stripe;
   tasks: typeof tasks;
   telemetry: typeof telemetry;

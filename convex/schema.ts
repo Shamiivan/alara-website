@@ -25,6 +25,8 @@ const schema = defineSchema({
     phone: v.optional(v.string()),
     isOnboarded: v.optional(v.boolean()),
     callTime: v.optional(v.string()),
+    callTimeUtc: v.optional(v.string()),
+    timezone: v.optional(v.string()),
     wantsCallReminders: v.optional(v.boolean()),
     wantsClarityCalls: v.optional(v.boolean()),
     updatedAt: v.optional(v.number()),
@@ -36,6 +38,23 @@ const schema = defineSchema({
     .index("by_token", ["tokenIdentifier"])
     .index("email", ["email"])  // using this format to match what @convex-dev/auth expects
     .index("by_phone", ["phone"]),
+
+  // Call to be made
+  scheduledCalls: defineTable({
+    userId: v.id("users"),
+    scheduledAtUtc: v.number(),
+    retryCount: v.optional(v.number()),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("in_progress"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"])
+    .index("by_status_time", ["status", "scheduledAtUtc"])
+    .index("by_scheduled_at", ["scheduledAtUtc"]),
 
   calls: defineTable({
     userId: v.id("users"),
