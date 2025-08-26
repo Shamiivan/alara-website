@@ -1,4 +1,4 @@
-// app/(app)/_components/tokens.ts
+// @/components/tokens.ts
 export const TOKENS = {
   bg: "#F8FAFC",
   cardB: "#FFFFFF",
@@ -26,5 +26,6 @@ export const TOKENS = {
   cardBg: "#FFFFFF",
   cardText: "#0F172A",
   cardBorder: "#E2E8F0",
+  successBg: "rba(16,185,129,0.12)"
 
 };

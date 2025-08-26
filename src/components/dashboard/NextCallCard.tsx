@@ -13,20 +13,6 @@ import {
 import { SecondaryButton, LinkButton } from "@/components/ui/CustomButton";
 import { TOKENS } from "@/components/tokens";
 
-/**
- * Recommended (optional) new TOKENS keys in tokens.ts:
- * badgeBg, badgeText, inputBg, focus, info, infoBg, warnBg, warn
- * Example:
- * badgeBg: "rgba(224,231,255,0.6)",
- * badgeText: "#111827",
- * inputBg: "#FFFFFF",
- * focus: "0 0 0 3px rgba(79,70,229,0.25)",
- * info: "#2563EB",
- * infoBg: "rgba(37,99,235,0.10)",
- * warn: "#B45309",
- * warnBg: "rgba(245,158,11,0.12)",
- */
-
 type Props = {
   initialUtc?: string | null;
   initialTimeZone?: string | null;
@@ -53,15 +39,14 @@ export default function NextCallCard({
   const pulledTZ = user?.timezone || initialTimeZone || defaultTZ;
 
   const [timeZone, setTimeZone] = useState<string>(pulledTZ);
-  const [dateStr, setDateStr] = useState<string>(""); // yyyy-mm-dd
-  const [timeStr, setTimeStr] = useState<string>(""); // HH:MM (24h)
+  const [dateStr, setDateStr] = useState<string>("");
+  const [timeStr, setTimeStr] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [showTzPicker, setShowTzPicker] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const allTimeZones = useMemo(() => getAllTimeZones(), []);
 
-  // Initialize fields
   useEffect(() => {
     const utcSource = user?.callTimeUtc || initialUtc;
     const tzSource = user?.timezone || pulledTZ;
@@ -72,7 +57,6 @@ export default function NextCallCard({
       setTimeStr(time);
       setTimeZone(tzSource);
     } else {
-      // Friendly default: next round hour in user's tz
       const { date, time } = roundNowToNext15(tzSource);
       setDateStr(date);
       setTimeStr(time);
@@ -81,13 +65,12 @@ export default function NextCallCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.callTimeUtc, user?.timezone, initialUtc, pulledTZ]);
 
-  // Nicely formatted primary line
   const displayLine = useMemo(() => {
-    if (!dateStr || !timeStr) return "Not set yet";
+    if (!dateStr || !timeStr) return "Not set";
     const iso = localFieldsToUtcISO(dateStr, timeStr, timeZone);
-    if (!iso) return "Not set yet";
+    if (!iso) return "Not set";
     const d = new Date(iso);
-    const long = new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(undefined, {
       timeZone,
       weekday: "short",
       month: "short",
@@ -96,10 +79,8 @@ export default function NextCallCard({
       minute: "2-digit",
       timeZoneName: "short",
     }).format(d);
-    return long;
   }, [dateStr, timeStr, timeZone]);
 
-  // A small relative hint (e.g., “in 2h 15m”, “tomorrow”)
   const relativeHint = useMemo(() => {
     if (!dateStr || !timeStr) return "";
     const iso = localFieldsToUtcISO(dateStr, timeStr, timeZone);
@@ -108,14 +89,13 @@ export default function NextCallCard({
     const now = Date.now();
     const diff = target - now;
 
-    const dayMs = 24 * 60 * 60 * 1000;
-    const hourMs = 60 * 60 * 1000;
-    const minMs = 60 * 1000;
+    const dayMs = 86400000;
+    const hourMs = 3600000;
+    const minMs = 60000;
 
     const abs = Math.abs(diff);
     const sign = diff >= 0 ? 1 : -1;
 
-    // Day-level label
     const today = new Date();
     const targetLocal = new Date(iso);
     const sameDay =
@@ -128,153 +108,78 @@ export default function NextCallCard({
       targetLocal.toLocaleDateString(undefined, { timeZone });
 
     if (sameDay && sign > 0) {
-      // same day in future
       const h = Math.floor(abs / hourMs);
       const m = Math.round((abs % hourMs) / minMs);
-      if (h === 0 && m <= 1) return "in ~1 minute";
-      if (h === 0) return `in ${m} min`;
-      if (m === 0) return `in ${h} hr`;
-      return `in ${h} hr ${m} min`;
+      if (h === 0 && m <= 1) return "~1m";
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
     }
 
     if (isTomorrow && sign > 0) return "tomorrow";
-
     if (sign < 0) {
-      // Past
       const h = Math.floor(abs / hourMs);
       const m = Math.round((abs % hourMs) / minMs);
-      if (h === 0 && m <= 1) return "about a minute ago";
-      if (h === 0) return `${m} min ago`;
-      if (m === 0) return `${h} hr ago`;
-      return `${h} hr ${m} min ago`;
+      if (h === 0 && m <= 1) return "1m ago";
+      if (h === 0) return `${m}m ago`;
+      if (m === 0) return `${h}h ago`;
+      return `${h}h ${m}m ago`;
     }
 
-    // Far future: just show days
     const days = Math.round(abs / dayMs);
     return days === 1 ? "in 1 day" : `in ${days} days`;
   }, [dateStr, timeStr, timeZone]);
 
-  // ---- Styles (token-driven) ----
+  // ---- Styles ----
   const cardStyle: React.CSSProperties = {
     backgroundColor: TOKENS.cardBg,
     border: `1px solid ${TOKENS.border}`,
     borderRadius: TOKENS.radius,
-    padding: compact ? 16 : 20,
+    padding: compact ? 14 : 18,
     boxShadow: TOKENS.shadow,
   };
 
-  const headerRow: React.CSSProperties = {
-    display: "flex",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 8,
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 700,
-    color: TOKENS.text,
-    letterSpacing: "-0.01em",
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-  };
-
-  const hintStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: TOKENS.subtext,
-    opacity: 0.9,
-  };
-
-  const badge: React.CSSProperties = {
-    display: "inline-block",
-    background: TOKENS.badgeBg || TOKENS.accent,
-    color: TOKENS.badgeText || TOKENS.text,
-    padding: "4px 8px",
-    borderRadius: TOKENS.radius,
-    fontWeight: 600,
-  };
-
-  const lineStyle: React.CSSProperties = {
-    fontSize: 16,
-    fontWeight: 600,
-    color: TOKENS.text,
-    marginBottom: 8,
-  };
-
-  const subStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: TOKENS.subtext,
-    marginBottom: 12,
-  };
-
-  const relativeStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: TOKENS.subtext,
-    background: TOKENS.infoBg || "transparent",
-    borderRadius: TOKENS.radius / 2,
-    padding: relativeHint ? "2px 6px" : 0,
-    display: relativeHint ? "inline-block" : "none",
-    marginLeft: 8,
-  };
-
-  const rowStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: 12,
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: 12,
-    fontWeight: 600,
-    color: TOKENS.subtext,
-    marginBottom: 6,
-    display: "block",
-  };
-
-  const inputStyle: React.CSSProperties = {
+  const row: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 };
+  const label: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: TOKENS.subtext };
+  const input: React.CSSProperties = {
     width: "100%",
     border: `1px solid ${TOKENS.border}`,
     borderRadius: TOKENS.radius - 2,
-    padding: "10px 12px",
+    padding: "9px 10px",
     fontSize: 14,
     color: TOKENS.text,
-    backgroundColor: TOKENS.inputBg || "#FFFFFF",
+    backgroundColor: TOKENS.inputBg || "#FFF",
     outline: "none",
   };
 
-  const inputWrap: React.CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    gap: 6,
-  };
-
-  const tinyHelp: React.CSSProperties = {
-    fontSize: 11,
-    color: TOKENS.subtext,
-  };
-
-  const btnRow: React.CSSProperties = {
-    display: "flex",
-    gap: 8,
-    marginTop: 12,
-    flexWrap: "wrap",
+  const chip: React.CSSProperties = {
+    display: "inline-flex",
     alignItems: "center",
+    gap: 6,
+    padding: "2px 8px",
+    borderRadius: TOKENS.radius,
+    background: TOKENS.badgeBg || TOKENS.accent,
+    color: TOKENS.badgeText || TOKENS.text,
+    fontSize: 12,
+    fontWeight: 600,
   };
 
-  const divider: React.CSSProperties = {
-    height: 1,
-    background: TOKENS.border,
-    margin: "10px 0",
-    opacity: 0.8,
+  const tinyLink: React.CSSProperties = {
+    border: "none",
+    background: "transparent",
+    color: TOKENS.primary,
+    textDecoration: "underline",
+    cursor: "pointer",
+    padding: 0,
+    fontSize: 12,
+    fontWeight: 600,
   };
 
-  const warnRow: React.CSSProperties = {
+  const warn: React.CSSProperties = {
     display: error ? "flex" : "none",
     alignItems: "center",
     gap: 8,
-    padding: "8px 10px",
+    padding: "6px 8px",
     borderRadius: TOKENS.radius,
     background: TOKENS.warnBg || "rgba(245,158,11,0.12)",
     color: TOKENS.warn || "#B45309",
@@ -282,27 +187,15 @@ export default function NextCallCard({
     marginTop: 8,
   };
 
-  // Validation: avoid past times
   useEffect(() => {
-    if (!dateStr || !timeStr) {
-      setError(null);
-      return;
-    }
+    if (!dateStr || !timeStr) return setError(null);
     const iso = localFieldsToUtcISO(dateStr, timeStr, timeZone);
-    if (!iso) {
-      setError("That time doesn’t look valid. Try another one?");
-      return;
-    }
+    if (!iso) return setError("Invalid time.");
     const target = new Date(iso).getTime();
-    if (target < Date.now()) {
-      setError("This time is in the past.");
-    } else {
-      setError(null);
-    }
+    setError(target < Date.now() ? "In the past." : null);
   }, [dateStr, timeStr, timeZone]);
 
   function nudgeToFuture() {
-    // If past, auto-advance to next 15-min slot
     const { date, time } = roundNowToNext15(timeZone);
     setDateStr(date);
     setTimeStr(time);
@@ -328,149 +221,133 @@ export default function NextCallCard({
   }
 
   return (
-    <section
-      style={cardStyle}
-      aria-live="polite"
-      aria-label="Next call scheduler"
-    >
-      {/* Header */}
-      <div style={headerRow}>
-        <div style={titleStyle}>
+    <section style={cardStyle} aria-live="polite" aria-label="Next call">
+      {/* Title row */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, color: TOKENS.text }}>
           <span aria-hidden>📞</span>
-          <span>Next Call</span>
+          <strong style={{ fontSize: 14 }}>Next call</strong>
         </div>
-        <span style={hintStyle} aria-label="You can change this anytime">
-          you can change the next time we call
+        <span style={{ fontSize: 12, color: TOKENS.subtext }}> Update your call time</span>
+      </div>
+
+      {/* When */}
+      <div style={{ marginBottom: 8, color: TOKENS.text }}>
+        <span style={{ fontWeight: 600 }}>Scheduled:</span>{" "}
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: TOKENS.badgeBg || TOKENS.accent,
+            color: TOKENS.badgeText || TOKENS.text,
+            padding: "4px 10px",
+            borderRadius: TOKENS.radius,
+            fontWeight: 600,
+          }}
+        >
+          {displayLine}
+          {relativeHint && (
+            <span
+              style={{
+                fontSize: 12,
+                color: TOKENS.subtext,
+                background: TOKENS.infoBg || "transparent",
+                borderRadius: TOKENS.radius / 2,
+                padding: "0 6px",
+              }}
+              aria-label="relative time"
+            >
+              {relativeHint}
+            </span>
+          )}
         </span>
       </div>
 
-      {/* Primary line */}
-      <div style={lineStyle}>
-        Scheduled for <span style={badge}>{displayLine}</span>
-        <span style={relativeStyle}>{relativeHint}</span>
-      </div>
-      <div style={subStyle}>
-        Shown in <strong>{timeZone}</strong>. Adjust the date/time below.{" "}
-        <button
-          type="button"
-          onClick={() => setShowTzPicker((s) => !s)}
-          style={{
-            border: "none",
-            background: "transparent",
-            color: TOKENS.primary,
-            textDecoration: "underline",
-            cursor: "pointer",
-            padding: 0,
-            fontSize: 12,
-            fontWeight: 600,
-            marginLeft: 4,
-          }}
-          aria-expanded={showTzPicker}
-          aria-controls="tz-picker"
-        >
-          {showTzPicker ? "Hide timezone" : "Change timezone"}
+      {/* TZ chip */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span style={chip}>{timeZone}</span>
+        <button type="button" onClick={() => setShowTzPicker((s) => !s)} style={tinyLink} aria-expanded={showTzPicker}>
+          {showTzPicker ? "Hide" : "Change"}
         </button>
       </div>
 
       {/* Inputs */}
-      <div style={rowStyle}>
-        <div style={inputWrap}>
-          <label htmlFor="nc-date" style={labelStyle}>
-            Date
-          </label>
+      <div style={row}>
+        <div>
+          <div style={label}>Date</div>
           <input
             id="nc-date"
             type="date"
             value={dateStr}
             onChange={(e) => setDateStr(e.target.value)}
-            style={inputStyle}
+            style={input}
             onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
             onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
-          <span style={tinyHelp}>Tip: Today or tomorrow works great.</span>
         </div>
-
-        <div style={inputWrap}>
-          <label htmlFor="nc-time" style={labelStyle}>
-            Time
-          </label>
+        <div>
+          <div style={label}>Time</div>
           <input
             id="nc-time"
             type="time"
             value={timeStr}
             onChange={(e) => setTimeStr(e.target.value)}
-            style={inputStyle}
+            style={input}
             onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
             onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
-          <span style={tinyHelp}>We’ll nudge you a little before the call.</span>
         </div>
       </div>
 
-      {/* Timezone (collapsed by default) */}
+      {/* Timezone picker */}
       {showTzPicker && (
-        <>
-          <div style={divider} />
-          <div id="tz-picker" style={rowStyle} aria-live="polite">
-            <div style={inputWrap}>
-              <label htmlFor="nc-tz" style={labelStyle}>
-                Timezone
-              </label>
-              <select
-                id="nc-tz"
-                value={timeZone}
-                onChange={(e) => setTimeZone(e.target.value)}
-                style={{ ...inputStyle, height: 42 }}
-                onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
-                onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
-              >
-                {[timeZone, defaultTZ, "UTC"]
-                  .filter((v, i, arr) => arr.indexOf(v) === i)
-                  .map((tz) => (
-                    <option key={`pinned-${tz}`} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                <optgroup label="All timezones">
-                  {allTimeZones.map((tz) => (
-                    <option key={tz} value={tz}>
-                      {tz}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-              <span style={tinyHelp}>
-                If you travel, pop in here to keep times accurate.
-              </span>
-            </div>
-          </div>
-        </>
+        <div style={{ marginTop: 8 }}>
+          <div style={label}>Timezone</div>
+          <select
+            id="nc-tz"
+            value={timeZone}
+            onChange={(e) => setTimeZone(e.target.value)}
+            style={{ ...input, height: 42 }}
+            onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
+            onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
+          >
+            {[timeZone, defaultTZ, "UTC"]
+              .filter((v, i, arr) => arr.indexOf(v) === i)
+              .map((tz) => (
+                <option key={`pinned-${tz}`} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            <optgroup label="All timezones">
+              {allTimeZones.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
       )}
 
-      {/* Warning / Fix-up */}
-      <div style={warnRow} role="alert">
+      {/* Warning / fix */}
+      <div style={warn} role="alert">
         <span aria-hidden>⚠️</span>
         <span>{error}</span>
-        {error && (
-          <LinkButton onClick={nudgeToFuture}>
-            Use the next available slot
-          </LinkButton>
-        )}
+        {error && <LinkButton onClick={nudgeToFuture}>Next available</LinkButton>}
       </div>
 
       {/* Actions */}
-      <div style={btnRow}>
+      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
         <SecondaryButton
           onClick={handleSave}
           disabled={saving || !dateStr || !timeStr || !!error}
-          hint={saving ? "Updating your schedule…" : undefined}
           aria-disabled={saving || !dateStr || !timeStr || !!error}
         >
-          {saving ? "Saving…" : "Save schedule"}
+          {saving ? "Saving…" : "Update"}
         </SecondaryButton>
-
-        <LinkButton onClick={handleNow}>Use current time (rounded)</LinkButton>
-        {onCancel && <SecondaryButton onClick={onCancel}>Cancel</SecondaryButton>}
+        <LinkButton onClick={handleNow}>Now</LinkButton>
+        {onCancel && <LinkButton onClick={onCancel}>Cancel</LinkButton>}
       </div>
     </section>
   );
