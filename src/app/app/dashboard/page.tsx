@@ -70,7 +70,7 @@ export default function DashboardPage() {
         </div>
 
         <p className="text-base mb-4" style={{ color: TOKENS.subtext }}>
-          This dashboard is part of the new mobile-first layout. Here's what you can do:
+          This dashboard is part of the new mobile-first layout. Here&apos;s what you can do:
         </p>
 
         <ul className="space-y-3 mb-6">

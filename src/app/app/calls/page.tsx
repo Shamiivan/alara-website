@@ -72,6 +72,7 @@ export default function CallsPage() {
       void handleFetchConversation(recent._id);
       setSelectedCallId(recent._id);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calls, isAutoRefreshing, isLoading]);
 
   // Keyboard shortcut: r to refresh selected conversation
@@ -82,8 +83,10 @@ export default function CallsPage() {
         void handleFetchConversation(selectedCallId);
       }
     };
-    window.addEventListener("keydown", onKey as any);
-    return () => window.removeEventListener("keydown", onKey as any);
+    // Fix the type casting with proper event type
+    window.addEventListener("keydown", onKey as EventListener);
+    return () => window.removeEventListener("keydown", onKey as EventListener);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCallId]);
 
   const handleStartCall = useCallback(async () => {
@@ -95,13 +98,14 @@ export default function CallsPage() {
       setIsLoading(true);
       const res = await initiateCall({ userId: user._id, toNumber, userName: user.name ?? "Friend" });
       // Convex action returns a typed object with success/message; we handle defensively
-      if (res && typeof res === "object" && "success" in res && (res as any).success) {
-        setToast({ type: "success", text: (res as any).message ?? "Call initiated. You got this!" });
+      if (res && typeof res === "object" && "success" in res && (res as { success: boolean }).success) {
+        setToast({ type: "success", text: (res as { message?: string }).message ?? "Call initiated. You got this!" });
       } else {
         setToast({ type: "error", text: "Couldn’t start the call. Try again." });
       }
-    } catch (e: any) {
-      setToast({ type: "error", text: e?.message ?? "Call failed to start." });
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : "Call failed to start.";
+      setToast({ type: "error", text: errorMsg });
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +117,9 @@ export default function CallsPage() {
       setToast(null);
       await fetchConversation({ callId });
       setToast({ type: "success", text: "Conversation updated." });
-    } catch (e: any) {
-      setToast({ type: "error", text: e?.message ?? "Couldn’t fetch conversation." });
+    } catch (e: unknown) {
+      const errorMsg = e instanceof Error ? e.message : "Couldn't fetch conversation.";
+      setToast({ type: "error", text: errorMsg });
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +160,7 @@ export default function CallsPage() {
                 <Phone size={20} className="text-indigo-500" style={{ opacity: 0.8 }} />
               </div>
               <p className="mt-1 text-sm sm:text-base" style={{ color: TOKENS.subtext }}>
-                You're one call away from clarity. We'll handle the follow‑through — you just press the button.
+                You&apos;re one call away from clarity. We&apos;ll handle the follow‑through — you just press the button.
               </p>
             </div>
 
@@ -250,7 +255,7 @@ export default function CallsPage() {
                         </span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>We'll ring you and keep notes for you ✨</TooltipContent>
+                    <TooltipContent>We&apos;ll ring you and keep notes for you ✨</TooltipContent>
                   </Tooltip>
                 </div>
 
@@ -464,7 +469,7 @@ function EmptyCalls() {
       </div>
       <p className="mt-2 font-medium" style={{ color: TOKENS.text }}>No calls yet</p>
       <p className="mt-1 text-sm" style={{ color: TOKENS.subtext }}>
-        Your first call is a tiny step — and it counts. We'll cheer you on.
+        Your first call is a tiny step — and it counts. We&apos;ll cheer you on.
       </p>
     </div>
   );
@@ -510,7 +515,7 @@ function EmptyConversation() {
           Pick a call to see the conversation
         </p>
         <p className="mt-2 text-sm" style={{ color: TOKENS.subtext }}>
-          We'll fetch transcripts automatically when they're ready.
+          We&apos;ll fetch transcripts automatically when they&apos;re ready.
         </p>
       </div>
     </div>

@@ -12,7 +12,7 @@ export default function SettingsPage() {
         <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
         <p className="text-[#475569]">
           This is the settings page of your Alara application. The sidebar navigation
-          will highlight this section when you're here.
+          will highlight this section when you&apos;re here.
         </p>
       </div>
     </div>
