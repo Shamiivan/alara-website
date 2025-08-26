@@ -9,6 +9,9 @@ export interface ButtonProps
   hint?: string;
   size?: Size;
   variant?: Variant;
+  /** If true, the button won’t stretch. Default is false (stretches). */
+  inline?: boolean;
+  /** kept for backward compat but no longer needed */
   fullWidth?: boolean;
   pulse?: boolean;
 }
@@ -78,9 +81,15 @@ function baseCommon(disabled?: boolean): React.CSSProperties {
     outline: "none",
     position: "relative",
     overflow: "hidden",
-    display: "inline-flex",
+
+    /* make width behavior sane */
+    display: "flex",         // block-level, width applies
     alignItems: "center",
     justifyContent: "center",
+    width: "100%",           // fill parent width by default
+    flex: "1 1 auto",        // expand in flex rows/cols
+    minWidth: 0,             // allow shrinking in tight grids
+    alignSelf: "stretch",    // stretch within flex parents
   };
 }
 
@@ -98,7 +107,7 @@ function variantStyle(variant: Variant, disabled?: boolean): React.CSSProperties
   return { ...c, backgroundColor: "transparent", color: TOKENS.link, boxShadow: "none" };
 }
 
-/* ---------- Interactions (Option A without extra ref) ---------- */
+/* ---------- Interactions (no extra ref) ---------- */
 function useInteractive(
   node: HTMLButtonElement | null,
   variant: Variant,
@@ -163,7 +172,6 @@ function PrimaryCharm() {
     </>
   );
 }
-
 function SecondaryCharm() {
   const notch: React.CSSProperties = { position: "absolute", width: 10, height: 10, borderColor: TOKENS.outlineHover, opacity: 0 };
   return (
@@ -183,7 +191,6 @@ function SecondaryCharm() {
     </>
   );
 }
-
 function TertiaryCharm() {
   return (
     <>
@@ -203,7 +210,6 @@ function TertiaryCharm() {
     </>
   );
 }
-
 function LinkCharm() {
   return (
     <>
@@ -231,7 +237,8 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
       hint,
       size = "md",
       variant = "primary",
-      fullWidth,
+      inline = false,      // NEW: default stretch
+      fullWidth,           // kept for compat; ignored
       pulse,
       disabled,
       style,
@@ -242,13 +249,13 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const d = dims(size);
 
-    // Keep a concrete node for effects; no extra ref object.
     const [node, setNode] = React.useState<HTMLButtonElement | null>(null);
     const attachRef = React.useCallback((el: HTMLButtonElement | null) => {
       setNode(el);
-      // forward the ref to parent
       if (typeof ref === "function") ref(el);
-      else if (ref && typeof ref === 'object' && 'current' in ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = el;
+      else if (ref && typeof ref === "object" && "current" in ref) {
+        (ref as React.MutableRefObject<HTMLButtonElement | null>).current = el;
+      }
     }, [ref]);
 
     useInteractive(node, variant, disabled);
@@ -257,10 +264,12 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
       ...variantStyle(variant, disabled),
       padding: `${d.padY}px ${d.padX}px`,
       fontSize: d.font,
-      width: fullWidth ? "100%" : undefined,
       gap: d.gap,
       transform: "translateY(0)",
       animation: pulse ? "subtle-bounce 1100ms ease-in-out infinite" : undefined,
+      // inline (opt-out) -> hug contents
+      ...(inline ? { width: undefined, flex: "0 0 auto", alignSelf: undefined, display: "inline-flex" } : null),
+      ...style,
     };
 
     const hostClass =
@@ -271,13 +280,13 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
           : "btn-pressable";
 
     return (
-      <div style={{ display: fullWidth ? "block" : "inline-block" }}>
+      <div style={{ width: "100%" }}>
         <StyleInjector />
         <button
           ref={attachRef}
           className={hostClass}
           disabled={disabled}
-          style={{ ...base, ...style }}
+          style={base}
           {...rest}
         >
           {variant === "primary" && <PrimaryCharm />}
@@ -293,7 +302,8 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
               marginTop: 6,
               fontSize: 12,
               color: TOKENS.subtext,
-              textAlign: fullWidth ? "left" : "center",
+              textAlign: "left",
+              width: "100%",
             }}
           >
             {hint}
