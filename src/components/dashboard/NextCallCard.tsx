@@ -74,9 +74,8 @@ export default function NextCallCard({
     // Prefer modern API; fallback to a compact list if unavailable.
     // (Keeps bundle small while still offering common choices)
     // You can replace the fallback with a full list later if you like.
-    // @ts-ignore - supportedValuesOf may not be in lib DOM types
+    // Check for browser support of Intl.supportedValuesOf
     if (Intl.supportedValuesOf) {
-      // @ts-ignore
       const vals = Intl.supportedValuesOf("timeZone") as string[];
       return vals?.length ? vals : ["UTC", "America/Toronto", "America/New_York", "Europe/London"];
     }
@@ -331,7 +330,8 @@ export default function NextCallCard({
     setSaving(true);
     try {
       await updateCallTime({ callTime: utcISO });
-
+      // Call the onSave prop with the saved data
+      onSave?.({ utcISO, timeZone, local: { date: dateStr, time: timeStr } });
     } finally {
       setSaving(false);
     }
