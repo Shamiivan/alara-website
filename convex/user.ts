@@ -300,7 +300,6 @@ export const getUserByEmail = query({
       const user = await ctx.db.query("users")
         .withIndex("email", (q) => q.eq("email", email))
         .unique();
-      console.log("[getUserByEmail] Found user by email:", email, user);
       return user;
     } catch (error) {
       console.error("[getUserByEmail] Error:", error);
@@ -334,3 +333,4 @@ export const updateCallTime = mutation({
     console.log("[updateCallTime] Updated call time for user:", userId);
   }
 });
+

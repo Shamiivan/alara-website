@@ -13,6 +13,8 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as admin_schedule from "../admin/schedule.js";
+import type * as admin_user from "../admin/user.js";
 import type * as auth from "../auth.js";
 import type * as calendar from "../calendar.js";
 import type * as calls from "../calls.js";
@@ -44,6 +46,8 @@ import type * as utils_verify from "../utils/verify.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "admin/schedule": typeof admin_schedule;
+  "admin/user": typeof admin_user;
   auth: typeof auth;
   calendar: typeof calendar;
   calls: typeof calls;
