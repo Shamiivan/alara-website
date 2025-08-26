@@ -53,10 +53,15 @@ const Hero = () => {
         </div>
 
         <div className="mb-8 sm:mb-10 fade-in flex flex-col sm:flex-row justify-center gap-3">
+          {/* <div className="mb-8 sm:mb-10 fade-in flex flex-col sm:flex-row justify-center items-center gap-3"> */}
+
           <PrimaryButton
+
+            inline={true}
             size="lg"
             onClick={() => router.push("/dashboard")}
             hint="Money Back Guarantee"
+
           >
             Find my first step
           </PrimaryButton>

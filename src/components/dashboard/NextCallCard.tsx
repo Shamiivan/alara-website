@@ -3,23 +3,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-/**
- * NextCallCard — lightweight, insertable card
- * - Displays: "Your next call is scheduled at …"
- * - Editable: date, time, timezone
- * - Returns: UTC ISO string + timezone + local fields via onSave
- *
- * Props:
- *   initialUtc?: string            // e.g., "2025-08-26T18:30:00Z"
- *   initialTimeZone?: string       // e.g., "America/Toronto"
- *   onSave: (data: {
- *     utcISO: string;
- *     timeZone: string;
- *     local: { date: string; time: string };
- *   }) => Promise<void> | void
- *   onCancel?: () => void
- *   compact?: boolean              // smaller padding / tighter layout
- */
+import {
+  getDefaultTimeZone,
+  getAllTimeZones,
+  utcToLocalFields,
+  localFieldsToUtcISO,
+  roundNowToNext15,
+} from "@/lib/utils";
+import { SecondaryButton, LinkButton } from "@/components/ui/CustomButton";
+import { TOKENS } from "@/components/tokens";
 
 type Props = {
   initialUtc?: string | null;
@@ -40,186 +32,44 @@ export default function NextCallCard({
   onCancel,
   compact = false,
 }: Props) {
-  /* ---------- Design Tokens (inline, no external CSS) ---------- */
-  const TOKENS = {
-    bg: "#F8FAFC",
-    cardBg: "#FFFFFF",
-    text: "#0F172A",
-    subtext: "#475569",
-    border: "#E2E8F0",
-    primary: "#4F46E5",
-    primaryHover: "#4338CA",
-    accent: "#E0E7FF",
-    radius: 12,
-    shadow:
-      "0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.06)",
-  };
-
-  // get current user
   const user = useQuery(api.user.getCurrentUser);
   const updateCallTime = useMutation(api.user.updateCallTime);
 
-  /* ---------- Timezone helpers ---------- */
-  // Robustly get a default TZ
-  const defaultTZ = useMemo(() => {
-    try {
-      return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    } catch {
-      return "UTC";
-    }
-  }, []);
+  const defaultTZ = useMemo(() => getDefaultTimeZone(), []);
+  const pulledTZ = user?.timezone || initialTimeZone || defaultTZ;
 
-  const timezone = useMemo(() => user?.timezone || defaultTZ, [user, defaultTZ]);
-  const allTimeZones = useMemo(() => {
-    // Prefer modern API; fallback to a compact list if unavailable.
-    // (Keeps bundle small while still offering common choices)
-    // You can replace the fallback with a full list later if you like.
-    // Check for browser support of Intl.supportedValuesOf
-    if (Intl.supportedValuesOf) {
-      const vals = Intl.supportedValuesOf("timeZone") as string[];
-      return vals?.length ? vals : ["UTC", "America/Toronto", "America/New_York", "Europe/London"];
-    }
-    return ["UTC", "America/Toronto", "America/New_York", "Europe/London", "Europe/Paris", "Asia/Tokyo"];
-  }, []);
-
-  /* ---------- Local state ---------- */
-  const [timeZone, setTimeZone] = useState<string>(initialTimeZone || defaultTZ);
-  const [dateStr, setDateStr] = useState<string>("");  // yyyy-mm-dd
-  const [timeStr, setTimeStr] = useState<string>("");  // HH:MM (24h)
+  const [timeZone, setTimeZone] = useState<string>(pulledTZ);
+  const [dateStr, setDateStr] = useState<string>("");
+  const [timeStr, setTimeStr] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [showTzPicker, setShowTzPicker] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  /* ---------- Formatting helpers (no libs) ---------- */
+  const allTimeZones = useMemo(() => getAllTimeZones(), []);
 
-  // Given a UTC ISO string, return {date, time} strings rendered in a target timeZone.
-  function utcToLocalFields(utcISO: string, tz: string) {
-    const d = new Date(utcISO);
-    if (isNaN(d.getTime())) return { date: "", time: "" };
-
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: tz,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).formatToParts(d);
-
-    const get = (type: Intl.DateTimeFormatPartTypes) =>
-      parts.find((p) => p.type === type)?.value || "";
-
-    const yyyy = get("year");
-    const mm = get("month");
-    const dd = get("day");
-    const hh = get("hour");
-    const mi = get("minute");
-
-    return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mi}` };
-  }
-
-  /**
-   * Convert a "wall clock" local time in a named IANA TZ to a UTC ISO string.
-   *
-   * Technique (no Temporal / no luxon):
-   * 1) Build a UTC date from the provided local components.
-   * 2) Compute the offset for that instant in the target TZ by taking the UTC
-   *    instant and formatting it in the TZ, then rebuilding a "pretend UTC" date
-   *    from those parts; the difference is the offset.
-   * 3) Subtract offset from the UTC-built timestamp to get the true UTC instant.
-   *
-   * This handles DST correctly for modern browsers.
-   */
-  function localFieldsToUtcISO(dateYYYYMMDD: string, timeHHMM: string, tz: string) {
-    if (!dateYYYYMMDD || !timeHHMM) return "";
-
-    const [y, m, d] = dateYYYYMMDD.split("-").map((v) => parseInt(v, 10));
-    const [hh, mm] = timeHHMM.split(":").map((v) => parseInt(v, 10));
-
-    // Step 1: a naive "UTC container" for those local parts
-    const naiveUtcMs = Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0);
-    const naiveUtcDate = new Date(naiveUtcMs);
-
-    // Step 2: get parts of that UTC instant as seen in the target TZ
-    const tzParts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: tz,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).formatToParts(naiveUtcDate);
-
-    const get = (type: Intl.DateTimeFormatPartTypes) =>
-      tzParts.find((p) => p.type === type)?.value || "00";
-
-    const tzYear = parseInt(get("year"), 10);
-    const tzMonth = parseInt(get("month"), 10);
-    const tzDay = parseInt(get("day"), 10);
-    const tzHour = parseInt(get("hour"), 10);
-    const tzMin = parseInt(get("minute"), 10);
-    const tzSec = parseInt(get("second"), 10);
-
-    // "Pretend" UTC built from the TZ-rendered parts
-    const pretendUtcMs = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMin, tzSec, 0);
-
-    // The offset between how the UTC instant looks in TZ vs real UTC instant
-    const offsetMs = pretendUtcMs - naiveUtcMs;
-
-    // Step 3: true UTC for the intended local wall time = naiveUtcMs - offset
-    const trueUtcMs = naiveUtcMs - offsetMs;
-
-    return new Date(trueUtcMs).toISOString();
-  }
-
-  /* ---------- Initialize local editable fields from props ---------- */
   useEffect(() => {
-    if (initialUtc) {
-      const { date, time } = utcToLocalFields(initialUtc, timeZone);
+    const utcSource = user?.callTimeUtc || initialUtc;
+    const tzSource = user?.timezone || pulledTZ;
+
+    if (utcSource) {
+      const { date, time } = utcToLocalFields(utcSource, tzSource);
       setDateStr(date);
       setTimeStr(time);
+      setTimeZone(tzSource);
     } else {
-      // Default: next full hour from "now" in selected TZ
-      // We'll take "now" in selected TZ via formatting to parts
-      const now = new Date();
-      const parts = new Intl.DateTimeFormat("en-CA", {
-        timeZone: timeZone,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).formatToParts(now);
-
-      const get = (t: Intl.DateTimeFormatPartTypes) =>
-        parts.find((p) => p.type === t)?.value || "";
-
-      const yyyy = parseInt(get("year"), 10);
-      const mm = parseInt(get("month"), 10);
-      const dd = parseInt(get("day"), 10);
-      let hh = parseInt(get("hour"), 10);
-      // round up to next hour
-      hh = (hh + 1) % 24;
-
-      const pad = (n: number) => String(n).padStart(2, "0");
-
-      setDateStr(`${yyyy}-${pad(mm)}-${pad(dd)}`);
-      setTimeStr(`${pad(hh)}:00`);
+      const { date, time } = roundNowToNext15(tzSource);
+      setDateStr(date);
+      setTimeStr(time);
+      setTimeZone(tzSource);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialUtc]); // leave TZ out so switching TZ doesn't auto-clobber user edits
+  }, [user?.callTimeUtc, user?.timezone, initialUtc, pulledTZ]);
 
-  /* ---------- Display string for the header ---------- */
   const displayLine = useMemo(() => {
-    if (!dateStr || !timeStr) return "Not set yet";
-    // Build a preview using the chosen TZ
+    if (!dateStr || !timeStr) return "Not set";
     const iso = localFieldsToUtcISO(dateStr, timeStr, timeZone);
-    if (!iso) return "Not set yet";
+    if (!iso) return "Not set";
     const d = new Date(iso);
-
-    const formatted = new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(undefined, {
       timeZone,
       weekday: "short",
       month: "short",
@@ -228,109 +78,135 @@ export default function NextCallCard({
       minute: "2-digit",
       timeZoneName: "short",
     }).format(d);
-
-    return formatted;
   }, [dateStr, timeStr, timeZone]);
 
-  /* ---------- Styles ---------- */
+  const relativeHint = useMemo(() => {
+    if (!dateStr || !timeStr) return "";
+    const iso = localFieldsToUtcISO(dateStr, timeStr, timeZone);
+    if (!iso) return "";
+    const target = new Date(iso).getTime();
+    const now = Date.now();
+    const diff = target - now;
+
+    const dayMs = 86400000;
+    const hourMs = 3600000;
+    const minMs = 60000;
+
+    const abs = Math.abs(diff);
+    const sign = diff >= 0 ? 1 : -1;
+
+    const today = new Date();
+    const targetLocal = new Date(iso);
+    const sameDay =
+      today.toLocaleDateString(undefined, { timeZone }) ===
+      targetLocal.toLocaleDateString(undefined, { timeZone });
+
+    const tomorrow = new Date(today.getTime() + dayMs);
+    const isTomorrow =
+      tomorrow.toLocaleDateString(undefined, { timeZone }) ===
+      targetLocal.toLocaleDateString(undefined, { timeZone });
+
+    if (sameDay && sign > 0) {
+      const h = Math.floor(abs / hourMs);
+      const m = Math.round((abs % hourMs) / minMs);
+      if (h === 0 && m <= 1) return "~1m";
+      if (h === 0) return `${m}m`;
+      if (m === 0) return `${h}h`;
+      return `${h}h ${m}m`;
+    }
+
+    if (isTomorrow && sign > 0) return "tomorrow";
+    if (sign < 0) {
+      const h = Math.floor(abs / hourMs);
+      const m = Math.round((abs % hourMs) / minMs);
+      if (h === 0 && m <= 1) return "1m ago";
+      if (h === 0) return `${m}m ago`;
+      if (m === 0) return `${h}h ago`;
+      return `${h}h ${m}m ago`;
+    }
+
+    const days = Math.round(abs / dayMs);
+    return days === 1 ? "in 1 day" : `in ${days} days`;
+  }, [dateStr, timeStr, timeZone]);
+
+  // ---- Styles ----
   const cardStyle: React.CSSProperties = {
     backgroundColor: TOKENS.cardBg,
     border: `1px solid ${TOKENS.border}`,
     borderRadius: TOKENS.radius,
-    padding: compact ? 16 : 24,
+    padding: compact ? 14 : 18,
     boxShadow: TOKENS.shadow,
   };
 
-  const labelStyle: React.CSSProperties = {
-    fontSize: 12,
-    fontWeight: 600,
-    color: TOKENS.subtext,
-    marginBottom: 6,
-    display: "block",
-  };
-
-  const inputStyle: React.CSSProperties = {
+  const row: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 };
+  const label: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: TOKENS.subtext };
+  const input: React.CSSProperties = {
     width: "100%",
     border: `1px solid ${TOKENS.border}`,
-    borderRadius: 10,
-    padding: "10px 12px",
+    borderRadius: TOKENS.radius - 2,
+    padding: "9px 10px",
     fontSize: 14,
     color: TOKENS.text,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: TOKENS.inputBg || "#FFF",
+    outline: "none",
   };
 
-  const rowStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: "1fr",
-    gap: 12,
+  const chip: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "2px 8px",
+    borderRadius: TOKENS.radius,
+    background: TOKENS.badgeBg || TOKENS.accent,
+    color: TOKENS.badgeText || TOKENS.text,
+    fontSize: 12,
+    fontWeight: 600,
   };
 
-  if (typeof window !== "undefined" && window.innerWidth >= 640) {
-    (rowStyle as React.CSSProperties).gridTemplateColumns = "1fr 1fr 1.2fr";
+  const tinyLink: React.CSSProperties = {
+    border: "none",
+    background: "transparent",
+    color: TOKENS.primary,
+    textDecoration: "underline",
+    cursor: "pointer",
+    padding: 0,
+    fontSize: 12,
+    fontWeight: 600,
+  };
+
+  const warn: React.CSSProperties = {
+    display: error ? "flex" : "none",
+    alignItems: "center",
+    gap: 8,
+    padding: "6px 8px",
+    borderRadius: TOKENS.radius,
+    background: TOKENS.warnBg || "rgba(245,158,11,0.12)",
+    color: TOKENS.warn || "#B45309",
+    fontSize: 12,
+    marginTop: 8,
+  };
+
+  useEffect(() => {
+    if (!dateStr || !timeStr) return setError(null);
+    const iso = localFieldsToUtcISO(dateStr, timeStr, timeZone);
+    if (!iso) return setError("Invalid time.");
+    const target = new Date(iso).getTime();
+    setError(target < Date.now() ? "In the past." : null);
+  }, [dateStr, timeStr, timeZone]);
+
+  function nudgeToFuture() {
+    const { date, time } = roundNowToNext15(timeZone);
+    setDateStr(date);
+    setTimeStr(time);
   }
 
-  const h2Style: React.CSSProperties = {
-    fontSize: 14,
-    fontWeight: 700,
-    color: TOKENS.text,
-    marginBottom: 10,
-    letterSpacing: "-0.01em",
-  };
-
-  const lineStyle: React.CSSProperties = {
-    fontSize: 16,
-    fontWeight: 600,
-    color: TOKENS.text,
-    marginBottom: 14,
-  };
-
-  const subStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: TOKENS.subtext,
-    marginBottom: 12,
-  };
-
-  const btnRow: React.CSSProperties = {
-    display: "flex",
-    gap: 8,
-    marginTop: 14,
-    flexWrap: "wrap",
-  };
-
-  const primaryBtn: React.CSSProperties = {
-    backgroundColor: TOKENS.primary,
-    color: "#FFFFFF",
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: `1px solid ${TOKENS.primary}`,
-    fontWeight: 700,
-    cursor: "pointer",
-    transition: "background-color 150ms ease, transform 150ms ease",
-  };
-
-  const secondaryBtn: React.CSSProperties = {
-    backgroundColor: "#FFFFFF",
-    color: TOKENS.text,
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: `1px solid ${TOKENS.border}`,
-    fontWeight: 600,
-    cursor: "pointer",
-    transition: "background-color 150ms ease, transform 150ms ease",
-  };
-
-  /* ---------- Handlers ---------- */
   async function handleSave() {
     if (!dateStr || !timeStr) return;
     const utcISO = localFieldsToUtcISO(dateStr, timeStr, timeZone);
     if (!utcISO) return;
-    console.log("Saved new call time", { utcISO, timeZone, local: { date: dateStr, time: timeStr } });
-    console.log("User", user);
-    console.log("Timezone", timezone);
     setSaving(true);
     try {
       await updateCallTime({ callTime: utcISO });
-      // Call the onSave prop with the saved data
       onSave?.({ utcISO, timeZone, local: { date: dateStr, time: timeStr } });
     } finally {
       setSaving(false);
@@ -338,136 +214,140 @@ export default function NextCallCard({
   }
 
   function handleNow() {
-    // Snap fields to the next 15-min slot in selected TZ
-    const now = new Date();
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).formatToParts(now);
-
-    const get = (t: Intl.DateTimeFormatPartTypes) =>
-      parts.find((p) => p.type === t)?.value || "";
-
-    const yyyy = parseInt(get("year"), 10);
-    const mm = parseInt(get("month"), 10);
-    const dd = parseInt(get("day"), 10);
-    let hh = parseInt(get("hour"), 10);
-    let mi = parseInt(get("minute"), 10);
-
-    // round up to nearest 15
-    const rounded = Math.ceil(mi / 15) * 15;
-    if (rounded === 60) {
-      mi = 0;
-      hh = (hh + 1) % 24;
-    } else {
-      mi = rounded;
-    }
-
-    const pad = (n: number) => String(n).padStart(2, "0");
-    setDateStr(`${yyyy}-${pad(mm)}-${pad(dd)}`);
-    setTimeStr(`${pad(hh)}:${pad(mi)}`);
+    const { date, time } = roundNowToNext15(timeZone);
+    setDateStr(date);
+    setTimeStr(time);
   }
 
-  /* ---------- Render ---------- */
   return (
-    <div style={cardStyle} aria-live="polite">
-      <style>{`
-        .tap:hover { transform: translateY(-1px); }
-        .tap:active { transform: translateY(0); }
-      `}</style>
+    <section style={cardStyle} aria-live="polite" aria-label="Next call">
+      {/* Title row */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, color: TOKENS.text }}>
+          <span aria-hidden>📞</span>
+          <strong style={{ fontSize: 14 }}>Next call</strong>
+        </div>
+        <span style={{ fontSize: 12, color: TOKENS.subtext }}> Update your call time</span>
+      </div>
 
-      <div style={h2Style}>Next Call</div>
-      <div style={lineStyle}>
-        Your next call is scheduled at{" "}
-        <span style={{ background: TOKENS.accent, padding: "2px 6px", borderRadius: 6 }}>
+      {/* When */}
+      <div style={{ marginBottom: 8, color: TOKENS.text }}>
+        <span style={{ fontWeight: 600 }}>Scheduled:</span>{" "}
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: TOKENS.badgeBg || TOKENS.accent,
+            color: TOKENS.badgeText || TOKENS.text,
+            padding: "4px 10px",
+            borderRadius: TOKENS.radius,
+            fontWeight: 600,
+          }}
+        >
           {displayLine}
+          {relativeHint && (
+            <span
+              style={{
+                fontSize: 12,
+                color: TOKENS.subtext,
+                background: TOKENS.infoBg || "transparent",
+                borderRadius: TOKENS.radius / 2,
+                padding: "0 6px",
+              }}
+              aria-label="relative time"
+            >
+              {relativeHint}
+            </span>
+          )}
         </span>
-        .
-      </div>
-      <div style={subStyle}>
-        Times are shown in{" "}
-        <strong>{timeZone}</strong>. You can adjust the date, time, or timezone below.
       </div>
 
-      <div style={rowStyle}>
+      {/* TZ chip */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span style={chip}>{timeZone}</span>
+        <button type="button" onClick={() => setShowTzPicker((s) => !s)} style={tinyLink} aria-expanded={showTzPicker}>
+          {showTzPicker ? "Hide" : "Change"}
+        </button>
+      </div>
+
+      {/* Inputs */}
+      <div style={row}>
         <div>
-          <label htmlFor="nc-date" style={labelStyle}>Date</label>
+          <div style={label}>Date</div>
           <input
             id="nc-date"
             type="date"
             value={dateStr}
             onChange={(e) => setDateStr(e.target.value)}
-            style={inputStyle}
+            style={input}
+            onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
+            onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
         </div>
         <div>
-          <label htmlFor="nc-time" style={labelStyle}>Time</label>
+          <div style={label}>Time</div>
           <input
             id="nc-time"
             type="time"
             value={timeStr}
             onChange={(e) => setTimeStr(e.target.value)}
-            style={inputStyle}
+            style={input}
+            onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
+            onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           />
         </div>
-        <div>
-          <label htmlFor="nc-tz" style={labelStyle}>Timezone</label>
+      </div>
+
+      {/* Timezone picker */}
+      {showTzPicker && (
+        <div style={{ marginTop: 8 }}>
+          <div style={label}>Timezone</div>
           <select
             id="nc-tz"
             value={timeZone}
             onChange={(e) => setTimeZone(e.target.value)}
-            style={{ ...inputStyle, height: 42 }}
+            style={{ ...input, height: 42 }}
+            onFocus={(e) => (e.currentTarget.style.boxShadow = TOKENS.focus || "")}
+            onBlur={(e) => (e.currentTarget.style.boxShadow = "none")}
           >
-            {/* Keep the user's current/auto TZ near the top */}
             {[timeZone, defaultTZ, "UTC"]
               .filter((v, i, arr) => arr.indexOf(v) === i)
               .map((tz) => (
-                <option key={`pinned-${tz}`} value={tz}>{tz}</option>
+                <option key={`pinned-${tz}`} value={tz}>
+                  {tz}
+                </option>
               ))}
             <optgroup label="All timezones">
               {allTimeZones.map((tz) => (
-                <option key={tz} value={tz}>{tz}</option>
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
               ))}
             </optgroup>
           </select>
         </div>
+      )}
+
+      {/* Warning / fix */}
+      <div style={warn} role="alert">
+        <span aria-hidden>⚠️</span>
+        <span>{error}</span>
+        {error && <LinkButton onClick={nudgeToFuture}>Next available</LinkButton>}
       </div>
 
-      <div style={btnRow}>
-        <button
-          className="tap"
+      {/* Actions */}
+      <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+        <SecondaryButton
           onClick={handleSave}
-          disabled={saving || !dateStr || !timeStr}
-          style={{
-            ...primaryBtn,
-            opacity: saving ? 0.7 : 1,
-            backgroundColor: saving ? TOKENS.primaryHover : TOKENS.primary,
-          }}
+          disabled={saving || !dateStr || !timeStr || !!error}
+          aria-disabled={saving || !dateStr || !timeStr || !!error}
         >
-          {saving ? "Saving…" : "Save schedule"}
-        </button>
-        <button
-          className="tap"
-          onClick={handleNow}
-          style={secondaryBtn}
-        >
-          Use current time (rounded)
-        </button>
-        {onCancel && (
-          <button
-            className="tap"
-            onClick={onCancel}
-            style={secondaryBtn}
-          >
-            Cancel
-          </button>
-        )}
+          {saving ? "Saving…" : "Update"}
+        </SecondaryButton>
+        <LinkButton onClick={handleNow}>Now</LinkButton>
+        {onCancel && <LinkButton onClick={onCancel}>Cancel</LinkButton>}
       </div>
-    </div>
+    </section>
   );
 }

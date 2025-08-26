@@ -1,239 +1,564 @@
 "use client";
 
-import React from "react";
-import { useQuery, useMutation } from "convex/react";
+import * as React from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import { CheckCircle2, Circle, Clock, Calendar, Mic, Trash2 } from "lucide-react";
+import { Plus, X, Calendar, Clock, CheckCircle2, Circle, Trash2, Sparkles, CheckSquare } from "lucide-react";
+import { TOKENS } from "@/components/tokens";
+import { PrimaryButton } from "@/components/ui/CustomButton";
+import { cn } from "@/lib/utils";
 
-interface ConvexTask {
-  _id: Id<"tasks">;
-  _creationTime: number;
-  title: string;
-  due: string;
-  timezone: string;
-  status?: string;
-  source?: string;
-  userId?: Id<"users">;
-  callId?: Id<"calls">;
-  reminderMinutesBefore?: number;
-  [key: string]: unknown;
+/**
+ * -------------------------------------------------------------
+ *  Lightweight motion helpers (no deps): fade / slide / pop
+ * -------------------------------------------------------------
+ */
+const Motion = {
+  injectOnce() {
+    if (document.querySelector("style[data-todo-motion]")) return;
+    const css = `
+      @media (prefers-reduced-motion: no-preference) {
+        .fade-in { opacity: 0; transform: translateY(2px); animation: fade .22s ease forwards; }
+        .slide-down { opacity: 0; transform: translateY(-6px); animation: slideDown .24s ease forwards; }
+        .pop-in { opacity: 0; transform: scale(.98); animation: pop .18s ease forwards; }
+        .highlight-in { animation: highlight .9s ease; }
+        @keyframes fade { to { opacity: 1; transform: none; } }
+        @keyframes slideDown { to { opacity: 1; transform: none; } }
+        @keyframes pop { to { opacity: 1; transform: none; } }
+        @keyframes highlight { 0% { box-shadow: 0 0 0 0 rgba(79,70,229,.24);} 100% { box-shadow: var(--shadow);} }
+      }
+    `;
+    const tag = document.createElement("style");
+    tag.setAttribute("data-todo-motion", "true");
+    tag.appendChild(document.createTextNode(css));
+    document.head.appendChild(tag);
+  },
+};
+
+/**
+ * -------------------------------------------------------------
+ *  Style injector using your tokens (kept intentionally minimal)
+ * -------------------------------------------------------------
+ */
+function StyleInjector() {
+  React.useEffect(() => {
+    if (document.querySelector('style[data-todo-ui]')) return;
+    const T = {
+      radius: TOKENS.radius ?? 12,
+      shadow: TOKENS.shadow ?? "0 1px 2px rgba(16,24,40,0.04), 0 8px 24px rgba(16,24,40,0.06)",
+      surface: TOKENS.cardBg ?? TOKENS.bg ?? "#FFFFFF",
+      border: TOKENS.border ?? "#E2E8F0",
+      text: TOKENS.text ?? "#0F172A",
+      muted: TOKENS.subtext ?? "#64748B",
+      primary: TOKENS.primary ?? "#4F46E5",
+      primaryHover: TOKENS.primaryHover ?? "#4338CA",
+      inputBg: TOKENS.inputBg ?? "#FFFFFF",
+      focus: TOKENS.focus ?? "0 0 0 3px rgba(79,70,229,0.25)",
+      rose50: "#FFF1F2",
+    };
+
+    const css = `
+      :root{ --shadow:${T.shadow}; }
+      .card{ background:${T.surface}; border:1px solid ${T.border}; border-radius:${T.radius + 2}px; box-shadow:var(--shadow); }
+      .soft{ background: linear-gradient(180deg, rgba(238,242,255,.6), transparent); border:1px solid ${T.border}; border-radius:${T.radius + 6}px; }
+      .muted{ color:${T.muted}; }
+      .btn-ghost{ background:transparent; border:1px solid ${T.border}; border-radius:10px; padding:8px 10px; color:${T.muted}; }
+      .icon-btn{ height:32px; width:32px; display:grid; place-items:center; background:${T.surface}; border:1px solid ${T.border}; border-radius:10px; color:#EF4444; }
+      .icon-btn:hover{ background:${T.rose50}; }
+      .chip{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid ${T.border}; color:${T.muted}; background:#F8FAFC; }
+      .chip--warn{ background:#FEF3C7; color:#92400E; border-color:#FDE68A; }
+      .input{ background:${T.inputBg}; color:${T.text}; border:1px solid ${T.border}; border-radius:12px; padding:10px 12px; outline:none; }
+      .input:focus{ box-shadow:${T.focus}; border-color:${T.primary}; }
+      .progress{ height:8px; border-radius:999px; background:#F1F5F9; border:1px solid ${T.border}; overflow:hidden; }
+      .progress__bar{ height:100%; background:linear-gradient(90deg, #22C55E, ${T.primary}); transition:width .3s ease; }
+      .ring{ box-shadow:${T.focus}; }
+      .title-line{ text-decoration:line-through; text-decoration-thickness:2px; text-decoration-color:#86EFAC; }
+    `;
+    const tag = document.createElement('style');
+    tag.setAttribute('data-todo-ui', 'true');
+    tag.appendChild(document.createTextNode(css));
+    document.head.appendChild(tag);
+
+    Motion.injectOnce();
+  }, []);
+  return null;
 }
 
-type Priority = "low" | "medium" | "high";
+/**
+ * -------------------------------------------------------------
+ *  TaskForm — simplified UI, crisp transitions
+ * -------------------------------------------------------------
+ */
+export function TaskForm({ onSuccess, onCancel }: { onSuccess?: () => void; onCancel?: () => void; }) {
+  const createTask = useMutation(api.tasks.create_task);
+  const user = useQuery(api.user.getCurrentUser);
 
-interface Todo {
-  _id?: Id<"tasks">;
-  _creationTime?: number;
-  title: string;
-  completed?: boolean;
-  due: string;
-  timezone: string;
-  priority?: Priority;
-  createdBy?: "voice" | "manual";
-  status?: string;
-}
+  const [title, setTitle] = React.useState("");
+  const [dueDate, setDueDate] = React.useState("");
+  const [dueTime, setDueTime] = React.useState("");
+  const [reminderMinutes, setReminderMinutes] = React.useState<number>(10);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [ok, setOk] = React.useState(false);
 
-export default function TodoApp() {
-  const tasks = useQuery(api.tasks.get_tasks) || [];
-  const updateTask = useMutation(api.tasks.update_task);
-  const deleteTask = useMutation(api.tasks.delete_task);
+  const tz = React.useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
+  const inputId = React.useId(); const dateId = React.useId(); const timeId = React.useId();
 
-  const todos: Todo[] = tasks.map((task: ConvexTask) => ({
-    _id: task._id,
-    _creationTime: task._creationTime,
-    title: task.title,
-    completed: task.status === "completed",
-    due: task.due,
-    timezone: task.timezone,
-    priority: determinePriority(task.title),
-    createdBy: task.source === "elevenlabs" ? "voice" : "manual",
-    status: task.status,
-  }));
+  // sensible defaults: tomorrow 12:00
+  React.useEffect(() => {
+    const t = new Date(); t.setDate(t.getDate() + 1);
+    setDueDate(t.toISOString().split("T")[0]);
+    setDueTime("12:00");
+  }, []);
 
-  function determinePriority(title: string): Priority {
-    const low = ["later", "sometime", "eventually", "when possible"];
-    const high = ["urgent", "important", "asap", "immediately", "critical"];
-    const t = title.toLowerCase();
-    if (high.some(k => t.includes(k))) return "high";
-    if (low.some(k => t.includes(k))) return "low";
-    return "medium";
+  const setQuick = (which: "today" | "tomorrow") => {
+    const d = new Date(); if (which === "tomorrow") d.setDate(d.getDate() + 1);
+    setDueDate(d.toISOString().split("T")[0]);
+  };
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim() || !dueDate) return;
+    setSubmitting(true);
+    try {
+      if (!user) throw new Error("User not found");
+      const dt = new Date(`${dueDate}T${(dueTime || "12:00")}:00`);
+      await createTask({
+        title: title.trim(),
+        due: dt.toISOString(),
+        timezone: tz,
+        status: "scheduled",
+        source: "manual",
+        userId: user._id as Id<"users">,
+        reminderMinutesBefore: reminderMinutes,
+      });
+      setOk(true);
+      setTitle("");
+      // keep date/time/reminder to quickly add siblings
+      setTimeout(() => { setOk(false); onSuccess?.(); }, 700);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const toggleTodo = (id: Id<"tasks">, completed: boolean) =>
-    updateTask({ id, status: completed ? "completed" : "scheduled" });
-
-  const removeTodo = (id: Id<"tasks">) => deleteTask({ id });
-
-  const completedCount = todos.filter(t => t.completed).length;
-  const totalCount = todos.length;
-
   return (
-    <div className="list-wrap">
-      <div className="stats">
-        <div className="stat">
-          <div className="stat__num">{totalCount}</div>
-          <div className="stat__label">Total</div>
-        </div>
-        <div className="stat">
-          <div className="stat__num stat__num--accent">{completedCount}</div>
-          <div className="stat__label">Completed</div>
-        </div>
+    <div className="card fade-in" role="region" aria-labelledby="tf-title" style={{ padding: 16 }}>
+      <StyleInjector />
+      <div className="slide-down" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <h3 id="tf-title" style={{ display: "inline-flex", gap: 8, margin: 0, fontSize: 16 }}>
+          <Sparkles size={16} aria-hidden /> New task
+        </h3>
+        {onCancel && (
+          <button className="btn-ghost" onClick={onCancel} aria-label="Close">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
-      {todos.length === 0 && (
-        <div className="empty">
-          <div className="empty__icon">
-            <Mic size={28} />
-          </div>
-          <h3>Ready when you are</h3>
-          <p>Speak your mind or tap “Add a task” to begin.</p>
-        </div>
-      )}
+      <form onSubmit={submit} className="pop-in" style={{ display: "grid", gap: 12 }}>
+        <label htmlFor={inputId} style={{ display: "grid", gap: 6 }}>
+          <span className="muted" style={{ fontSize: 12 }}>Task</span>
+          <input id={inputId} className="input" placeholder="Email Alex the draft" value={title} onChange={e => setTitle(e.target.value)} maxLength={140} autoFocus />
+        </label>
 
-      <ul className="list">
-        {todos.map(todo => (
-          <li key={todo._id as string} className={`card ${todo.completed ? "card--done" : ""}`}>
-            <button
-              className="check"
-              onClick={() => todo._id && toggleTodo(todo._id, !todo.completed)}
-              aria-label={todo.completed ? "Mark as not done" : "Mark as done"}
-              title={todo.completed ? "Undo complete" : "Mark complete"}
-            >
-              {todo.completed ? <CheckCircle2 size={22} /> : <Circle size={22} />}
-            </button>
-
-            <div className="content">
-              <div className="chips">
-                <span className={`chip chip--${todo.priority}`}>{todo.priority}</span>
-                {todo.createdBy === "voice" && <span className="chip chip--voice"> <Mic size={14} /> Voice</span>}
-                {todo.due && (
-                  <span className="chip chip--outline">
-                    <Clock size={14} /> {getDueTime(todo.due)}
-                  </span>
-                )}
-              </div>
-
-              <p className={`title ${todo.completed ? "title--line" : ""}`}>{todo.title}</p>
-
-              <div className="meta">
-                <span className="meta__row">
-                  <Calendar size={14} />
-                  {todo._creationTime ? getTimeAgo(todo._creationTime) : "Just now"}
-                </span>
-              </div>
+        <div style={{ display: "grid", gap: 12, gridTemplateColumns: "1fr 1fr" }}>
+          <label htmlFor={dateId} style={{ display: "grid", gap: 6 }}>
+            <span className="muted" style={{ fontSize: 12 }}><Calendar size={14} /> Due date</span>
+            <input id={dateId} type="date" className="input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" className="btn-ghost" onClick={() => setQuick("today")}>Today</button>
+              <button type="button" className="btn-ghost" onClick={() => setQuick("tomorrow")}>Tomorrow</button>
             </div>
+          </label>
+          <label htmlFor={timeId} style={{ display: "grid", gap: 6 }}>
+            <span className="muted" style={{ fontSize: 12 }}><Clock size={14} /> Time</span>
+            <input id={timeId} type="time" className="input" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+            <span className="muted" style={{ fontSize: 12 }}>Timezone: {tz}</span>
+          </label>
+        </div>
 
-            <button className="icon-btn" onClick={() => todo._id && removeTodo(todo._id)} title="Delete">
-              <Trash2 size={18} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span className="muted" style={{ fontSize: 12 }}>Reminder:</span>
+          {[5, 10, 30, 60].map(m => (
+            <button key={m} type="button" className="btn-ghost" onClick={() => setReminderMinutes(m)} aria-pressed={reminderMinutes === m}>
+              {m}m
             </button>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
 
+        <PrimaryButton type="submit" disabled={submitting || !title.trim()} aria-live="polite" style={{ justifyContent: "center" }}>
+          {submitting ? <span className="tf-spin" /> : <><Plus size={14} /> Add task</>}
+        </PrimaryButton>
+        {ok && <div className="soft" style={{ padding: 10, textAlign: "center" }}>Saved — future you says thanks ✨</div>}
+      </form>
+
+      {/* tiny spinner */}
       <style jsx>{`
-        :root {
-          --indigo: #4f46e5;
-          --lavender: #e0e7ff;
-          --purple: #a78bfa;
-          --teal: #14b8a6;
-          --success: #10b981;
-          --warning: #f59e0b;
-          --error: #ef4444;
-
-          --bg-elev: #121225;
-          --text: #eef0ff;
-          --muted: #9aa0c3;
-          --divider: #232347;
-        }
-
-        .list-wrap { padding: 4px; }
-        .stats {
-          display: flex; gap: 16px; margin: 4px 4px 14px;
-        }
-        .stat { background: rgba(79,70,229,0.08); border:1px solid var(--divider); border-radius: 12px; padding: 10px 14px; }
-        .stat__num { font-weight: 700; font-size: 20px; }
-        .stat__num--accent { color: var(--teal); }
-        .stat__label { font-size: 12px; color: var(--muted); }
-
-        .empty {
-          border: 1px dashed var(--divider);
-          border-radius: 14px;
-          padding: 28px 16px;
-          text-align: center;
-          color: var(--muted);
-          background: linear-gradient(180deg, rgba(224,231,255,0.04), transparent);
-        }
-        .empty__icon {
-          display: inline-flex; padding: 10px; border-radius: 50%;
-          background: rgba(20,184,166,0.12); color: var(--teal); margin-bottom: 10px;
-          animation: subtle 1800ms ease-in-out infinite;
-        }
-
-        .list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
-        .card {
-          display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 12px;
-          background: rgba(18,18,37,0.9);
-          border: 1px solid var(--divider);
-          border-radius: 14px;
-          padding: 12px;
-          box-shadow: 0 8px 28px rgba(79,70,229,0.18);
-          transition: transform 150ms ease, box-shadow 200ms ease, opacity 150ms ease;
-        }
-        .card:hover { transform: translateY(-1px); box-shadow: 0 12px 36px rgba(79,70,229,0.28); }
-        .card--done { opacity: 0.72; }
-
-        .check {
-          margin-top: 2px;
-          background: transparent; border: none; color: var(--teal); cursor: pointer;
-          border-radius: 999px; padding: 4px;
-          transition: transform 120ms ease, background 150ms ease;
-        }
-        .check:hover { transform: scale(1.06); background: rgba(20,184,166,0.12); }
-
-        .content { min-width: 0; }
-        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
-        .chip {
-          display: inline-flex; align-items: center; gap: 6px;
-          padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
-        }
-        .chip--high { background: rgba(239,68,68,0.15); color: #ffd3d3; border: 1px solid rgba(239,68,68,0.35); }
-        .chip--medium { background: rgba(79,70,229,0.16); color: #dfe4ff; border: 1px solid rgba(79,70,229,0.4); }
-        .chip--low { background: rgba(20,184,166,0.12); color: #c8fff3; border: 1px solid rgba(20,184,166,0.35); }
-        .chip--voice { background: rgba(167,139,250,0.14); color: #efe9ff; border: 1px solid rgba(167,139,250,0.4); }
-        .chip--outline { background: transparent; color: var(--muted); border: 1px dashed var(--divider); }
-
-        .title { margin: 2px 0 8px; font-size: 15px; line-height: 1.35; }
-        .title--line { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: rgba(239,68,68,0.65); }
-
-        .meta { display: flex; gap: 10px; color: var(--muted); font-size: 12px; }
-        .meta__row { display: inline-flex; gap: 6px; align-items: center; }
-
-        .icon-btn {
-          background: transparent; border: 1px solid var(--divider);
-          color: #ffb4b4; border-radius: 10px; padding: 6px; height: 32px; width: 32px;
-          display: inline-grid; place-items: center; cursor: pointer;
-          transition: background 150ms ease, transform 120ms ease;
-        }
-        .icon-btn:hover { background: rgba(239,68,68,0.12); transform: translateY(-1px); }
-
-        @keyframes subtle { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+        .tf-spin{ width:16px; height:16px; border:2px solid rgba(0,0,0,0.15); border-top-color:#111; border-radius:50%; display:inline-block; animation: spin .7s linear infinite; }
+        @keyframes spin{ to{ transform: rotate(360deg); } }
       `}</style>
     </div>
   );
 }
 
-function getTimeAgo(date: number) {
-  const now = new Date();
-  const diff = now.getTime() - date;
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(minutes / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+/**
+ * -------------------------------------------------------------
+ *  TodoApp — decluttered header, calmer list, better submit flow
+ * -------------------------------------------------------------
+ */
+export default function TodoApp() {
+  const tasks = useQuery(api.tasks.get_tasks) || [];
+  const updateTask = useMutation(api.tasks.update_task);
+  const deleteTask = useMutation(api.tasks.delete_task);
+
+  const [showForm, setShowForm] = React.useState(false);
+  const [nudge, setNudge] = React.useState<string | null>(null);
+  // This state is used elsewhere for highlighting newly added tasks
+  const [freshKey] = React.useState<Id<"tasks"> | null>(null);
+  // Add missing state variables for animations
+  const [completedAnimation, setCompletedAnimation] = React.useState<Id<"tasks"> | null>(null);
+  const [deleteAnimation, setDeleteAnimation] = React.useState<Id<"tasks"> | null>(null);
+  const [shouldAnimate, setShouldAnimate] = React.useState(false);
+
+  type Priority = "low" | "medium" | "high";
+  interface ConvexTask { _id: Id<"tasks">; _creationTime: number; title: string; due: string; timezone: string; status?: string; source?: string; }
+  interface Todo { _id: Id<"tasks">; _creationTime: number; title: string; completed: boolean; due: string; timezone: string; priority: Priority; status?: string; }
+
+  // Initialize animations and motion helpers
+  React.useEffect(() => {
+    Motion.injectOnce();
+    // Allow animations after first render
+    const timer = setTimeout(() => setShouldAnimate(true), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Store tasks in a stable reference for useMemo
+  const tasksList = tasks as ConvexTask[];
+
+  const todos: Todo[] = React.useMemo(() => {
+    const list = tasksList.map(t => ({
+      _id: t._id,
+      _creationTime: t._creationTime,
+      title: t.title,
+      completed: t.status === "completed",
+      due: t.due,
+      timezone: t.timezone,
+      priority: determinePriority(t.title),
+      status: t.status,
+    }));
+    return list.sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      const ad = a.due ? new Date(a.due).getTime() : Number.POSITIVE_INFINITY;
+      const bd = b.due ? new Date(b.due).getTime() : Number.POSITIVE_INFINITY;
+      if (ad !== bd) return ad - bd; return b._creationTime - a._creationTime;
+    });
+  }, [tasksList]);
+
+  const total = todos.length; const done = todos.filter(t => t.completed).length; const pct = total ? Math.round((done / total) * 100) : 0;
+
+  async function toggle(id: Id<'tasks'>, next: boolean, title: string) {
+    // Set animation state before API call for immediate feedback
+    if (next) {
+      setCompletedAnimation(id);
+      // Haptic feedback if available
+      if ('vibrate' in navigator) {
+        navigator.vibrate(10);
+      }
+    }
+
+    await updateTask({ id, status: next ? "completed" : "scheduled" });
+
+    if (next) {
+      const msg = celebrate(title);
+      setNudge(msg);
+
+      // Clear animations after a delay
+      setTimeout(() => {
+        setNudge(null);
+        setCompletedAnimation(null);
+      }, 1500);
+    }
+  }
+
+  const remove = async (id: Id<'tasks'>) => {
+    // Animate before actual deletion
+    setDeleteAnimation(id);
+
+    // Small delay for animation before actual deletion
+    setTimeout(async () => {
+      await deleteTask({ id });
+      setDeleteAnimation(null);
+    }, 300);
+  };
+
+  return (
+    <div style={{ padding: "8px 4px" }}>
+      <StyleInjector />
+
+      {/* Header - Enhanced with animations and better mobile layout */}
+      <header
+        className="fade-in"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr auto",
+          alignItems: "end",
+          gap: 12,
+          margin: "4px 0 16px",
+          padding: "0 4px"
+        }}
+      >
+        <div style={{ display: "grid", gap: 8 }}>
+          <div
+            className={`chip ${shouldAnimate ? "pulse-subtle" : ""}`}
+            style={{
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              maxWidth: "fit-content"
+            }}
+          >
+            <Sparkles size={16} className={shouldAnimate ? "wiggle-effect" : ""} />
+            {done ? (
+              <span className="flex items-center gap-1">
+                <span className="font-bold">{done}</span> completed
+              </span>
+            ) : (
+              "Let's capture one tiny win"
+            )}
+          </div>
+
+          <div className="progress" aria-hidden style={{ overflow: "hidden", borderRadius: "999px" }}>
+            <div
+              className="progress__bar"
+              style={{
+                width: `${pct}%`,
+                transition: "width 0.5s ease-out"
+              }}
+            />
+          </div>
+        </div>
+
+        <div>
+          {!showForm && (
+            <button
+              className="btn-ghost hover-lift"
+              onClick={() => setShowForm(true)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 14px", // Larger touch target for mobile
+                borderRadius: "10px",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <Plus size={16} />
+              <span style={{ fontWeight: 500 }}>Add task</span>
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Inline form */}
+      {showForm && (
+        <div className="fade-in" style={{ margin: "0 4px 12px" }}>
+          <TaskForm onSuccess={() => { setShowForm(false); setNudge("Nice! Added to your list."); setTimeout(() => setNudge(null), 900); }} onCancel={() => setShowForm(false)} />
+        </div>
+      )}
+
+      {/* Nudge */}
+      {nudge && (
+        <div className="soft slide-down" style={{ margin: "0 4px 10px", padding: 10, textAlign: "center" }}>{nudge}</div>
+      )}
+
+      {/* Empty state - Enhanced with delightful animations */}
+      {todos.length === 0 && !showForm && (
+        <div
+          className="card fade-in hover-lift"
+          style={{
+            borderStyle: "dashed",
+            padding: "28px 20px",
+            textAlign: "center",
+            color: "#64748B",
+            borderRadius: "14px",
+            transition: "all 0.3s ease"
+          }}
+        >
+          <div className={`${shouldAnimate ? "float-effect" : ""}`}>
+            <div
+              className="mx-auto mb-3 flex items-center justify-center rounded-full"
+              style={{
+                width: "48px",
+                height: "48px",
+                background: TOKENS.accent,
+                boxShadow: "0 2px 10px rgba(79, 70, 229, 0.15)"
+              }}
+            >
+              <CheckSquare size={22} style={{ color: TOKENS.primary }} />
+            </div>
+            <h3 style={{ margin: 0, fontSize: "18px", color: TOKENS.text }}>Ready when you are</h3>
+            <p style={{ margin: "10px 0 0" }}>
+              Tap <b style={{ color: TOKENS.primary }}>Add task</b> to get started.
+              <br className="hidden sm:block" /> Tiny steps are welcome.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* List - Enhanced with animations and mobile-friendly design */}
+      <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, display: "grid", gap: 12 }}>
+        {todos.map((t, index) => (
+          <li
+            key={t._id}
+            className={cn(
+              "card",
+              shouldAnimate ? "hover-lift" : "",
+              deleteAnimation === t._id ? "fade-out" : "",
+              freshKey === t._id ? "highlight-in" : ""
+            )}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "auto 1fr auto",
+              gap: 12,
+              alignItems: "start",
+              padding: "14px 12px",
+              borderRadius: "12px",
+              opacity: deleteAnimation === t._id ? 0 : 1,
+              transform: deleteAnimation === t._id ? 'translateX(-20px)' : 'none',
+              transition: 'opacity 0.3s ease, transform 0.3s ease',
+              // Staggered entrance animation
+              animationDelay: shouldAnimate ? `${index * 50}ms` : '0ms',
+            }}
+          >
+            <button
+              className={cn(
+                "btn-ghost",
+                completedAnimation === t._id ? "scale-110" : ""
+              )}
+              aria-pressed={t.completed}
+              aria-label={t.completed ? "Mark as not done" : "Mark as done"}
+              onClick={() => toggle(t._id, !t.completed, t.title)}
+              style={{
+                height: 40, // Larger touch target
+                width: 40, // Larger touch target
+                display: "grid",
+                placeItems: "center",
+                borderRadius: "10px",
+                transition: "all 0.2s ease",
+                transform: completedAnimation === t._id ? 'scale(1.1)' : 'scale(1)'
+              }}
+            >
+              {t.completed ? (
+                <CheckCircle2
+                  size={22}
+                  color="#16A34A"
+                  className={completedAnimation === t._id ? "pulse-subtle" : ""}
+                />
+              ) : (
+                <Circle size={22} />
+              )}
+            </button>
+
+            <div style={{ minWidth: 0 }}>
+              {/* chips row - improved styling */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 6 }}>
+                <span
+                  className={`chip ${t.priority === 'high' ? 'chip--warn' : ''}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "4px 8px",
+                    borderRadius: "999px",
+                    fontSize: "12px"
+                  }}
+                >
+                  <span aria-hidden>{priorityEmoji(t.priority)}</span> {t.priority}
+                </span>
+
+                {t.due && (
+                  <span
+                    className="chip"
+                    title="Due"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    <Clock size={14} /> {formatDue(t.due)}
+                  </span>
+                )}
+              </div>
+
+              <p
+                style={{
+                  margin: "4px 0 8px",
+                  fontSize: 15,
+                  lineHeight: 1.4,
+                  fontWeight: t.completed ? 400 : 500,
+                  transition: "text-decoration 0.3s ease, opacity 0.3s ease",
+                  opacity: t.completed ? 0.8 : 1
+                }}
+                className={t.completed ? "title-line" : undefined}
+              >
+                {t.title}
+              </p>
+
+              <div
+                className="muted"
+                style={{
+                  fontSize: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{
+                    background: t.completed ? "#10B981" : "#94A3B8",
+                    opacity: 0.7
+                  }}
+                />
+                {getTimeAgo(t._creationTime)}
+              </div>
+            </div>
+
+            <button
+              className="icon-btn"
+              onClick={() => remove(t._id)}
+              aria-label="Delete task"
+              style={{
+                height: 36, // Larger touch target
+                width: 36, // Larger touch target
+                transition: "all 0.2s ease"
+              }}
+            >
+              <Trash2 size={18} />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-function getDueTime(dueDate: string) {
-  const date = new Date(dueDate);
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+/** Helpers (kept from your original but trimmed) */
+function determinePriority(title: string): "low" | "medium" | "high" {
+  const low = ["later", "sometime", "eventually", "when possible"]; const high = ["urgent", "important", "asap", "immediately", "critical"];
+  const t = title.toLowerCase(); if (high.some(k => t.includes(k))) return "high"; if (low.some(k => t.includes(k))) return "low"; return "medium";
 }
+function priorityEmoji(p: "low" | "medium" | "high") { return p === "high" ? "⏫" : p === "low" ? "🌿" : "✨"; }
+function formatDue(iso: string) { const d = new Date(iso); if (isNaN(d.getTime())) return "—"; const today = new Date(); const dd = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); const td = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime(); const diff = Math.round((dd - td) / 86400000); const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); if (diff === 0) return `Today · ${time}`; if (diff === 1) return `Tomorrow · ${time}`; if (diff === -1) return `Yesterday · ${time}`; if (diff < -1) return `Overdue · ${Math.abs(diff)}d`; if (diff <= 7) return `${d.toLocaleDateString([], { weekday: "short" })} · ${time}`; return d.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); }
+function getTimeAgo(ts: number) { const diff = Math.max(0, Date.now() - ts); const m = Math.floor(diff / 60000); if (m < 1) return "Just now"; if (m < 60) return `${m}m ago`; const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`; return `${Math.floor(h / 24)}d ago`; }
+function celebrate(title: string) {
+  const msg = [
+    `Sweet! “${truncate(title, 36)}” is done 🎉`,
+    "Tiny win logged ✅",
+    "Nice move — momentum building",
+    "One less tab in your brain 🧠",
+  ]; return msg[Math.floor(Math.random() * msg.length)];
+}
+const truncate = (s: string, n: number) => s.length > n ? s.slice(0, n - 1) + "…" : s;
