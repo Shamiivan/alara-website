@@ -494,3 +494,160 @@ export const handleElevenLabsWebhookTemp = action({
     }
   },
 });
+
+interface InitiateCallWithCalendarResult extends InitiateCallResult {
+  calendarSummary?: {
+    freeSlots: number;
+    busyPeriods: number;
+    longestFreeSlot: number;
+  };
+}
+
+// Action to initiate a call with calendar availability data
+export const initiateCallWithCalendarData = action({
+  args: {
+    userId: v.id("users"),
+    toNumber: v.string(),
+    calendarId: v.string(),
+    userName: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+  },
+  handler: async (ctx, args): Promise<InitiateCallResult> => {
+    try {
+      // Environment variables validation
+      const agentId = process.env.ELEVEN_LABS_AGENT_ID!;
+      if (!agentId) throw new Error("Missing ELEVEN_LABS_AGENT_ID environment variable");
+
+      const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID!;
+      if (!agentPhoneNumberId) throw new Error("Missing ELEVEN_LABS_PHONE_NUMBER_ID environment variable");
+
+      const apiKey = process.env.ELEVEN_LABS_API_KEY!;
+      if (!apiKey) throw new Error("Missing ELEVEN_LABS_API_KEY environment variable");
+
+      // Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(today);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      // Fetch calendar data for today
+      const calendarData = await ctx.runAction(api.calendar.getCalendarEventsWithAvailability, {
+        userId: args.userId,
+        calendarId: args.calendarId,
+        timeMin: startOfDay.toISOString(),
+        timeMax: endOfDay.toISOString(),
+        timezone: args.timezone || "America/Toronto",
+      });
+
+      if (!calendarData.success || !calendarData.data) {
+        throw new Error("Failed to fetch calendar data");
+      }
+
+      // Extract today's free and busy slots
+      const todayFreeSlots = calendarData.data.freeSlots.map(slot => ({
+        start: slot.start,
+        end: slot.end,
+        durationMinutes: slot.durationMinutes,
+        isBusinessHours: slot.isBusinessHours || false,
+      }));
+
+      const todayBusySlots = calendarData.data.busyPeriods.map(busy => ({
+        summary: busy.summary,
+        start: busy.start,
+        end: busy.end,
+        isAllDay: busy.isAllDay,
+        location: busy.location || null,
+      }));
+
+      // Initialize ElevenLabs client
+      const elevenLabs = new ElevenLabsClient({
+        apiKey: apiKey
+      });
+
+      // Build dynamic variables with calendar data
+      const dynamicVariables: Record<string, string> = {
+        user_name: args.userName || "There",
+        user_timezone: args.timezone || "America/Toronto",
+        calendar_connected: "true",
+        today_free_slots: JSON.stringify(todayFreeSlots),
+        today_busy_slots: JSON.stringify(todayBusySlots),
+        total_free_slots: todayFreeSlots.length.toString(),
+        total_busy_periods: todayBusySlots.length.toString(),
+        longest_free_slot: Math.max(...todayFreeSlots.map(slot => slot.durationMinutes), 0).toString(),
+      };
+
+      // Log calendar data for debugging
+      console.log(`Calendar data for call initiation:`, {
+        freeSlots: todayFreeSlots.length,
+        busySlots: todayBusySlots.length,
+        userId: args.userId,
+        calendarId: args.calendarId,
+      });
+
+      // Make API call to ElevenLabs to initiate the call
+      const result = await elevenLabs.conversationalAi.twilio.outboundCall({
+        agentId: agentId,
+        agentPhoneNumberId: agentPhoneNumberId,
+        toNumber: args.toNumber,
+        conversationInitiationClientData: {
+          dynamicVariables: dynamicVariables,
+        }
+      });
+
+      if (!result.callSid) throw new Error("Failed to get callSid from ElevenLabs");
+
+      // Create a call record in the database
+      const dbCallId: Id<"calls"> = await ctx.runMutation(api.calls.createCall, {
+        userId: args.userId,
+        toNumber: args.toNumber,
+        agentId: agentId,
+        agentPhoneNumberId: agentPhoneNumberId,
+        elevenLabsCallId: result.callSid,
+        status: "initiated"
+      });
+
+      // Update the call with ElevenLabs response data
+      await ctx.runMutation(api.calls.updateCallWithElevenLabsResponse, {
+        callId: dbCallId,
+        elevenLabsCallId: result.callSid,
+        conversationId: result.conversationId || "",
+        twilioCallSid: result.callSid,
+        success: true
+      });
+
+      // Return success response with call details and calendar summary
+      return {
+        success: true,
+        callId: dbCallId,
+        elevenLabsCallId: result.callSid,
+        conversationId: result.conversationId || "",
+        message: `Call initiated successfully with calendar data - ${todayFreeSlots.length} free slots, ${todayBusySlots.length} busy periods`,
+      };
+
+    } catch (error) {
+      // Log error
+      await ctx.runMutation(api.events.logErrorInternal, {
+        category: "calls",
+        message: `Failed to initiate ElevenLabs call with calendar data: ${error instanceof Error ? error.message : String(error)}`,
+        details: {
+          toNumber: args.toNumber,
+          calendarId: args.calendarId,
+          error: error instanceof Error ? error.stack : String(error),
+        },
+        source: "convex",
+      });
+
+      console.log("Error in initiateCallWithCalendarData:", error);
+
+      // Return error response
+      return {
+        success: false,
+        callId: "" as Id<"calls">,
+        elevenLabsCallId: "",
+        conversationId: "",
+        message: error instanceof Error ? error.message : String(error)
+      };
+    }
+  },
+});
