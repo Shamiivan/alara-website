@@ -29,6 +29,7 @@ import type * as scheduledCall from "../scheduledCall.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
+import type * as types_calendar from "../types/calendar.js";
 import type * as types_flags from "../types/flags.js";
 import type * as types_google from "../types/google.js";
 import type * as user from "../user.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   stripe: typeof stripe;
   tasks: typeof tasks;
   telemetry: typeof telemetry;
+  "types/calendar": typeof types_calendar;
   "types/flags": typeof types_flags;
   "types/google": typeof types_google;
   user: typeof user;

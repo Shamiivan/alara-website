@@ -15,3 +15,4 @@ export interface JwtPayload {
   // Allow unknown extra fields
   [key: string]: unknown;
 }
+
