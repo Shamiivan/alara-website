@@ -1,6 +1,7 @@
 import { useAction, useQuery } from "convex/react";
 import { PrimaryButton, SecondaryButton, TertiaryButton } from "../ui/CustomButton";
 import { api } from "../../../convex/_generated/api";
+import CalendarEventsList from "./CalendarEventList";
 
 export default function Form() {
   const getFreeBusy = useAction(api.calendar.getFreeBusy);
@@ -50,6 +51,16 @@ export default function Form() {
       <SecondaryButton onClick={handleGetMainCalendar}> Get Main Calendar</SecondaryButton>
 
       <TertiaryButton onClick={handleGetCalendarEvents}> Get Calendar Event</TertiaryButton>
+      <CalendarEventsList
+        calendarId="shamiivan@gmail.com" // or "primary" / any calendar ID
+        initialRange={{
+          start: new Date("2025-08-01"),
+          end: new Date("2025-08-31"),
+        }}
+        maxResults={250}
+        singleEvents={true}
+        autoFetch={true}
+      />
     </div>
   );
 }
