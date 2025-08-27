@@ -32,6 +32,7 @@ import type * as telemetry from "../telemetry.js";
 import type * as types_calendar from "../types/calendar.js";
 import type * as types_flags from "../types/flags.js";
 import type * as types_google from "../types/google.js";
+import type * as types_result from "../types/result.js";
 import type * as user from "../user.js";
 import type * as utils_crypto from "../utils/crypto.js";
 import type * as utils_extractor from "../utils/extractor.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "types/calendar": typeof types_calendar;
   "types/flags": typeof types_flags;
   "types/google": typeof types_google;
+  "types/result": typeof types_result;
   user: typeof user;
   "utils/crypto": typeof utils_crypto;
   "utils/extractor": typeof utils_extractor;
