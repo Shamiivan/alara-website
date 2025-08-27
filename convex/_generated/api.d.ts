@@ -35,6 +35,7 @@ import type * as user from "../user.js";
 import type * as utils_crypto from "../utils/crypto.js";
 import type * as utils_extractor from "../utils/extractor.js";
 import type * as utils_getUser from "../utils/getUser.js";
+import type * as utils_tokens from "../utils/tokens.js";
 import type * as utils_verify from "../utils/verify.js";
 
 /**
@@ -68,6 +69,7 @@ declare const fullApi: ApiFromModules<{
   "utils/crypto": typeof utils_crypto;
   "utils/extractor": typeof utils_extractor;
   "utils/getUser": typeof utils_getUser;
+  "utils/tokens": typeof utils_tokens;
   "utils/verify": typeof utils_verify;
 }>;
 export declare const api: FilterApi<
