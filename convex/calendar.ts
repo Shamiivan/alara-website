@@ -54,7 +54,7 @@ export const isCalendarConnected = query({
   },
 
 });
-export const getAccount = internalQuery({
+export const getTokenById = internalQuery({
   args: {
     userId: v.id("users"),
   },
@@ -62,5 +62,18 @@ export const getAccount = internalQuery({
     const account = await ctx.db.query("googleTokens")
       .withIndex("by_user", (q) => q.eq("userId", args.userId)).unique();
     return account;
+  }
+});
+
+
+export const getFreeBusy = action({
+  args: {
+    userId: v.id("users")
+  },
+  handler: async (ctx, { userId }) => {
+    console.log("Action has been called");
+    // get the token by users 
+    const tokenRow = await ctx.runQuery(internal.calendar.getTokenById, { userId })
+    console.log(tokenRow);
   }
 })

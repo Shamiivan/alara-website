@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import NextCallCard from "@/components/dashboard/NextCallCard";
 import { TOKENS } from "@/components/tokens";
 import { Sparkles, Star, Zap, Check, Smile } from "lucide-react";
+import CalendarComponent from "@/components/calendar/CalendarComponent";
 
 export default function DashboardPage() {
   // Track if component has mounted for animations
@@ -104,6 +105,9 @@ export default function DashboardPage() {
             onCancel={() => { }}
             compact={true}
           />
+        </div>
+        <div className="mt-8 rounded-lg p-1 hover-lift" style={{ background: TOKENS.accent, opacity: mounted ? 1 : 0, transition: 'opacity 0.5s ease 300ms' }}>
+          <CalendarComponent />
         </div>
       </div>
     </div>
