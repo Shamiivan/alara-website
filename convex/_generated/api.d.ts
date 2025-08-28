@@ -20,6 +20,8 @@ import type * as calendar from "../calendar.js";
 import type * as calls from "../calls.js";
 import type * as calls_node from "../calls_node.js";
 import type * as conversation from "../conversation.js";
+import type * as core_calls_mutations from "../core/calls/mutations.js";
+import type * as core_calls_queries from "../core/calls/queries.js";
 import type * as events from "../events.js";
 import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
@@ -59,6 +61,8 @@ declare const fullApi: ApiFromModules<{
   calls: typeof calls;
   calls_node: typeof calls_node;
   conversation: typeof conversation;
+  "core/calls/mutations": typeof core_calls_mutations;
+  "core/calls/queries": typeof core_calls_queries;
   events: typeof events;
   "feature/flags": typeof feature_flags;
   google: typeof google;
