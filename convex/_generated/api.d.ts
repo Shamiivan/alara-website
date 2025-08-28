@@ -26,6 +26,7 @@ import type * as google from "../google.js";
 import type * as http from "../http.js";
 import type * as payments from "../payments.js";
 import type * as scheduledCall from "../scheduledCall.js";
+import type * as shared_error from "../shared/error.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   payments: typeof payments;
   scheduledCall: typeof scheduledCall;
+  "shared/error": typeof shared_error;
   stripe: typeof stripe;
   tasks: typeof tasks;
   telemetry: typeof telemetry;
