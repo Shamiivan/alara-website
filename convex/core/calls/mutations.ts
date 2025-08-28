@@ -103,7 +103,7 @@ export const upsertCallByElevenLabsId = mutation({
       elevenLabsCallId: args.elevenLabsCallId,
       agentId: args.agentId,
       conversationId: args.conversationId,
-      initiatedAt: nowMs(),
+      initiatedAt: Date.now(),
     });
 
     return callId;
@@ -220,7 +220,7 @@ export const patchCall = mutation({
       if (!current) throw new Error("Call not found");
       assertTransition(current.status, data.status);
       if (["completed", "failed", "no_answer"].includes(data.status)) {
-        data.completedAt ??= nowMs();
+        data.completedAt ??= Date.now();
       }
     }
     await ctx.db.patch(callId, data);

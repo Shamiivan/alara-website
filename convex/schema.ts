@@ -68,13 +68,22 @@ const schema = defineSchema({
       v.literal("no_answer"),
     ),
     elevenLabsCallId: v.optional(v.string()),
-    initiatedAt: v.optional(v.number()),
+    duration: v.optional(v.number()),
+    cost: v.optional(v.number()),
+    initiatedAt: v.number(),
+    completedAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
+
     agentId: v.optional(v.string()),
+    agentPhoneNumberId: v.optional(v.string()),
     conversationId: v.optional(v.string()),
+    twilioCallSid: v.optional(v.string()),
+    hasTranscript: v.optional(v.boolean()),
+    hasAudio: v.optional(v.boolean()),
+    startTimeUnix: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_status", ["status"]) // TODO: Remove the status
+    .index("by_status", ["status"]) // TODO: Remove the stat
     .index("by_eleven_labs_call_id", ["elevenLabsCallId"]),
 
   // NEW TABLE FOR CONVERSATION TRANSCRIPTS

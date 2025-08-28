@@ -32,6 +32,7 @@ import type * as integrations_elevenlabs_types from "../integrations/elevenlabs/
 import type * as payments from "../payments.js";
 import type * as scheduledCall from "../scheduledCall.js";
 import type * as stripe from "../stripe.js";
+import type * as sytem_migration from "../sytem/migration.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
 import type * as types_calendar from "../types/calendar.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   scheduledCall: typeof scheduledCall;
   stripe: typeof stripe;
+  "sytem/migration": typeof sytem_migration;
   tasks: typeof tasks;
   telemetry: typeof telemetry;
   "types/calendar": typeof types_calendar;
