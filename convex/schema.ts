@@ -83,7 +83,7 @@ const schema = defineSchema({
     startTimeUnix: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_status", ["status"])
+    .index("by_status", ["status"]) // TODO: Remove the stat
     .index("by_eleven_labs_call_id", ["elevenLabsCallId"]),
 
   // NEW TABLE FOR CONVERSATION TRANSCRIPTS
