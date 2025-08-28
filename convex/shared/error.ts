@@ -1,3 +1,5 @@
+import { api } from "../_generated/api";
+
 export async function withErrorHandling<T>(
   ctx: any,
   operation: string,
