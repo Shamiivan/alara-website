@@ -24,6 +24,7 @@ import type * as events from "../events.js";
 import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
 import type * as http from "../http.js";
+import type * as integrations_elevenlabs_http from "../integrations/elevenlabs/http.js";
 import type * as payments from "../payments.js";
 import type * as scheduledCall from "../scheduledCall.js";
 import type * as shared_error from "../shared/error.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   "feature/flags": typeof feature_flags;
   google: typeof google;
   http: typeof http;
+  "integrations/elevenlabs/http": typeof integrations_elevenlabs_http;
   payments: typeof payments;
   scheduledCall: typeof scheduledCall;
   "shared/error": typeof shared_error;

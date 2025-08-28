@@ -6,10 +6,12 @@ import { getAuthUserId } from "@convex-dev/auth/server";
 import { get } from "http";
 import { JwtPayload } from "./types/google";
 import { use } from "react";
+import { elevenLabsRoutes } from "./integrations/elevenlabs/http";
 
 const http = httpRouter();
-
 auth.addHttpRoutes(http);
+
+elevenLabsRoutes(http);
 
 http.route({
   path: "/api/gcal/callback",
@@ -126,24 +128,5 @@ http.route({
   }),
 });
 
-
-http.route({
-  path: "/api/convai/webhook",
-  method: "POST",
-  handler: httpAction(async (ctx, req) => {
-    try {
-      // 1) Read raw body (must do this before any .json() usage)
-      const bodyText = await req.text();
-      const data = JSON.parse(bodyText).data;
-      await ctx.runAction(api.calls_node.handleElevenLabsWebhookTemp, {
-        payload: data,
-      });
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
-    } catch (e) {
-      console.error("Error in ConvAI webhook:", e);
-      return new Response("Internal Server Error", { status: 500 });
-    }
-  }),
-});
 
 export default http;
