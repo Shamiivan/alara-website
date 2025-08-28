@@ -1,4 +1,3 @@
-## Use try catch 
 # Integration Layer Error Handling
 
 ## When to Use Try-Catch in Integration Functions
