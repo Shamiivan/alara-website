@@ -5,7 +5,7 @@ import PageHeader from "@/components/dashboard/PageHeader";
 import NextCallCard from "@/components/dashboard/NextCallCard";
 import CalendarComponent from "@/components/calendar/CalendarComponent";
 import { Sparkles, Star, Zap, Check, Clock, Calendar, Smile } from "lucide-react";
-
+import Rolling7DayStrip from "@/components/calendar/WeekSectionComponent"
 export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [greeting, setGreeting] = useState("Hello");
@@ -186,7 +186,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-
+        <Rolling7DayStrip />
         {/* Content Grid - Two Column on Desktop */}
         <div style={twoColumnGridStyles}>
           {/* Next Call Section */}
@@ -234,7 +234,8 @@ export default function DashboardPage() {
                 Your schedule at a glance
               </p>
             </div>
-            <CalendarComponent />
+            {/* <CalendarComponent /> */}
+            <Rolling7DayStrip />
           </div>
         </div>
 

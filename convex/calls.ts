@@ -23,7 +23,6 @@ export const createCall = mutation({
       // Create call record
       const callId = await ctx.db.insert("calls", {
         userId: args.userId,
-        toNumber: args.toNumber,
         status: args.status || "initiated",
         agentId: args.agentId,
         elevenLabsCallId: args.elevenLabsCallId,
@@ -218,10 +217,6 @@ export const storeConversation = mutation({
         userId: args.userId,
         conversationId: args.conversationId,
         transcript: args.transcript,
-        metadata: args.metadata,
-        hasAudio: args.hasAudio,
-        hasUserAudio: args.hasUserAudio,
-        hasResponseAudio: args.hasResponseAudio,
         createdAt: Date.now(),
       });
 

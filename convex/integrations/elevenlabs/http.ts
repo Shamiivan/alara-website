@@ -1,6 +1,7 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "../../_generated/server";
 import { api } from "../../_generated/api";
+import { parseWebhook } from "./conversations";
 
 export function elevenLabsRoutes(http: ReturnType<typeof httpRouter>) {
   http.route({
@@ -9,11 +10,12 @@ export function elevenLabsRoutes(http: ReturnType<typeof httpRouter>) {
     handler: httpAction(async (ctx, req) => {
       try {
         const bodyText = await req.text();
-        const data = JSON.parse(bodyText).data;
-
-        await ctx.runAction(api.calls_node.handleElevenLabsWebhookTemp, {
-          payload: data,
-        });
+        const data = JSON.parse(bodyText);
+        const parsedData = parseWebhook(data);
+        console.log("Parsed Data", parsedData);
+        // await ctx.runAction(api.calls_node.handleElevenLabsWebhookTemp, {
+        //   payload: data,
+        // });
 
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       } catch (e) {

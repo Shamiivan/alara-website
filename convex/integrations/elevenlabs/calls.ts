@@ -3,6 +3,7 @@
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { CallResult, CallRequest } from "./types";
 import { error } from "console";
+import { Ok, Result } from "../../shared/result";
 
 function createClient(): ElevenLabsClient {
   const apiKey = process.env.ELEVEN_LABS_API_KEY!;
@@ -10,11 +11,8 @@ function createClient(): ElevenLabsClient {
   return new ElevenLabsClient({ apiKey: apiKey });
 }
 
-export async function initiateElevenLabsCall(
-  request: CallRequest
-): Promise<CallResult> {
+export async function initiateCall(request: CallRequest): Promise<Result<CallResult>> {
   try {
-
     const client = createClient();
 
     const result = await client.conversationalAi.twilio.outboundCall({
@@ -26,10 +24,17 @@ export async function initiateElevenLabsCall(
       }
     });
 
-    return {
-      callId: result.callSid,
-      conversationId: result.conversationId,
+    if (!result.callSid) {
+      throw new Error("ElevenLabs returned no callSid");
     }
+
+    return Ok(
+
+      {
+        callSid: result.callSid,
+        conversationId: result.conversationId,
+      }
+    )
 
   } catch (error) {
     throw new Error(`ElevenLabs call failed for ${request.toNumber}: ${error}`);

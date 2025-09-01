@@ -97,7 +97,6 @@ export const upsertCallByElevenLabsId = mutation({
 
     const callId = await ctx.db.insert("calls", {
       userId: args.userId,
-      toNumber: args.toNumber,
       purpose: args.purpose,
       status: "initiated" as const,
       elevenLabsCallId: args.elevenLabsCallId,

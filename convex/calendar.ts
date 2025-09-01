@@ -3,8 +3,6 @@ import { action, internalQuery, mutation, query } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { CalendarEventsResponse, GoogleCalendarEvent } from "./types/calendar";
 
-
-
 export const upsertTokens = mutation({
   args: {
     userId: v.id("users"),

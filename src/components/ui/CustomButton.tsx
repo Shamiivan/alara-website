@@ -103,7 +103,7 @@ function variantStyle(variant: Variant, disabled?: boolean): React.CSSProperties
   if (variant === "tertiary") {
     return { ...c, backgroundColor: "transparent", color: TOKENS.text, boxShadow: "none" };
   }
-  return { ...c, backgroundColor: "transparent", color: TOKENS.link, boxShadow: "none" };
+  return { ...c, backgroundColor: "rgba(79, 70, 229, 0.02)", color: TOKENS.link, boxShadow: "none" };
 }
 
 /* ---------- Interactions (no extra ref) ---------- */
@@ -209,16 +209,27 @@ function TertiaryCharm() {
     </>
   );
 }
-function LinkCharm() {
+
+// Fixed LinkCharm to handle inline buttons properly
+function LinkCharm({ inline }: { inline?: boolean }) {
+  const underlineStyle: React.CSSProperties = {
+    position: "absolute",
+    left: inline ? 4 : 10,
+    right: inline ? 4 : 10,
+    bottom: 6,
+    height: 2,
+    backgroundColor: TOKENS.link,
+    transform: "scaleX(0)",
+    transformOrigin: "left",
+    opacity: 0.9,
+  };
+
   return (
     <>
       <span
         aria-hidden
         className="link-underline"
-        style={{
-          position: "absolute", left: 10, right: 10, bottom: 6, height: 2,
-          backgroundColor: TOKENS.link, transform: "scaleX(0)", transformOrigin: "left", opacity: 0.9,
-        }}
+        style={underlineStyle}
       />
       <span aria-hidden className="link-arrow" style={{ display: "inline-flex", marginLeft: 6 }}>→</span>
       <style>{`
@@ -277,7 +288,7 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
           ? "btn-pressable link-host"
           : "btn-pressable";
 
-    // 🔧 Wrapper fix: when inline, don't force a 100% width container.
+    // Wrapper fix: when inline, don't force a 100% width container.
     const Wrapper: React.ElementType = inline ? "span" : "div";
     const wrapperStyle: React.CSSProperties = inline
       ? { display: "inline-block", maxWidth: "100%" }
@@ -296,7 +307,7 @@ export const ReusableButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
           {variant === "primary" && <PrimaryCharm />}
           {variant === "secondary" && <SecondaryCharm />}
           {variant === "tertiary" && <TertiaryCharm />}
-          {variant === "link" && <LinkCharm />}
+          {variant === "link" && <LinkCharm inline={inline} />}
           <span style={{ position: "relative", zIndex: 1 }}>{children}</span>
         </button>
 

@@ -6,7 +6,6 @@ export interface CallResult {
 
 export interface ElevenLabsCallRequest {
   agentId: string;
-  agentPhoneNumberId: string;
   toNumber: string;
   userName?: string;
   timezone?: string;
