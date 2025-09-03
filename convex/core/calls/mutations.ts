@@ -11,7 +11,6 @@ const CallStatus = v.union(
   v.literal("no_answer"),
 );
 
-// Basic state machine: forward-only transitions.
 const allowedTransitions: Record<string, Array<"in_progress" | "completed" | "failed" | "no_answer">> = {
   initiated: ["in_progress", "completed", "failed", "no_answer"],
   in_progress: ["completed", "failed", "no_answer"],
