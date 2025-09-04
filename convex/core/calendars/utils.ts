@@ -1,3 +1,5 @@
+import { Id } from "../../_generated/dataModel";
+import { Result, Ok, Err } from "../../shared/result";
 // Type definitions
 export interface ToolCall {
   type: string;
@@ -148,4 +150,105 @@ export function extractTasksFromTranscript(transcript: TranscriptInput): ParsedT
   }
 
   return validTasks;
+}
+
+
+export interface CalendarCallData {
+  callId: Id<"calls">;
+  elevenLabsCallId: string;
+  conversationId: string;
+  message: string;
+}
+
+export interface CalendarContext {
+  freeSlots: Array<{
+    start: string;
+    end: string;
+    durationMinutes: number;
+    isBusinessHours: boolean;
+  }>;
+  busyPeriods: Array<{
+    summary: string;
+    start: string;
+    end: string;
+    isAllDay: boolean;
+    location: string | null;
+  }>;
+}
+
+export function buildCalendarContext(
+  freeSlots: any[],
+  busyPeriods: any[]
+): Result<CalendarContext> {
+  try {
+    const context: CalendarContext = {
+      freeSlots: freeSlots.map(slot => ({
+        start: slot.start,
+        end: slot.end,
+        durationMinutes: slot.durationMinutes,
+        isBusinessHours: slot.isBusinessHours || false,
+      })),
+      busyPeriods: busyPeriods.map(busy => ({
+        summary: busy.summary,
+        start: busy.start,
+        end: busy.end,
+        isAllDay: busy.isAllDay,
+        location: busy.location || null,
+      }))
+    };
+
+    return Ok(context);
+  } catch (error) {
+    return Err("Failed to build calendar context");
+  }
+}
+
+export function createDynamicVariables(
+  userName: string,
+  timezone: string,
+  context: CalendarContext
+): Record<string, string> {
+  return {
+    user_name: userName,
+    user_timezone: timezone,
+    calendar_connected: "true",
+    today_free_slots: JSON.stringify(context.freeSlots),
+    today_busy_slots: JSON.stringify(context.busyPeriods),
+    total_free_slots: context.freeSlots.length.toString(),
+    total_busy_periods: context.busyPeriods.length.toString(),
+    longest_free_slot: Math.max(...context.freeSlots.map(slot => slot.durationMinutes), 0).toString(),
+  };
+}
+
+
+export function getCalendarCallConfig(): Result<{
+  agentId: string;
+  agentPhoneNumberId: string;
+  apiKey: string;
+}> {
+  const agentId = process.env.ELEVEN_LABS_AGENT_ID;
+  const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID;
+  const apiKey = process.env.ELEVEN_LABS_API_KEY;
+
+  if (!agentId) return Err("Missing ELEVEN_LABS_AGENT_ID");
+  if (!agentPhoneNumberId) return Err("Missing ELEVEN_LABS_PHONE_NUMBER_ID");
+  if (!apiKey) return Err("Missing ELEVEN_LABS_API_KEY");
+
+  return Ok({ agentId, agentPhoneNumberId, apiKey });
+}
+
+
+// Helper function for configuration
+export function getReminderCallConfig(): Result<{ agentId: string, agentPhoneNumberId: string }> {
+  const agentId = process.env.ELEVEN_LABS_REMINDER_AGENT_ID;
+  const agentPhoneNumberId = process.env.ELEVEN_LABS_PHONE_NUMBER_ID;
+
+  if (!agentId) {
+    return Err("Missing ELEVEN_LABS_REMINDER_AGENT_ID environment variable");
+  }
+  if (!agentPhoneNumberId) {
+    return Err("Missing ELEVEN_LABS_PHONE_NUMBER_ID environment variable");
+  }
+
+  return Ok({ agentId, agentPhoneNumberId });
 }

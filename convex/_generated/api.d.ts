@@ -23,6 +23,7 @@ import type * as conversation from "../conversation.js";
 import type * as core_calendars_actions from "../core/calendars/actions.js";
 import type * as core_calendars_queries from "../core/calendars/queries.js";
 import type * as core_calendars_utils from "../core/calendars/utils.js";
+import type * as core_calls_actions from "../core/calls/actions.js";
 import type * as core_calls_mutations from "../core/calls/mutations.js";
 import type * as core_calls_queries from "../core/calls/queries.js";
 import type * as core_calls_types from "../core/calls/types.js";
@@ -46,6 +47,9 @@ import type * as integrations_google_types from "../integrations/google/types.js
 import type * as payments from "../payments.js";
 import type * as scheduledCall from "../scheduledCall.js";
 import type * as shared_result from "../shared/result.js";
+import type * as shared_types_calendar from "../shared/types/calendar.js";
+import type * as shared_types_flags from "../shared/types/flags.js";
+import type * as shared_types_google from "../shared/types/google.js";
 import type * as stripe from "../stripe.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
@@ -78,6 +82,7 @@ declare const fullApi: ApiFromModules<{
   "core/calendars/actions": typeof core_calendars_actions;
   "core/calendars/queries": typeof core_calendars_queries;
   "core/calendars/utils": typeof core_calendars_utils;
+  "core/calls/actions": typeof core_calls_actions;
   "core/calls/mutations": typeof core_calls_mutations;
   "core/calls/queries": typeof core_calls_queries;
   "core/calls/types": typeof core_calls_types;
@@ -101,6 +106,9 @@ declare const fullApi: ApiFromModules<{
   payments: typeof payments;
   scheduledCall: typeof scheduledCall;
   "shared/result": typeof shared_result;
+  "shared/types/calendar": typeof shared_types_calendar;
+  "shared/types/flags": typeof shared_types_flags;
+  "shared/types/google": typeof shared_types_google;
   stripe: typeof stripe;
   tasks: typeof tasks;
   telemetry: typeof telemetry;

@@ -37,31 +37,18 @@ export const createCallRecord = mutation({
     toNumber: v.string(),
     purpose: v.optional(v.string()),
     agentId: v.optional(v.string()),
-    agentPhoneNumberId: v.optional(v.string()),
     conversationId: v.optional(v.string()), // if preallocated on provider
     elevenLabsCallId: v.optional(v.string()), // if already known
-    twilioCallSid: v.optional(v.string()),
-    startTimeUnix: v.optional(v.number()), // provider start unix (secs) if available
   },
   handler: async (ctx, args) => {
     const doc = {
       userId: args.userId,
-      toNumber: args.toNumber,
       purpose: args.purpose,
       status: "initiated" as const,
       elevenLabsCallId: args.elevenLabsCallId,
       agentId: args.agentId,
-      agentPhoneNumberId: args.agentPhoneNumberId,
       conversationId: args.conversationId,
-      twilioCallSid: args.twilioCallSid,
-      hasTranscript: false,
-      hasAudio: false,
-      startTimeUnix: args.startTimeUnix,
       initiatedAt: Date.now(),
-      // unset fields
-      duration: undefined,
-      cost: undefined,
-      completedAt: undefined,
       errorMessage: undefined,
     };
     const callId = await ctx.db.insert("calls", doc);

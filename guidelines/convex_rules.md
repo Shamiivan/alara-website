@@ -66,7 +66,7 @@ export default defineSchema({
     )
 });
 ```
-- Always use the `v.null()` validator when returning a null value. Below is an example query that returns a null value:
+- Always use the `v.null()` validator when returning a null value and only if you are returning a null value. Below is an example query that returns a null value:
 ```typescript
 import { query } from "./_generated/server";
 import { v } from "convex/values";
