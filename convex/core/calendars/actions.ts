@@ -1,7 +1,7 @@
 "use node";
 import { v } from "convex/values";
 import { action } from "./../../_generated/server";
-import { internal } from "./../../_generated/api";
+import { api, internal } from "./../../_generated/api";
 import { CalendarEventsResponse, GoogleCalendarEvent } from "../../integrations/google/types";
 import { fetchCalendars, fetchCalendarEvents } from "../../integrations/google/calendar";
 import { Result, Ok, Err } from "../../shared/result";
@@ -78,6 +78,20 @@ export const getUserCalendars = action({
 
       // Find the primary calendar
       const primaryCalendar = calendarData.items?.find(cal => cal.primary === true) || null;
+
+
+      // Check if user needs their main calendar ID set
+      if (primaryCalendar?.id) {
+        const user = await ctx.runQuery(api.core.users.queries.getUserById, { userId });
+
+        if (user && !user.mainCalendarId) {
+          console.log("Setting main calendar ID for first time:", primaryCalendar.id);
+          await ctx.runMutation(api.core.users.mutations.updateMainCalendar, {
+            userId,
+            mainCalendarId: primaryCalendar.id,
+          });
+        }
+      }
 
       return Ok({
         calendars: calendarData.items || [],

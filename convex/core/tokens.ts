@@ -56,7 +56,6 @@ export const ensureValidToken = internalAction({
   returns: v.string(),
   handler: async (ctx, { userId }): Promise<string> => {
     try {
-      console.log("Ensuring valid token for userId:", userId);
       const tokenRow = await ctx.runQuery(internal.core.tokens.getTokenByUserId, { userId });
       if (!tokenRow) throw new Error(`No token found for user ${userId}`);
 
@@ -69,7 +68,6 @@ export const ensureValidToken = internalAction({
         return tokenRow.accessToken;
       }
 
-      console.log("Token is expired, refreshing...");
 
       // Refresh the token using the integration function
       const googleResponse = await refreshAccessToken({
@@ -85,7 +83,6 @@ export const ensureValidToken = internalAction({
         expiresAtMs: newExpiresAtMs
       });
 
-      console.log("Token refreshed successfully");
       return googleResponse.access_token;
 
     } catch (error) {

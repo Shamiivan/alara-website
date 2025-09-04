@@ -11,26 +11,17 @@ import { CalendarCallData, buildCalendarContext, createDynamicVariables, getCale
 export const initiateCalendarCall = action({
   args: {
     userId: v.id("users"),
-    toNumber: v.string(),
-    calendarId: v.string(),
-    userName: v.optional(v.string()),
-    timezone: v.optional(v.string()),
   },
-  returns: v.union(
-    v.object({
-      success: v.literal(true),
-      data: v.object({
-        callId: v.id("calls"),
-        elevenLabsCallId: v.string(),
-        conversationId: v.string(),
-        message: v.string(),
-      })
-    }),
-    v.object({ success: v.literal(false), error: v.string() })
-  ),
-  handler: async (ctx, args): Promise<Result<CalendarCallData>> => {
+  handler: async (ctx, { userId }): Promise<Result<CalendarCallData>> => {
     try {
-      console.log(`[initiateCalendarCall] Starting for user ${args.userId}, calendar ${args.calendarId}`);
+      const user = await ctx.runQuery(api.core.users.queries.getUserById, { userId });
+      const toNumber = user.phone;
+      const calendarId = user.mainCalendarId;
+      const timezone = user.timezone;
+
+      if (!calendarId) throw new Error("Oops, looks like something is wrong with you main calendar:(");
+      if (!toNumber) throw new Error("Ooops, looks like something is wrong with your phone number");
+      console.log(`[initiateCalendarCall] Starting for user`);
 
       // 1. Validate configuration
       const config = getCalendarCallConfig();
@@ -47,8 +38,8 @@ export const initiateCalendarCall = action({
 
       // 3. Fetch calendar events using core layer
       const eventsResult = await ctx.runAction(api.core.calendars.actions.getCalendarEvents, {
-        userId: args.userId,
-        calendarId: args.calendarId,
+        userId: userId,
+        calendarId: calendarId,
         timeMin: startOfDay.toISOString(),
         timeMax: endOfDay.toISOString(),
       });
@@ -84,10 +75,12 @@ export const initiateCalendarCall = action({
 
       // 6. Create dynamic variables
       const dynamicVariables = createDynamicVariables(
-        args.userName || "There",
-        args.timezone || "America/Toronto",
+        user.name || "There",
+        user.timezone || "America/Toronto",
         context
       );
+
+      console.log("context", timezone);
 
       console.log(`[initiateCalendarCall] Calendar context: ${context.freeSlots.length} free, ${context.busyPeriods.length} busy`);
 
@@ -96,7 +89,7 @@ export const initiateCalendarCall = action({
       const callResult = await initiateCall({
         agentId: config.data.agentId,
         agentPhoneNumberId: config.data.agentPhoneNumberId,
-        toNumber: args.toNumber,
+        toNumber: toNumber,
         dynamicVariables,
       });
 
@@ -114,9 +107,9 @@ export const initiateCalendarCall = action({
 
       // 8. Create call record using core layer
       const dbCallId = await ctx.runMutation(api.core.calls.mutations.createCallRecord, {
-        userId: args.userId,
-        toNumber: args.toNumber,
-        purpose: "calendar_reminder",
+        userId: userId,
+        toNumber: toNumber,
+        purpose: "planning",
         agentId: config.data.agentId,
         elevenLabsCallId: callResult.data.callId,
         conversationId: callResult.data.conversationId,

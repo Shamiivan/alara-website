@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
   getDefaultTimeZone,
@@ -34,6 +34,7 @@ export default function NextCallCard({
 }: Props) {
   const user = useQuery(api.user.getCurrentUser);
   const updateCallTime = useMutation(api.user.updateCallTime);
+  const callNow = useAction(api.core.calls.actions.initiateCalendarCall)
 
   const defaultTZ = useMemo(() => getDefaultTimeZone(), []);
   const pulledTZ = user?.timezone || initialTimeZone || defaultTZ;
@@ -217,6 +218,11 @@ export default function NextCallCard({
     const { date, time } = roundNowToNext15(timeZone);
     setDateStr(date);
     setTimeStr(time);
+    if (!user || !user._id) {
+      console.error("No user available for call");
+      return;
+    }
+    const res = callNow({ userId: user._id });
   }
 
   return (

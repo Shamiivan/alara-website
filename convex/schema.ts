@@ -30,7 +30,7 @@ const schema = defineSchema({
     wantsCallReminders: v.optional(v.boolean()),
     wantsClarityCalls: v.optional(v.boolean()),
     updatedAt: v.optional(v.number()),
-
+    mainCalendarId: v.optional(v.string()),
     // Payment fields
     hasPaid: v.optional(v.boolean()),
     paidAt: v.optional(v.number()),
