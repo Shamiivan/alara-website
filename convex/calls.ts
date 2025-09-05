@@ -23,10 +23,8 @@ export const createCall = mutation({
       // Create call record
       const callId = await ctx.db.insert("calls", {
         userId: args.userId,
-        toNumber: args.toNumber,
         status: args.status || "initiated",
         agentId: args.agentId,
-        agentPhoneNumberId: args.agentPhoneNumberId,
         elevenLabsCallId: args.elevenLabsCallId,
         initiatedAt: Date.now(),
         errorMessage: args.errorMessage,
@@ -94,8 +92,6 @@ export const updateCallStatus = mutation({
     try {
       await ctx.db.patch(args.callId, {
         status: args.status,
-        duration: args.duration,
-        completedAt: args.completedAt || Date.now(),
         errorMessage: args.errorMessage,
       });
 
@@ -170,7 +166,6 @@ export const updateCallWithElevenLabsResponse = mutation({
         purpose: args.purpose || "unknown",
         elevenLabsCallId: args.elevenLabsCallId,
         conversationId: args.conversationId,
-        twilioCallSid: args.twilioCallSid,
         status: args.success ? "in_progress" : "failed",
         errorMessage: args.errorMessage,
       });
@@ -222,10 +217,6 @@ export const storeConversation = mutation({
         userId: args.userId,
         conversationId: args.conversationId,
         transcript: args.transcript,
-        metadata: args.metadata,
-        hasAudio: args.hasAudio,
-        hasUserAudio: args.hasUserAudio,
-        hasResponseAudio: args.hasResponseAudio,
         createdAt: Date.now(),
       });
 

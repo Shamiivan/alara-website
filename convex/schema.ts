@@ -30,7 +30,7 @@ const schema = defineSchema({
     wantsCallReminders: v.optional(v.boolean()),
     wantsClarityCalls: v.optional(v.boolean()),
     updatedAt: v.optional(v.number()),
-
+    mainCalendarId: v.optional(v.string()),
     // Payment fields
     hasPaid: v.optional(v.boolean()),
     paidAt: v.optional(v.number()),
@@ -59,7 +59,6 @@ const schema = defineSchema({
   calls: defineTable({
     userId: v.id("users"),
     purpose: v.optional(v.string()),
-    toNumber: v.string(),
     status: v.union(
       v.literal("initiated"),
       v.literal("in_progress"),
@@ -68,22 +67,14 @@ const schema = defineSchema({
       v.literal("no_answer"),
     ),
     elevenLabsCallId: v.optional(v.string()),
-    duration: v.optional(v.number()),
-    cost: v.optional(v.number()),
     initiatedAt: v.number(),
-    completedAt: v.optional(v.number()),
     errorMessage: v.optional(v.string()),
 
     agentId: v.optional(v.string()),
-    agentPhoneNumberId: v.optional(v.string()),
     conversationId: v.optional(v.string()),
-    twilioCallSid: v.optional(v.string()),
-    hasTranscript: v.optional(v.boolean()),
-    hasAudio: v.optional(v.boolean()),
-    startTimeUnix: v.optional(v.number()),
   })
     .index("by_user", ["userId"])
-    .index("by_status", ["status"])
+    .index("by_status", ["status"]) // TODO: Remove the stat
     .index("by_eleven_labs_call_id", ["elevenLabsCallId"]),
 
   // NEW TABLE FOR CONVERSATION TRANSCRIPTS
@@ -97,13 +88,6 @@ const schema = defineSchema({
       timeInCallSecs: v.number(),
       message: v.string(),
     })),
-    metadata: v.object({
-      startTimeUnixSecs: v.number(),
-      callDurationSecs: v.number(),
-    }),
-    hasAudio: v.boolean(),
-    hasUserAudio: v.boolean(),
-    hasResponseAudio: v.boolean(),
     createdAt: v.number(),
   })
     .index("by_call", ["callId"])
@@ -114,6 +98,7 @@ const schema = defineSchema({
   tasks: defineTable({
     title: v.string(),
     due: v.string(), // ISO string with offset
+    reminderMinutesBefore: v.optional(v.number()),
     timezone: v.string(),
     callId: v.optional(v.id("calls")),
     userId: v.optional(v.id("users")),
@@ -211,7 +196,7 @@ const schema = defineSchema({
     expiresAtMs: v.number(),
     createdAt: v.number(),
     updatedAt: v.number(),
-  }).index("by_user", ["userId"])
+  }).index("by_user", ["userId"]).index("by_email", ["userEmail"])
 });
 
 export default schema;

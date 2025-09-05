@@ -4,6 +4,42 @@ import { useState, useEffect, useMemo, useCallback, Fragment } from "react";
 import { useQuery, useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import type { Id } from "../../../../convex/_generated/dataModel";
+
+// Define proper types to match the actual data structure
+interface CallType {
+  _id: Id<"calls">;
+  _creationTime: number;
+  purpose?: string;
+  elevenLabsCallId?: string;
+  errorMessage?: string;
+  agentId?: string;
+  conversationId?: string;
+  status: "in_progress" | "completed" | "failed" | "no_answer";
+  userId: Id<"users">;
+  initiatedAt: number;
+  completedAt?: number;
+  duration?: number;
+  toNumber?: string; // Make this optional as it might not exist in all call objects
+}
+
+interface ConversationType {
+  _id: Id<"conversations">;
+  _creationTime: number;
+  userId?: Id<"users">;
+  elevenLabsCallId?: string;
+  callId?: Id<"calls">;
+  createdAt: number;
+  conversationId: string;
+  transcript: Array<{
+    role: string;
+    message: string;
+    timeInCallSecs: number;
+  }>;
+  metadata: {
+    startTimeUnixSecs: number;
+    callDurationSecs: number;
+  };
+}
 import { TOKENS } from "@/components/tokens";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,12 +87,12 @@ export default function CallsPage() {
   // Data
   const user = useQuery(api.user.getCurrentUser);
   const callsRaw = useQuery(api.calls.getUserCalls, {});
-  const calls = useMemo(() => callsRaw ?? [], [callsRaw]);
+  const calls = useMemo(() => (callsRaw ?? []) as CallType[], [callsRaw]);
 
   const selectedConversation = useQuery(
     api.conversation.getConversationByCallId,
     selectedCallId ? { callId: selectedCallId } : "skip"
-  );
+  ) as ConversationType | null;
 
   // Actions
   const initiateCall = useAction(api.calls_node.initiateCall);
@@ -66,7 +102,7 @@ export default function CallsPage() {
   useEffect(() => {
     if (!isAutoRefreshing || !calls?.length) return;
     const recent = calls
-      .filter(c => c.status === "completed" && !c.hasTranscript && c.completedAt && Date.now() - c.completedAt < 5 * 60 * 1000)
+      .filter(c => c.status === "completed" && !c.conversationId && c.completedAt && Date.now() - c.completedAt < 5 * 60 * 1000)
       .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0))[0];
     if (recent && !isLoading) {
       void handleFetchConversation(recent._id);
@@ -330,7 +366,7 @@ export default function CallsPage() {
                                 )}
                               </div>
                             </div>
-                            {c.status === "completed" && !c.hasTranscript && (
+                            {c.status === "completed" && !c.conversationId && (
                               <Button
                                 variant="outline"
                                 size="sm"

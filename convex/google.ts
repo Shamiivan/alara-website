@@ -5,6 +5,13 @@ import { api, internal } from "./_generated/api";
 
 
 
+export const getTokenById = internalQuery({
+  args: { rowId: v.id("googleTokens") },
+  handler: async ({ db }, { rowId }) => {
+    // get the row 
+    return await db.get(rowId);
+  }
+})
 export const upsertTokens = mutation({
   args: {
     userId: v.id("users"),

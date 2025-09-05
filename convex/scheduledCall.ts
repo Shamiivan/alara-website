@@ -15,7 +15,10 @@ export const create = mutation({
       const scheduledAtMs = new Date(scheduledAtUtc);
       const user = await ctx.db.get(userId);
       if (!user) throw new Error("User not found");
+
       // validate if the time is the future
+      if (!user.mainCalendarId) throw new Error("Calendar id not connected");
+
       if (scheduledAtUtc < Date.now())
         throw new Error("Scheduled time must be in the future");
 
@@ -30,13 +33,10 @@ export const create = mutation({
         updatedAt: Date.now(),
       });
 
-
-      await ctx.scheduler.runAt(scheduledAtUtc, api.calls_node.initiateCall, {
+      await ctx.scheduler.runAt(scheduledAtUtc, api.core.calls.actions.initiateCalendarCall, {
         userId: user?._id,
-        timezone: user?.timezone,
-        toNumber: user?.phone!,
-        userName: user?.name!
       });
+
       // await
       return scheduledCall;
 

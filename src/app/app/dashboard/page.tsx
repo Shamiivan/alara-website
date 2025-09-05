@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import PageHeader from "@/components/dashboard/PageHeader";
 import NextCallCard from "@/components/dashboard/NextCallCard";
-import { TOKENS } from "@/components/tokens";
-import { Sparkles, Star, Zap, Check, Smile } from "lucide-react";
-
+import CalendarComponent from "@/components/calendar/CalendarComponent";
+import { Sparkles, Star, Zap, Check, Clock, Calendar, Smile } from "lucide-react";
+import Rolling7DayStrip from "@/components/calendar/WeekSectionComponent"
 export default function DashboardPage() {
-  // Track if component has mounted for animations
   const [mounted, setMounted] = useState(false);
   const [greeting, setGreeting] = useState("Hello");
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Get appropriate greeting based on time of day
   useEffect(() => {
     const hour = new Date().getHours();
     let newGreeting = "Hello";
@@ -20,90 +20,330 @@ export default function DashboardPage() {
     else newGreeting = "Good evening";
 
     setGreeting(newGreeting);
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
     setMounted(true);
 
-    // Add a gentle entrance effect
-    const timer = setTimeout(() => {
-      const welcomeEl = document.getElementById('welcome-text');
-      if (welcomeEl) welcomeEl.classList.add('float-effect');
-    }, 500);
-
-    return () => clearTimeout(timer);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  const features = [
+    { icon: <Check size={18} />, text: "Toggle the sidebar using the menu button", color: "#10b981" },
+    { icon: <Zap size={18} />, text: "Navigate easily between Dashboard, Calls, and Tasks", color: "#3b82f6" },
+    { icon: <Clock size={18} />, text: "Sidebar slides smoothly on mobile and desktop", color: "#8b5cf6" },
+    { icon: <Calendar size={18} />, text: "Responsive layout adapts to any screen size", color: "#f59e0b" },
+    { icon: <Smile size={18} />, text: "Touch-friendly with 44px minimum tap targets", color: "#ec4899" }
+  ];
+
+  // Container styles
+  const containerStyles: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '32px',
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? 'translateY(0)' : 'translateY(8px)',
+    transition: 'opacity 0.5s ease, transform 0.5s ease',
+  };
+
+  // Welcome card styles
+  const welcomeCardStyles: React.CSSProperties = {
+    backgroundColor: 'white',
+    border: '1px solid rgba(226, 232, 240, 0.5)',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+  };
+
+  // Content grid styles
+  const contentGridStyles: React.CSSProperties = {
+    display: 'grid',
+    gap: '24px',
+    gridTemplateColumns: '1fr',
+  };
+
+  // Two column grid for larger screens
+  const twoColumnGridStyles: React.CSSProperties = {
+    display: 'grid',
+    gap: '24px',
+    gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+  };
+
+  // Feature list styles
+  const featureListStyles: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    margin: '16px 0',
+  };
+
+  // Feature item styles
+  const getFeatureItemStyles = (index: number): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? 'translateX(0)' : 'translateX(-10px)',
+    transition: `opacity 0.3s ease ${index * 100}ms, transform 0.3s ease ${index * 100}ms`,
+  });
+
+  // Card styles for next call and calendar
+  const cardStyles: React.CSSProperties = {
+    backgroundColor: 'white',
+    border: '1px solid rgba(226, 232, 240, 0.5)',
+    borderRadius: '16px',
+    padding: '1px',
+    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    overflow: 'hidden',
+  };
+
+  // Quick actions grid styles
+  const quickActionsGridStyles: React.CSSProperties = {
+    display: 'grid',
+    gap: '16px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    marginTop: '16px',
+  };
+
+  // Quick action item styles
+  const quickActionItemStyles: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '12px',
+    borderRadius: '8px',
+    backgroundColor: 'rgba(226, 232, 240, 0.3)',
+  };
+
   return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-      {/* Header with staggered animation */}
-      <div
-        className="flex flex-col gap-2 sm:gap-3"
-        style={{
-          opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0)' : 'translateY(10px)',
-          transition: 'opacity 0.5s ease, transform 0.5s ease'
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: TOKENS.text }}>Dashboard</h1>
-          <Sparkles className="h-5 w-5 text-yellow-500 pulse-subtle" aria-hidden="true" />
+    <div style={containerStyles}>
+      <PageHeader
+        title="Dashboard"
+        description={`${greeting}! Here's your productivity overview`}
+        icon={<Sparkles size={24} color="#fbbf24" style={{ animation: 'pulse 2s infinite' }} />}
+      />
+
+      <div style={contentGridStyles}>
+        {/* Welcome Card */}
+        <div style={welcomeCardStyles}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Star size={20} color="white" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h2 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                color: '#0f172a',
+                margin: '0 0 8px 0'
+              }}>
+                Welcome to your mobile-first layout
+              </h2>
+              <p style={{
+                color: '#64748b',
+                margin: '0 0 16px 0',
+                lineHeight: '1.5'
+              }}>
+                This layout prioritizes mobile usability while maintaining desktop functionality.
+              </p>
+
+              <ul style={featureListStyles}>
+                {features.map((item, index) => (
+                  <li key={index} style={getFeatureItemStyles(index)}>
+                    <span style={{
+                      marginTop: '2px',
+                      color: item.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {item.icon}
+                    </span>
+                    <span style={{
+                      fontSize: '14px',
+                      color: '#64748b',
+                      lineHeight: '1.4'
+                    }}>
+                      {item.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
-        <p
-          id="welcome-text"
-          className="text-lg transition-all duration-500"
-          style={{ color: TOKENS.subtext }}
-        >
-          {greeting}! Welcome to your Alara dashboard
-        </p>
-      </div>
+        <Rolling7DayStrip />
+        {/* Content Grid - Two Column on Desktop */}
+        <div style={twoColumnGridStyles}>
+          {/* Next Call Section */}
+          <div style={cardStyles}>
+            <div style={{ padding: '20px 20px 4px 20px' }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#0f172a',
+                margin: '0 0 8px 0'
+              }}>
+                Next Call
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#64748b',
+                margin: '0 0 16px 0'
+              }}>
+                Manage your upcoming conversations
+              </p>
+            </div>
+            <NextCallCard
+              onSave={() => { }}
+              onCancel={() => { }}
+              compact={true}
+            />
+          </div>
 
-      <div
-        className="p-4 sm:p-6 rounded-[16px] border bg-white"
-        style={{
-          borderColor: TOKENS.border,
-          boxShadow: TOKENS.shadow,
-          animation: mounted ? "fadeInUp 550ms ease forwards" : "none",
-          opacity: mounted ? 1 : 0
-        }}
-      >
-        <div className="flex items-center gap-2 mb-4">
-          <Star className="h-5 w-5 text-orange-500 wiggle-effect" />
-          <h2 className="text-lg font-semibold" style={{ color: TOKENS.text }}>Getting Started</h2>
+          {/* Calendar Section */}
+          <div style={cardStyles}>
+            <div style={{ padding: '20px 20px 4px 20px' }}>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#0f172a',
+                margin: '0 0 8px 0'
+              }}>
+                Calendar
+              </h3>
+              <p style={{
+                fontSize: '14px',
+                color: '#64748b',
+                margin: '0 0 16px 0'
+              }}>
+                Your schedule at a glance
+              </p>
+            </div>
+            {/* <CalendarComponent /> */}
+            <Rolling7DayStrip />
+          </div>
         </div>
 
-        <p className="text-base mb-4" style={{ color: TOKENS.subtext }}>
-          This dashboard is part of the new mobile-first layout. Here&apos;s what you can do:
-        </p>
+        {/* Quick Actions Card */}
+        <div style={welcomeCardStyles}>
+          <h3 style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: '#0f172a',
+            margin: '0 0 16px 0'
+          }}>
+            Layout Features
+          </h3>
 
-        <ul className="space-y-3 mb-6">
-          {[
-            { icon: <Check size={18} />, text: "Toggle the sidebar using the button in the top corner" },
-            { icon: <Zap size={18} />, text: "Navigate easily between Dashboard, Calls, and Tasks" },
-            { icon: <Check size={18} />, text: "The sidebar collapses to icons-only on desktop" },
-            { icon: <Check size={18} />, text: "On mobile, it transforms into a full-screen overlay" },
-            { icon: <Smile size={18} />, text: "Your sidebar state is remembered between sessions" }
-          ].map((item, index) => (
-            <li
-              key={index}
-              className="flex items-start gap-3 hover-lift"
-              style={{
-                color: TOKENS.subtext,
-                animationDelay: `${index * 150}ms`,
-                opacity: mounted ? 1 : 0,
-                transform: mounted ? 'translateX(0)' : 'translateX(-10px)',
-                transition: `opacity 0.3s ease ${index * 100}ms, transform 0.3s ease ${index * 100}ms`
-              }}
-            >
-              <span className="mt-0.5 text-indigo-500">{item.icon}</span>
-              <span>{item.text}</span>
-            </li>
-          ))}
-        </ul>
+          <div style={quickActionsGridStyles}>
+            <div style={quickActionItemStyles}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#dbeafe',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Zap size={16} color="#2563eb" />
+              </div>
+              <div>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#0f172a',
+                  margin: '0 0 2px 0'
+                }}>
+                  Touch Optimized
+                </p>
+                <p style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  margin: '0'
+                }}>
+                  44px minimum targets
+                </p>
+              </div>
+            </div>
 
-        <div className="mt-8 rounded-lg p-1 hover-lift" style={{ background: TOKENS.accent, opacity: mounted ? 1 : 0, transition: 'opacity 0.5s ease 300ms' }}>
-          <NextCallCard
-            onSave={() => { }}
-            onCancel={() => { }}
-            compact={true}
-          />
+            <div style={quickActionItemStyles}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#dcfce7',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Check size={16} color="#16a34a" />
+              </div>
+              <div>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#0f172a',
+                  margin: '0 0 2px 0'
+                }}>
+                  Responsive Grid
+                </p>
+                <p style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  margin: '0'
+                }}>
+                  Adapts to all screens
+                </p>
+              </div>
+            </div>
+
+            <div style={quickActionItemStyles}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                backgroundColor: '#f3e8ff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Smile size={16} color="#9333ea" />
+              </div>
+              <div>
+                <p style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#0f172a',
+                  margin: '0 0 2px 0'
+                }}>
+                  Smooth Animations
+                </p>
+                <p style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  margin: '0'
+                }}>
+                  Reduced motion support
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
