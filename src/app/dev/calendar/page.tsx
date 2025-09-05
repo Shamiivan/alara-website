@@ -3,13 +3,22 @@
 import * as React from "react";
 import { useAction } from "convex/react";
 import { api } from "../../../../convex/_generated/api"; // adjust path if needed
+import { Id } from "../../../../convex/_generated/dataModel";
 
 type AvailabilityData = {
   calendarId: string;
   calendarSummary?: string;
   timeZone?: string;
   queryRange: { start: string; end: string };
-  events: Array<any>;
+  events: Array<{
+    id: string;
+    summary: string;
+    description?: string;
+    start: { date?: string; dateTime?: string; timeZone?: string };
+    end: { date?: string; dateTime?: string; timeZone?: string };
+    status?: string;
+    [key: string]: unknown;
+  }>;
   busyPeriods: Array<{
     eventId: string;
     summary: string;
@@ -91,7 +100,7 @@ export default function CalendarAvailabilityTester() {
     setSlotResult(null);
     try {
       const resp = (await getCalendarEventsWithAvailability({
-        userId: userId as any, // Convex Id<"users"> in your app — paste a valid value here while testing
+        userId: userId as Id<"users">, // Convex Id<"users"> in your app — paste a valid value here while testing
         calendarId,
         timeMin,
         timeMax,
@@ -105,8 +114,8 @@ export default function CalendarAvailabilityTester() {
       } else {
         setAvail(resp.data);
       }
-    } catch (e: any) {
-      setAvailErr(e?.message ?? String(e));
+    } catch (e: unknown) {
+      setAvailErr(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -117,15 +126,15 @@ export default function CalendarAvailabilityTester() {
     setSlotResult(null);
     try {
       const resp = (await checkTimeSlotAvailability({
-        userId: userId as any, // Convex Id<"users"> again
+        userId: userId as Id<"users">, // Convex Id<"users"> again
         calendarId,
         requestedStart: reqStart,
         requestedEnd: reqEnd,
         timezone,
       })) as CheckSlotResp;
       setSlotResult(resp);
-    } catch (e: any) {
-      setSlotResult({ success: false, error: e?.message ?? String(e) });
+    } catch (e: unknown) {
+      setSlotResult({ success: false, error: e instanceof Error ? e.message : String(e) });
     } finally {
       setChecking(false);
     }

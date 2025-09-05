@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useAction, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { TOKENS as APP_TOKENS } from "@/components/tokens"
+import { TOKENS as APP_TOKENS } from "@/components/tokens";
 /*
   CalendarEventsList
   -------------------
@@ -80,9 +80,12 @@ let PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> =
   );
 
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const Buttons = require("@/components/ui/CustomButton");
-  if (Buttons?.PrimaryButton) PrimaryButton = Buttons.PrimaryButton;
+  // Use dynamic import instead of require
+  import("@/components/ui/CustomButton").then(Buttons => {
+    if (Buttons?.PrimaryButton) PrimaryButton = Buttons.PrimaryButton;
+  }).catch(() => {
+    // Silently continue with fallback button if import fails
+  });
 } catch { }
 
 // Types that mirror your action's return shape
@@ -203,8 +206,8 @@ export default function CalendarEventsList({
         totalCount: resp.data.totalCount,
         nextPageToken: resp.data.nextPageToken,
       });
-    } catch (e: any) {
-      setError(e?.message ?? String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setEvents(null);
       setMeta({});
     } finally {

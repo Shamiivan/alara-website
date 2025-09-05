@@ -170,7 +170,7 @@ const TodayCardComponent: React.FC<CardProps> = ({ date, events, isLoading }) =>
           {message}
         </div>
       ) : (
-        <div className="text-sm font-medium text-slate-900 mb-3">Today's Schedule</div>
+        <div className="text-sm font-medium text-slate-900 mb-3">Today&apos;s Schedule</div>
       )}
 
       <div className="space-y-2">
@@ -522,7 +522,7 @@ export default function Rolling7DayStrip(): React.ReactElement {
         <div className="mb-4">
           <h1 className="text-xl font-semibold text-foreground mb-1">The Next Seven Sunrises</h1>
           <p className="text-xs text-muted-foreground">
-            "Yesterday is history, tomorrow is a mystery, today is a gift, that's why we call it the present" --Master Oogway
+            &quot;Yesterday is history, tomorrow is a mystery, today is a gift, that&apos;s why we call it the present&quot; --Master Oogway
           </p>
         </div>
         <WeekSectionComponent />

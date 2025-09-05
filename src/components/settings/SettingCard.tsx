@@ -118,7 +118,7 @@ const CalendarSettingsCard = () => {
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
           <div>
             <p className="text-sm text-red-800">
-              Couldn't reach your calendars right now.
+              Couldn&apos;t reach your calendars right now.
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -170,7 +170,7 @@ const CalendarSettingsCard = () => {
                 </span>
               </div>
               <p className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs text-slate-500 mt-1">
-                We'll check it when planning for the day.
+                We&apos;ll check it when planning for the day.
               </p>
             </div>
             <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
