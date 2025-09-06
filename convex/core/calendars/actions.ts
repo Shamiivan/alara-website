@@ -66,7 +66,6 @@ export const getUserCalendars = action({
   },
   handler: async (ctx, { userId }): Promise<Result<UserCalendarsData>> => {
     try {
-      console.log("Getting user calendars for userId:", userId);
 
       // Get valid access token (handles refresh automatically)
       const accessToken = await ctx.runAction(internal.core.tokens.ensureValidToken, { userId });
@@ -74,7 +73,6 @@ export const getUserCalendars = action({
       // Fetch calendars using the integration function
       const calendarData = await fetchCalendars(accessToken);
 
-      console.log(`Found ${calendarData.items?.length || 0} calendars`);
 
       // Find the primary calendar
       const primaryCalendar = calendarData.items?.find(cal => cal.primary === true) || null;
@@ -85,7 +83,6 @@ export const getUserCalendars = action({
         const user = await ctx.runQuery(api.core.users.queries.getUserById, { userId });
 
         if (user && !user.mainCalendarId) {
-          console.log("Setting main calendar ID for first time:", primaryCalendar.id);
           await ctx.runMutation(api.core.users.mutations.updateMainCalendar, {
             userId,
             mainCalendarId: primaryCalendar.id,
@@ -100,7 +97,6 @@ export const getUserCalendars = action({
       });
 
     } catch (error) {
-      console.log("[getUserCalendars] Error:", error);
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.log("[getUserCalendars] Error:", error);
 
@@ -124,7 +120,6 @@ export const getCalendarEvents = action({
   ),
   handler: async (ctx, { userId, calendarId, timeMin, timeMax }): Promise<Result<CalendarEventsData>> => {
     try {
-      console.log(`Getting events for calendar: ${calendarId}`);
 
       const accessToken = await ctx.runAction(internal.core.tokens.ensureValidToken, { userId });
 
@@ -277,3 +272,5 @@ export const checkSlotAvailability = action({
     }
   }
 });
+
+
