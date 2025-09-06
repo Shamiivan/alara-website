@@ -184,7 +184,9 @@ const schema = defineSchema({
     error: v.optional(v.any()),
     createdAt: v.number(),
   }).index("by_user", ["userId"])
+    .index("by_event", ["error"])
     .index("by_event_time", ["createdAt"]),
+
 
 
   // google tokens
