@@ -51,6 +51,8 @@ import type * as shared_types_calendar from "../shared/types/calendar.js";
 import type * as shared_types_flags from "../shared/types/flags.js";
 import type * as shared_types_google from "../shared/types/google.js";
 import type * as stripe from "../stripe.js";
+import type * as system_telemetry_mutations from "../system/telemetry/mutations.js";
+import type * as system_telemetry_queries from "../system/telemetry/queries.js";
 import type * as tasks from "../tasks.js";
 import type * as telemetry from "../telemetry.js";
 import type * as types_calendar from "../types/calendar.js";
@@ -110,6 +112,8 @@ declare const fullApi: ApiFromModules<{
   "shared/types/flags": typeof shared_types_flags;
   "shared/types/google": typeof shared_types_google;
   stripe: typeof stripe;
+  "system/telemetry/mutations": typeof system_telemetry_mutations;
+  "system/telemetry/queries": typeof system_telemetry_queries;
   tasks: typeof tasks;
   telemetry: typeof telemetry;
   "types/calendar": typeof types_calendar;
