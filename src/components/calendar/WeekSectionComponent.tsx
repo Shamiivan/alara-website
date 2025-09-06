@@ -270,6 +270,10 @@ const WeekSectionComponent: React.FC = () => {
     return date.toISOString().split('T')[0]; // YYYY-MM-DD
   };
 
+  // connect the calendar 
+  const handleConnect = () => {
+    window.location.href = "/api/gcal/auth";
+  };
   const loadCalendarData = async () => {
     if (user === undefined) return; // Still loading user
 
@@ -348,6 +352,7 @@ const WeekSectionComponent: React.FC = () => {
     } catch (err) {
       console.error('[WeekSection] Error loading calendar data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load calendar data');
+
     } finally {
       setIsLoading(false);
     }
@@ -416,7 +421,7 @@ const WeekSectionComponent: React.FC = () => {
         <div className="text-sm text-red-700 mb-2">Unable to load calendar events</div>
         <div className="text-xs text-red-600 mb-3">{error}</div>
         <button
-          onClick={loadCalendarData}
+          onClick={handleConnect}
           className="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded"
         >
           Try Again
