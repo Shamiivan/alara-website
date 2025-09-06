@@ -63,7 +63,9 @@ export const ensureValidToken = internalAction({
       const isExpired = Date.now() + 30_000 >= tokenRow.expiresAtMs;
 
       if (!tokenRow.accessToken) throw new Error("Invalid access token");
-      if (!isExpired) throw new Error("Can not reach this point");
+      if (!isExpired) {
+        return tokenRow.accessToken;
+      }
 
 
       // Refresh the token using the integration function
