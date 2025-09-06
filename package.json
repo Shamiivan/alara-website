@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "npx tsc --noEmit",
+    "deploy": "npm run type-check && npx convex deploy --prod",
+    "ship": "npm run deploy && git push"
   },
   "dependencies": {
     "@auth/core": "^0.37.0",
