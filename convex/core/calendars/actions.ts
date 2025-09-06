@@ -151,6 +151,15 @@ export const getCalendarEvents = action({
 
     } catch (error) {
       console.log(`[getCalendarEvents] Error:`, error);
+      await ctx.runMutation(api.system.telemetry.mutations.createLog, {
+        userId,
+        event: "calendar_fetch_failed",
+        context: {
+          calendarId,
+          timeRange: { timeMin, timeMax }
+        },
+        error: error instanceof Error ? error.message : String(error)
+      });
       return Err("Failed to get calendar events");
     }
   }
