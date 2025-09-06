@@ -272,6 +272,7 @@ const WeekSectionComponent: React.FC = () => {
 
   const loadCalendarData = async () => {
     if (user === undefined) return; // Still loading user
+
     if (user === null) {
       setError("Please sign in to view your calendar");
       setIsLoading(false);

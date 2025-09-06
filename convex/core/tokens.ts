@@ -83,6 +83,7 @@ export const ensureValidToken = internalAction({
 
       return googleResponse.access_token;
 
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw new Error(`Failed to ensure valid token for user ${userId}: ${errorMessage}`);
