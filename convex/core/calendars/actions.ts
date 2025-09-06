@@ -104,15 +104,6 @@ export const getUserCalendars = action({
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.log("[getUserCalendars] Error:", error);
 
-      // Check for specific error types to give better guidance
-      if (errorMessage.includes("token") || errorMessage.includes("auth")) {
-        return Err("We're having trouble connecting to your calendar. Please sign in again and we'll get this sorted.");
-      }
-
-      if (errorMessage.includes("network") || errorMessage.includes("timeout")) {
-        return Err("Your calendar is taking a moment to load. Give it another try in a few seconds.");
-      }
-
       // Default friendly message
       return Err("We hit a small bump loading your calendar. Please try again - we're here to help if it keeps happening.");
 
