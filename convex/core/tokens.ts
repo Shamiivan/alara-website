@@ -63,10 +63,7 @@ export const ensureValidToken = internalAction({
       const isExpired = Date.now() + 30_000 >= tokenRow.expiresAtMs;
 
       if (!tokenRow.accessToken) throw new Error("Invalid access token");
-      if (!isExpired) {
-        console.log("Token is valid, returning existing access token");
-        return tokenRow.accessToken;
-      }
+      if (!isExpired) throw new Error("Can not reach this point");
 
 
       // Refresh the token using the integration function
@@ -83,6 +80,8 @@ export const ensureValidToken = internalAction({
         expiresAtMs: newExpiresAtMs
       });
 
+
+      throw new Error("Can not reach this point");
       return googleResponse.access_token;
 
     } catch (error) {
