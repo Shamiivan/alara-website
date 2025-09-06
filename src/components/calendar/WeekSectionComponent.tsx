@@ -244,9 +244,6 @@ const FutureCardComponent: React.FC<FutureCardProps> = ({ date, events, dayOffse
   );
 };
 
-// ========================================
-// WEEK SECTION WITH DATA FETCHING
-// ========================================
 
 const WeekSectionComponent: React.FC = () => {
   const user = useQuery(api.core.users.queries.getCurrentUser, {});
@@ -256,6 +253,7 @@ const WeekSectionComponent: React.FC = () => {
 
   const getUserCalendars = useAction(api.core.calendars.actions.getUserCalendars);
   const getCalendarEvents = useAction(api.core.calendars.actions.getCalendarEvents);
+
 
   const today = new Date();
   const days = [
