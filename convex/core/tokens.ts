@@ -81,7 +81,6 @@ export const ensureValidToken = internalAction({
       });
 
 
-      throw new Error("Can not reach this point");
       return googleResponse.access_token;
 
     } catch (error) {
