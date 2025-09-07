@@ -38,8 +38,13 @@ export function decodeJWT(token: string): JwtPayload {
     const parts = token.split('.');
     if (parts.length !== 3) throw new Error("Invalid JWT format");
 
-    const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
-    return JSON.parse(payload);
+    // Manual base64url decoding that works in all JS environments
+    let payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (payload.length % 4) {
+      payload += '=';
+    }
+
+    return JSON.parse(atob(payload));
   } catch (error) {
     throw new Error(`Failed to decode JWT: ${error instanceof Error ? error.message : String(error)}`);
   }
