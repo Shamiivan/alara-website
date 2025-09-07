@@ -17,7 +17,8 @@ export function googleRoutes(http: ReturnType<typeof httpRouter>) {
           throw new Error("Invalid Google Calendar callback - no code or error present");
         }
 
-        const redirectUri = process.env.CONVEX_URL!;
+        const redirectUri = `${process.env.CONVEX_URL}/api/gcal/callback`;
+
         if (!redirectUri) throw new Error("Missing CONVEX_URL environment variable");
 
         // Exchange code for tokens using integration layer
