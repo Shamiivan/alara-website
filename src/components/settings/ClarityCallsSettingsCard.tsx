@@ -189,7 +189,7 @@ const ClarityCallsSettingsCard = () => {
           <div className="flex-1">
             <p className="font-medium text-slate-900">Enable daily calls</p>
             <p className="text-sm text-slate-600">
-              We'll call you each day to help plan and prioritize
+              We&apos;ll call you each day to help plan and prioritize
             </p>
           </div>
         </div>
@@ -224,14 +224,14 @@ const ClarityCallsSettingsCard = () => {
                       Daily calls at {formatTimeDisplay(user.callTime, user.timezone)}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">
-                      We'll call you at this time each day
+                      We&apos;ll call you at this time each day
                     </p>
                   </div>
                 ) : (
                   <div>
                     <p className="text-sm text-slate-600">No time set</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      Choose when you'd like your daily call
+                      Choose when you&apos;d like your daily call
                     </p>
                   </div>
                 )}
@@ -258,7 +258,7 @@ const ClarityCallsSettingsCard = () => {
                   className="block w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  Choose when you'd like your daily clarity call
+                  Choose when you&apos;d like your daily clarity call
                 </p>
               </div>
 
