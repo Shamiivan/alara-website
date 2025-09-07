@@ -5,7 +5,23 @@ export interface GoogleTokenRefreshRequest {
   refreshToken: string;
 }
 
+export interface GoogleTokenRequest {
+  code: string;
+  redirectUri: string;
+}
+
+
+export interface JwtPayload {
+  email: string;
+  name?: string;
+  picture?: string;
+  sub: string;
+}
+
+
 export interface GoogleTokenResponse {
+  id_token?: string;
+  refresh_token?: string;
   access_token: string;
   expires_in: number;
   token_type: string;

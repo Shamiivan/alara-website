@@ -42,6 +42,7 @@ import type * as integrations_elevenlabs_http from "../integrations/elevenlabs/h
 import type * as integrations_elevenlabs_types from "../integrations/elevenlabs/types.js";
 import type * as integrations_google_auth from "../integrations/google/auth.js";
 import type * as integrations_google_calendar from "../integrations/google/calendar.js";
+import type * as integrations_google_https from "../integrations/google/https.js";
 import type * as integrations_google_tokens from "../integrations/google/tokens.js";
 import type * as integrations_google_types from "../integrations/google/types.js";
 import type * as payments from "../payments.js";
@@ -103,6 +104,7 @@ declare const fullApi: ApiFromModules<{
   "integrations/elevenlabs/types": typeof integrations_elevenlabs_types;
   "integrations/google/auth": typeof integrations_google_auth;
   "integrations/google/calendar": typeof integrations_google_calendar;
+  "integrations/google/https": typeof integrations_google_https;
   "integrations/google/tokens": typeof integrations_google_tokens;
   "integrations/google/types": typeof integrations_google_types;
   payments: typeof payments;
