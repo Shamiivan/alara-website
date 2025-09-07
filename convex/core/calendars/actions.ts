@@ -68,7 +68,7 @@ export const getUserCalendars = action({
     try {
 
       // Get valid access token (handles refresh automatically)
-      const accessToken = await ctx.runAction(internal.core.tokens.ensureValidToken, { userId });
+      const accessToken = await ctx.runAction(internal.core.tokens.actions.ensureValidToken, { userId });
 
       // Fetch calendars using the integration function
       const calendarData = await fetchCalendars(accessToken);
@@ -121,7 +121,7 @@ export const getCalendarEvents = action({
   handler: async (ctx, { userId, calendarId, timeMin, timeMax }): Promise<Result<CalendarEventsData>> => {
     try {
 
-      const accessToken = await ctx.runAction(internal.core.tokens.ensureValidToken, { userId });
+      const accessToken = await ctx.runAction(internal.core.tokens.actions.ensureValidToken, { userId });
 
       const response: CalendarEventsResponse = await fetchCalendarEvents(accessToken, calendarId, {
         timeMin,
