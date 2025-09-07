@@ -24,7 +24,7 @@ http.route({
 
       const client_id = process.env.AUTH_GOOGLE_ID!;
       const client_secret = process.env.AUTH_GOOGLE_SECRET!;
-      const redirect_uri = "https://fiery-beagle-144.convex.site/api/gcal/callback";
+      const redirect_uri = process.env.CONVEX_URL!;
       const origin = process.env.SITE_URL!;
 
       if (!code || error) throw new Error("Invalid Google Calendar callback there is no code or another error");

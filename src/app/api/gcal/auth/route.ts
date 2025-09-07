@@ -27,7 +27,6 @@ export async function GET() {
         "https://www.googleapis.com/auth/calendar"
       ],
     });
-    console.log(url);
 
     return NextResponse.redirect(url);
 

@@ -274,6 +274,8 @@ const WeekSectionComponent: React.FC = () => {
   const handleConnect = () => {
     window.location.href = "/api/gcal/auth";
   };
+
+
   const loadCalendarData = async () => {
     if (user === undefined) return; // Still loading user
 
