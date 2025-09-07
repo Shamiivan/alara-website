@@ -4,31 +4,6 @@ import * as React from "react";
 import { useAction, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { TOKENS as APP_TOKENS } from "@/components/tokens";
-/*
-  CalendarEventsList
-  -------------------
-  A small, production-ready component that fetches and lists Google Calendar events
-  for a given calendarId within a user-selected time frame, powered by your
-  Convex action `api.calendar.getCalendarEvents`.
-
-  Props
-  -----
-  - calendarId: string (required) → e.g., "primary" or an email/calendar id
-  - initialRange?: { start: Date; end: Date }
-  - maxResults?: number (default 250)
-  - singleEvents?: boolean (default true)
-  - autoFetch?: boolean (default true) → auto fetch on mount when user is ready
-  - className?: string → outer container className
-
-  Notes
-  -----
-  - Handles all‑day and timed events. 
-  - Converts local date inputs to RFC3339 Zulu (UTC) bounds for the Google API.
-  - Graceful empty/errored/loading states. 
-  - If you later add pageToken support to your backend action, you can extend
-    this component (search for TODO: pagination) to wire up pagination.
-*/
-
 // Optional tokens (fallbacks in case your TOKENS object isn't available here)
 const FALLBACK_TOKENS = {
   radius: 12,
@@ -49,7 +24,7 @@ const FALLBACK_TOKENS = {
 // If your app exposes TOKENS globally, you can import it and prefer it:
 // import { TOKENS as APP_TOKENS } from "@/components/tokens";
 // const TOKENS = { ...FALLBACK_TOKENS, ...APP_TOKENS };
-const TOKENS = FALLBACK_TOKENS;
+const TOKENS = (!APP_TOKENS) ? FALLBACK_TOKENS : APP_TOKENS;
 
 // Try to use your shared buttons if you have them; otherwise fall back to inline buttons.
 let PrimaryButton: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> =

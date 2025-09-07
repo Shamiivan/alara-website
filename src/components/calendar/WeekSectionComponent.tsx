@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
@@ -275,8 +275,8 @@ const WeekSectionComponent: React.FC = () => {
     window.location.href = "/api/gcal/auth";
   };
 
-
-  const loadCalendarData = async () => {
+  // Memoize loadCalendarData to prevent unnecessary re-renders
+  const loadCalendarData = useCallback(async () => {
     if (user === undefined) return; // Still loading user
 
     if (user === null) {
@@ -358,7 +358,7 @@ const WeekSectionComponent: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, getUserCalendars, getCalendarEvents, today, days]);
 
   useEffect(() => {
     if (user === null || user === undefined) return;
@@ -366,13 +366,13 @@ const WeekSectionComponent: React.FC = () => {
     // Initial load
     loadCalendarData();
 
-    // Refresh every 5 minutes
+    // Refresh every hour
     const interval = setInterval(() => {
       loadCalendarData();
-    }, 60 * 60 * 1000); // 5 minutes
+    }, 60 * 60 * 1000); // 1 hour
 
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, loadCalendarData]);
 
   // Refresh when tab becomes visible (user switches back to tab)
   useEffect(() => {
@@ -386,7 +386,7 @@ const WeekSectionComponent: React.FC = () => {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user]);
+  }, [user, loadCalendarData]);
 
   // Handle loading and error states early
   if (user === undefined) {

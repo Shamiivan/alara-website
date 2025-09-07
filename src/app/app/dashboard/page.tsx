@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import PageHeader from "@/components/dashboard/PageHeader";
 import NextCallCard from "@/components/dashboard/NextCallCard";
-import CalendarComponent from "@/components/calendar/CalendarComponent";
 import { Sparkles, Star, Zap, Check, Clock, Calendar, Smile } from "lucide-react";
 import Rolling7DayStrip from "@/components/calendar/WeekSectionComponent"
 export default function DashboardPage() {

@@ -2,13 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useAction, useQuery } from "convex/react";
 import {
   Calendar,
-  Shield,
   CheckCircle2,
   AlertCircle,
   Loader2,
 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
-import { LinkButton, SecondaryButton, TertiaryButton } from "../ui/CustomButton";
+import { LinkButton } from "../ui/CustomButton";
 
 type CalendarItem = {
   id: string;

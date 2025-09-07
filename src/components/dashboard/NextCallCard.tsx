@@ -222,7 +222,8 @@ export default function NextCallCard({
       console.error("No user available for call");
       return;
     }
-    const res = callNow({ userId: user._id });
+    callNow({ userId: user._id });
+
   }
 
   return (
