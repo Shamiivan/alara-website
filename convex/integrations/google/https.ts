@@ -57,7 +57,7 @@ export function googleRoutes(http: ReturnType<typeof httpRouter>) {
         });
 
         // Redirect to success page
-        const returnUrl = new URL("/settings?gcal=connected", process.env.SITE_URL!);
+        const returnUrl = new URL("/app/dashboard?gcal=connected", process.env.SITE_URL!);
         return Response.redirect(returnUrl);
 
       } catch (error) {
