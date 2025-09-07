@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 
@@ -244,6 +244,9 @@ const FutureCardComponent: React.FC<FutureCardProps> = ({ date, events, dayOffse
   );
 };
 
+// ========================================
+// WEEK SECTION COMPONENT (FIXED)
+// ========================================
 
 const WeekSectionComponent: React.FC = () => {
   const user = useQuery(api.core.users.queries.getCurrentUser, {});
@@ -254,36 +257,37 @@ const WeekSectionComponent: React.FC = () => {
   const getUserCalendars = useAction(api.core.calendars.actions.getUserCalendars);
   const getCalendarEvents = useAction(api.core.calendars.actions.getCalendarEvents);
 
+  // Fix 1: Stabilize date calculations - only recalculate when day actually changes
+  const { today, days } = useMemo(() => {
+    const currentDate = new Date();
+    const calculatedDays = [
+      { date: new Date(currentDate.getTime() - 86400000), type: 'yesterday' as const, offset: -1 },
+      { date: currentDate, type: 'today' as const, offset: 0 },
+      ...[1, 2, 3, 4, 5].map(i => ({
+        date: new Date(currentDate.getTime() + i * 86400000),
+        type: 'future' as const,
+        offset: i
+      }))
+    ];
 
-  const today = new Date();
-  const days = [
-    { date: new Date(today.getTime() - 86400000), type: 'yesterday', offset: -1 },
-    { date: today, type: 'today', offset: 0 },
-    ...[1, 2, 3, 4, 5].map(i => ({
-      date: new Date(today.getTime() + i * 86400000),
-      type: 'future',
-      offset: i
-    }))
-  ] as const;
+    return {
+      today: currentDate,
+      days: calculatedDays
+    };
+  }, []); // Empty dependency - will only run once per component mount
 
-  const formatDayKey = (date: Date): string => {
+  const formatDayKey = useCallback((date: Date): string => {
     return date.toISOString().split('T')[0]; // YYYY-MM-DD
-  };
+  }, []);
 
   // connect the calendar 
-  const handleConnect = () => {
+  const handleConnect = useCallback(() => {
     window.location.href = "/api/gcal/auth";
-  };
+  }, []);
 
-  // Memoize loadCalendarData to prevent unnecessary re-renders
+  // Fix 1: Remove unstable dependencies from useCallback
   const loadCalendarData = useCallback(async () => {
-    if (user === undefined) return; // Still loading user
-
-    if (user === null) {
-      setError("Please sign in to view your calendar");
-      setIsLoading(false);
-      return;
-    }
+    if (!user?._id) return;
 
     try {
       setIsLoading(true);
@@ -354,30 +358,28 @@ const WeekSectionComponent: React.FC = () => {
     } catch (err) {
       console.error('[WeekSection] Error loading calendar data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load calendar data');
-
     } finally {
       setIsLoading(false);
     }
-  }, [user, getUserCalendars, getCalendarEvents, today, days]);
+  }, [user?._id, today, days, formatDayKey, getUserCalendars, getCalendarEvents]); // Only stable dependencies
 
+  // Fix 2: Single effect with proper cleanup and guards
   useEffect(() => {
-    if (user === null || user === undefined) return;
+    // Guard: Don't run if user is not loaded or not authenticated
+    if (user === undefined || user === null) {
+      setIsLoading(false);
+      return;
+    }
 
     // Initial load
     loadCalendarData();
 
-    // Refresh every hour
-    const interval = setInterval(() => {
+    // Set up refresh interval
+    const refreshInterval = setInterval(() => {
       loadCalendarData();
     }, 60 * 60 * 1000); // 1 hour
 
-    return () => clearInterval(interval);
-  }, [user, loadCalendarData]);
-
-  // Refresh when tab becomes visible (user switches back to tab)
-  useEffect(() => {
-    if (user === null || user === undefined) return;
-
+    // Set up visibility change handler
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         loadCalendarData();
@@ -385,8 +387,13 @@ const WeekSectionComponent: React.FC = () => {
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [user, loadCalendarData]);
+
+    // Fix 2: Proper cleanup - clean up ALL side effects
+    return () => {
+      clearInterval(refreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, loadCalendarData]); // Runs when user changes or loadCalendarData changes
 
   // Handle loading and error states early
   if (user === undefined) {
@@ -512,7 +519,6 @@ const WeekSectionComponent: React.FC = () => {
           }
         })}
       </div>
-
     </div>
   );
 };
