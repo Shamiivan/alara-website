@@ -88,3 +88,35 @@ export const getUserById = query({
     return user;
   },
 });
+
+
+export const getUsersForDailyCalls = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.id("users"),
+    _creationTime: v.number(),
+    name: v.optional(v.string()),
+    callTime: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    wantsClarityCalls: v.optional(v.boolean()),
+    mainCalendarId: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    image: v.optional(v.string()),
+    isOnboarded: v.optional(v.boolean()),
+    callTimeUtc: v.optional(v.string()),
+    wantsCallReminders: v.optional(v.boolean()),
+    updatedAt: v.optional(v.number()),
+    hasPaid: v.optional(v.boolean()),
+    paidAt: v.optional(v.number()),
+    tokenIdentifier: v.optional(v.string()),
+  })),
+  handler: async (ctx) => {
+    // Public query for admin/debugging
+    return await ctx.db
+      .query("users")
+      .filter(q => q.eq(q.field("wantsClarityCalls"), true))
+      .collect();
+  },
+});

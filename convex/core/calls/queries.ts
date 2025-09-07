@@ -16,3 +16,23 @@ export const getCallByElevenLabsId = query({
       .unique();
   },
 });
+
+export const getUsersForDailyCalls = query({
+  args: {},
+  returns: v.array(v.object({
+    _id: v.id("users"),
+    name: v.optional(v.string()),
+    callTime: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    wantsClarityCalls: v.optional(v.boolean()),
+    mainCalendarId: v.optional(v.string()),
+    phone: v.optional(v.string()),
+  })),
+  handler: async (ctx) => {
+    // Public query for admin/debugging
+    return await ctx.db
+      .query("users")
+      .filter(q => q.eq(q.field("wantsClarityCalls"), true))
+      .collect();
+  },
+});
