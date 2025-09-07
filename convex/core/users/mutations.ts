@@ -24,6 +24,7 @@ export const createUser = mutation({
       updatedAt: v.optional(v.number()),
       hasPaid: v.optional(v.boolean()),
       paidAt: v.optional(v.number()),
+      mainCalendarId: v.optional(v.string()),
     }),
     v.null()
   ),
@@ -170,6 +171,7 @@ export const updateUser = mutation({
       updatedAt: v.optional(v.number()),
       hasPaid: v.optional(v.boolean()),
       paidAt: v.optional(v.number()),
+      mainCalendarId: v.optional(v.string()),
     }),
     v.null()
   ),
@@ -253,7 +255,6 @@ export const updateCallTime = mutation({
         });
       }
 
-      console.log("[updateCallTime] Updated call time for user:", userId);
       const updatedUser = await ctx.db.get(userId);
       return updatedUser;
     } catch (error) {

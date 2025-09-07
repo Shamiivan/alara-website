@@ -49,16 +49,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge";
 import { Phone, RefreshCw, CheckCircle2, AlertTriangle, Clock, Download, Sparkles, Mic, User, MessageSquare } from "lucide-react";
 
-/**
- * CallsPage – Lovable, intuitive, and encouraging.
- * Kevin Hale principles applied:
- * 1) Emotional hook: friendly micro‑copy, tiny sparkle moment on first call.
- * 2) Remove friction: clear primary action, large hit areas, saved preferences, smart auto-refresh.
- * 3) Guide next step: inline hints ("you can change this later"), empty states, status chips.
- * 4) Feel cared for: accessible labels, keyboard shortcuts, reduced motion aware.
- */
-
-// Helper: format timestamp -> local string
 const fmt = (ts?: number) => (ts ? new Date(ts).toLocaleString() : "—");
 
 // Status → styles
@@ -82,10 +72,11 @@ export default function CallsPage() {
   const [toast, setToast] = useState<null | { type: "success" | "error"; text: string }>(null);
   const [selectedCallId, setSelectedCallId] = useState<Id<"calls"> | null>(null);
   const [isAutoRefreshing, setAutoRefreshing] = useState(true);
-  const [toNumber, setToNumber] = useState("+15146909416");
+  const [toNumber, setToNumber] = useState("");
 
   // Data
   const user = useQuery(api.user.getCurrentUser);
+
   const callsRaw = useQuery(api.calls.getUserCalls, {});
   const calls = useMemo(() => (callsRaw ?? []) as CallType[], [callsRaw]);
 
@@ -243,9 +234,6 @@ export default function CallsPage() {
                   </Badge>
                 </div>
 
-                <p className="mt-2 text-sm" style={{ color: TOKENS.subtext }}>
-                  Quick chat → transcript → gentle nudge. That&apos;s the loop.
-                </p>
 
                 <div className="mt-4 flex items-center gap-2">
                   <Input

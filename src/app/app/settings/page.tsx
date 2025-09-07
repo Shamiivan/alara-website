@@ -1,5 +1,6 @@
 "use client"
 import SettingCard from '@/components/settings/SettingCard';
+import ClarityCallsSettingsCard from '@/components/settings/ClarityCallsSettingsCard';
 import React from 'react';
 
 // This would be imported from a separate file
@@ -42,6 +43,8 @@ export default function SettingsPage() {
 
       {/* Profile Section */}
       < SettingCard />
+      <ClarityCallsSettingsCard />
+
     </div>
   );
 }
