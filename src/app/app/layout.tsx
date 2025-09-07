@@ -51,7 +51,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       window.removeEventListener("resize", checkMobile);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, manuallyOpened]); // Added manuallyOpened to dependency array
 
   // Prevent body scroll when mobile sidebar is open
   useEffect(() => {
@@ -93,30 +93,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
     padding: isMobile ? '80px 16px 24px 16px' : '32px 24px',
   };
 
-  // Skip link styles
-  const skipLinkStyles: React.CSSProperties = {
-    position: 'absolute',
-    top: '8px',
-    left: '8px',
-    zIndex: 100,
-    padding: '8px 16px',
-    backgroundColor: '#6366f1',
-    color: 'white',
-    textDecoration: 'none',
-    borderRadius: '6px',
-    fontSize: '14px',
-    transform: 'translateY(-100px)',
-    transition: 'transform 0.2s ease',
-  };
-
-  const skipLinkFocusStyles: React.CSSProperties = {
-    ...skipLinkStyles,
-    transform: 'translateY(0)',
-  };
-
   return (
     <div style={layoutStyles}>
-
       {/* Mobile menu button */}
       <MobileMenuButton
         onClick={() => {
