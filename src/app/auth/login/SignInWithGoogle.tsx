@@ -8,7 +8,7 @@ interface SignInWithGoogleProps {
   onError?: (message: string) => void;
 }
 
-export function SignInWithGoogle({ returnUrl = "/dashboard", onError }: SignInWithGoogleProps) {
+export function SignInWithGoogle({ returnUrl = "/app/dashboard", onError }: SignInWithGoogleProps) {
   const { signIn } = useAuthActions();
   const [isHovered, setIsHovered] = useState(false);
   const { info, error: logError, logUserAction } = useEventLogger();
