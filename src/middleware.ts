@@ -101,7 +101,7 @@ export default convexAuthNextjsMiddleware(async (request: NextRequest, { convexA
 
     // Special case: Allow access to dashboard if coming from successful payment
     // This gives the webhook time to process the payment
-    if (pathname === '/dashboard' && isPaymentSuccess && paymentId) {
+    if (pathname === '/app/dashboard' && isPaymentSuccess && paymentId) {
       serverLogger.info("payment", "Dashboard access allowed after payment success", {
         paymentId,
         userStatus,
