@@ -1,22 +1,10 @@
 "use client"
-import SettingCard from '@/components/settings/SettingCard';
-import ClarityCallsSettingsCard from '@/components/settings/ClarityCallsSettingsCard';
 import React from 'react';
-
+import { useSettingsData } from '@/hooks/useSettingsData';
+import { SettingsView } from '@/components/settings/SettingsView';
 
 export default function SettingsPage() {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-[#0F172A]">Settings</h1>
-        <p className="text-[#64748B]">Manage your account and application preferences</p>
-      </div>
+  const settingsData = useSettingsData();
 
-      {/* Profile Section */}
-      < SettingCard />
-      <ClarityCallsSettingsCard />
-
-    </div>
-  );
+  return <SettingsView {...settingsData} />;
 }
