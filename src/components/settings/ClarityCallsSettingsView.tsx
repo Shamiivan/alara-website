@@ -3,7 +3,6 @@ import {
   Phone,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
 import { LoadingState, ErrorDisplay } from "../primitives/feedback";

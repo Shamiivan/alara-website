@@ -2,8 +2,6 @@ import React from "react";
 import {
   Calendar,
   CheckCircle2,
-  AlertCircle,
-  Loader2,
 } from "lucide-react";
 import { LoadingState, ErrorDisplay } from "../primitives/feedback";
 import { LinkButton } from "../ui/CustomButton";
@@ -30,7 +28,6 @@ interface CalendarSettingsViewProps {
 }
 
 export function CalendarSettingsView({
-  calendars,
   primaryCalendar,
   otherCalendars,
   isLoading,
