@@ -3,10 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import { NavigationProvider } from "@/components/navigation/useNavigation";
-import { Navbar, Footer } from "@/components/navigation";
-import HydrationDebugger from "@/components/HydrationDebugger";
-
+import ClientLayout from "@/components/ClientLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,15 +38,7 @@ export default function RootLayout({
       >
         <ConvexAuthNextjsServerProvider>
           <ConvexClientProvider>
-            <NavigationProvider>
-              {/* Add HydrationDebugger to catch hydration errors */}
-              <HydrationDebugger />
-              <Navbar />
-              <main id="main-content" className="test-global-css">
-                {children}
-              </main>
-              <Footer />
-            </NavigationProvider>
+            <ClientLayout>{children}</ClientLayout>
           </ConvexClientProvider>
         </ConvexAuthNextjsServerProvider>
       </body>
