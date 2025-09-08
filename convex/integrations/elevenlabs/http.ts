@@ -17,6 +17,18 @@ export function elevenLabsRoutes(http: ReturnType<typeof httpRouter>) {
         //   payload: data,
         // });
 
+        const result = await ctx.runAction(api.core.conversations.actions.processWebhook, {
+          callSid: parsedData.callSid,
+          conversationId: parsedData.conversationId,
+          agentId: parsedData.agentId,
+          transcript: parsedData.transcript,
+          callStatus: parsedData.callStatus,
+          duration: parsedData.duration,
+          cost: parsedData.cost,
+          startTimeUnix: parsedData.startTimeUnix,
+        });
+
+
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       } catch (e) {
         console.error("Error in ConvAI webhook:", e);

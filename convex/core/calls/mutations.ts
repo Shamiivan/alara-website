@@ -211,3 +211,25 @@ export const patchCall = mutation({
     await ctx.db.patch(callId, data);
   },
 });
+
+/**
+ * Update call status
+ */
+export const updateCallStatus = mutation({
+  args: {
+    callId: v.id("calls"),
+    status: v.union(
+      v.literal("initiated"),
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("in_progress")
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.callId, {
+      status: args.status,
+    });
+    return null;
+  },
+})

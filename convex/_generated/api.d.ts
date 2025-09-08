@@ -28,6 +28,7 @@ import type * as core_calls_crons from "../core/calls/crons.js";
 import type * as core_calls_mutations from "../core/calls/mutations.js";
 import type * as core_calls_queries from "../core/calls/queries.js";
 import type * as core_calls_types from "../core/calls/types.js";
+import type * as core_conversations_actions from "../core/conversations/actions.js";
 import type * as core_conversations_mutations from "../core/conversations/mutations.js";
 import type * as core_conversations_queries from "../core/conversations/queries.js";
 import type * as core_tokens_actions from "../core/tokens/actions.js";
@@ -94,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   "core/calls/mutations": typeof core_calls_mutations;
   "core/calls/queries": typeof core_calls_queries;
   "core/calls/types": typeof core_calls_types;
+  "core/conversations/actions": typeof core_conversations_actions;
   "core/conversations/mutations": typeof core_conversations_mutations;
   "core/conversations/queries": typeof core_conversations_queries;
   "core/tokens/actions": typeof core_tokens_actions;

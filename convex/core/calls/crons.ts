@@ -8,7 +8,6 @@ export const processDailyCalls = internalAction({
   handler: async (ctx) => {
     try {
       const now = new Date();
-      console.log(`[processDailyCalls] Running at ${now.toISOString()}`);
 
       // Get users who want clarity calls and have all required fields
       const users = await ctx.runQuery(internal.core.calls.crons.getUsersForClarityCalls, {});
@@ -17,7 +16,6 @@ export const processDailyCalls = internalAction({
 
       for (const user of users) {
         if (shouldCallUser(user, now)) {
-          console.log(`[processDailyCalls] Calling ${user.name} (${user._id}) at ${user.callTime} in ${user.timezone}`);
 
           try {
             const result = await ctx.runAction(api.core.calls.actions.initiateCalendarCall, {
@@ -26,7 +24,7 @@ export const processDailyCalls = internalAction({
 
             if (result.success) {
               callsInitiated++;
-              console.log(`[processDailyCalls] Successfully initiated call for ${user.name}`);
+              // console.log(`[processDailyCalls] Successfully initiated call for ${user.name}`);
             } else {
               console.error(`[processDailyCalls] Failed to call ${user.name}: ${result.error}`);
             }
@@ -48,7 +46,7 @@ export const processDailyCalls = internalAction({
         }
       }
 
-      console.log(`[processDailyCalls] Completed. Initiated ${callsInitiated} calls out of ${users.length} eligible users`);
+      // console.log(`[processDailyCalls] Completed. Initiated ${callsInitiated} calls out of ${users.length} eligible users`);
       return null;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

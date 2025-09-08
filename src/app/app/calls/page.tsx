@@ -86,8 +86,8 @@ export default function CallsPage() {
   ) as ConversationType | null;
 
   // Actions
-  const initiateCall = useAction(api.calls_node.initiateCall);
-  const fetchConversation = useAction(api.calls.fetchElevenLabsConversation);
+  const initiateCall = useAction(api.core.calls.actions.initiateCalendarCall);
+  // const fetchConversation = useAction(api.calls.fetchElevenLabsConversation);
 
   // Effects: soft auto-refresh for just-completed calls without transcripts
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function CallsPage() {
       .filter(c => c.status === "completed" && !c.conversationId && c.completedAt && Date.now() - c.completedAt < 5 * 60 * 1000)
       .sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0))[0];
     if (recent && !isLoading) {
-      void handleFetchConversation(recent._id);
+      // void handleFetchConversation(recent._id);
       setSelectedCallId(recent._id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,7 +107,7 @@ export default function CallsPage() {
     const onKey = (e: KeyboardEvent): void => {
       if ((e.key === "r" || e.key === "R") && selectedCallId) {
         e.preventDefault();
-        void handleFetchConversation(selectedCallId);
+        // void handleFetchConversation(selectedCallId);
       }
     };
 
@@ -124,7 +124,7 @@ export default function CallsPage() {
     }
     try {
       setIsLoading(true);
-      const res = await initiateCall({ userId: user._id, toNumber, userName: user.name ?? "Friend" });
+      const res = await initiateCall({ userId: user._id });
       // Convex action returns a typed object with success/message; we handle defensively
       if (res && typeof res === "object" && "success" in res && (res as { success: boolean }).success) {
         setToast({ type: "success", text: (res as { message?: string }).message ?? "Call initiated. You got this!" });
@@ -139,19 +139,19 @@ export default function CallsPage() {
     }
   }, [user, toNumber, initiateCall]);
 
-  const handleFetchConversation = useCallback(async (callId: Id<"calls">) => {
-    try {
-      setIsLoading(true);
-      setToast(null);
-      await fetchConversation({ callId });
-      setToast({ type: "success", text: "Conversation updated." });
-    } catch (e: unknown) {
-      const errorMsg = e instanceof Error ? e.message : "Couldn't fetch conversation.";
-      setToast({ type: "error", text: errorMsg });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchConversation]);
+  // const handleFetchConversation = useCallback(async (callId: Id<"calls">) => {
+  //   try {
+  //     setIsLoading(true);
+  //     setToast(null);
+  //     // await fetchConversation({ callId });
+  //     setToast({ type: "success", text: "Conversation updated." });
+  //   } catch (e: unknown) {
+  //     const errorMsg = e instanceof Error ? e.message : "Couldn't fetch conversation.";
+  //     setToast({ type: "error", text: errorMsg });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, [fetchConversation]);
 
   // Add state to track animations and user interactions
   const [animateIn, setAnimateIn] = useState(false);
@@ -360,7 +360,7 @@ export default function CallsPage() {
                                 size="sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  void handleFetchConversation(c._id);
+                                  // void handleFetchConversation(c._id);
                                   setSelectedCallId(c._id);
                                 }}
                               >
@@ -387,7 +387,7 @@ export default function CallsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => selectedCallId && handleFetchConversation(selectedCallId)}
+                      // onClick={() => selectedCallId && handleFetchConversation(selectedCallId)}
                       disabled={isLoading}
                       aria-label="Refresh conversation"
                     >
