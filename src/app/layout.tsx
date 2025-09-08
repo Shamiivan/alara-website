@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased test-global-css`}
       >
         <ConvexAuthNextjsServerProvider>
           <ConvexClientProvider>
@@ -45,7 +45,7 @@ export default function RootLayout({
               {/* Add HydrationDebugger to catch hydration errors */}
               <HydrationDebugger />
               <Navbar />
-              <main id="main-content">
+              <main id="main-content" className="test-global-css">
                 {children}
               </main>
               <Footer />
