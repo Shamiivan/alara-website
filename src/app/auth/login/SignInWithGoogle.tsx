@@ -18,7 +18,7 @@ export function SignInWithGoogle({ returnUrl = "/dashboard", onError }: SignInWi
       info("auth", "Google sign-in initiated");
       logUserAction("Google sign-in button clicked", "auth");
       // check the return URL
-      if (returnUrl !== '/dashboard') {
+      if (returnUrl !== '/app/dashboard') {
         localStorage.setItem('auth_returnTo', returnUrl);
       }
       await signIn("google", { redirectTo: returnUrl });

@@ -58,13 +58,13 @@ const routes: RouteConfig[] = [
   // Protected pages
   {
     id: 'dashboard',
-    path: '/dashboard',
+    path: '/app/dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
     requiresAuth: true,
     requiresOnboarding: true,
     requiresPayment: true,
-    showInNav: false,
+    showInNav: true,
     showInUserMenu: true,
   },
   {

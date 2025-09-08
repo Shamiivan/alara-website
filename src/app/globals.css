@@ -74,7 +74,7 @@
 :root {
   /* Base */
   --radius: 0.75rem;
-  --background: 210 20% 98%;
+  --background: 210 10% 98%;
   --foreground: 224 71% 4%;
 
   /* Card */
@@ -326,11 +326,11 @@
 
   /* Card components */
   .card-base {
-    @apply bg-card border border-border/50 rounded-xl shadow-sm;
+    @apply bg-card rounded-xl;
   }
 
   .card-elevated {
-    @apply bg-card border border-border/50 rounded-xl shadow-lg;
+    @apply bg-card rounded-xl shadow-md;
   }
 
   /* Interactive states */

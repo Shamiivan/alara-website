@@ -44,7 +44,7 @@ export const pay = action({
         },
       ],
       mode: "payment",
-      success_url: `${domain}/dashboard?payment=success&paymentId=${paymentId}`,
+      success_url: `${domain}/app/dashboard?payment=success&paymentId=${paymentId}`,
       cancel_url: `${domain}/payment?payment=cancelled`,
       automatic_tax: { enabled: true },
     });

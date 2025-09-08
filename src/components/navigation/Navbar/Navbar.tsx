@@ -98,7 +98,7 @@ export default function Navbar() {
             {/* Right cluster: Help + CTA (desktop) */}
             <div className="hidden md:flex items-center gap-3">
               <HelpLink />
-              <PrimaryButton onClick={() => router.push("/dashboard")}>
+              <PrimaryButton onClick={() => router.push("/app/dashboard")}>
                 Start 30‑day pilot
               </PrimaryButton>
             </div>
