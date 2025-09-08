@@ -118,7 +118,7 @@ export function CalendarSettingsView({
                 </span>
               </div>
               <p className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs text-slate-500 mt-1">
-                We'll check it when planning for the day.
+                We&apos;ll check it when planning for the day.
               </p>
             </div>
             <CheckCircle2 className="w-5 h-5 text-blue-600 flex-shrink-0" />
