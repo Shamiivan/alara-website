@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAction, useQuery } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
+import { SignInWithGoogle } from '../../app/auth/login/SignInWithGoogle';
+import { LogoutButton } from '../auth/LogoutButton';
 
 // ========================================
 // TYPES
@@ -419,7 +421,8 @@ const WeekSectionComponent: React.FC = () => {
     return (
       <div className="w-full p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="text-sm text-blue-700 mb-2">Sign in required</div>
-        <div className="text-xs text-blue-600">Please sign in to see your calendar events</div>
+        <div className="text-xs text-blue-600 mb-3">Please sign in to see your calendar events</div>
+        <SignInWithGoogle />
       </div>
     );
   }
