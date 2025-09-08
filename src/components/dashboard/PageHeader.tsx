@@ -12,7 +12,7 @@ interface PageHeaderProps {
 export default function PageHeader({ title, description, icon, children }: PageHeaderProps) {
   const headerStyles: React.CSSProperties = {
     marginBottom: '32px',
-    paddingBottom: '16px',
+    paddingBottom: '4px',
   };
 
   const titleRowStyles: React.CSSProperties = {

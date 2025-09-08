@@ -33,42 +33,28 @@ export function DashboardView() {
   }, []);
   const containerClasses = `flex flex-col gap-8 opacity-${mounted ? '100' : '0'} transform ${mounted ? 'translate-y-0' : 'translate-y-2'} transition-all duration-500`;
 
-  const contentGridClasses = "grid gap-6";
 
   const twoColumnGridClasses = `grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-2'}`;
 
   return (
-    <div className={containerClasses}>
+    <div>
       <PageHeader
         title="Dashboard"
-        description={`${greeting}! Here's your productivity overview`}
-        icon={<Sparkles size={24} color="#fbbf24" className="animate-pulse" />}
       />
 
-      <div className={contentGridClasses}>
 
-        {/* Content Grid - Two Column on Desktop */}
-        {/* Calendar Section */}
-        <Card variant="elevated" className="overflow-hidden">
-          <div className="p-5 pb-1">
-            <h3 className="text-base font-semibold text-gray-900 mb-2">
-              Calendar
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Your schedule at a glance
-            </p>
-          </div>
-          <Rolling7DayStrip />
-        </Card>
+      {/* Calendar Section */}
+      <Card variant="default" className="overflow-hidden">
+        <Rolling7DayStrip />
+      </Card>
 
-        {/* Features Card */}
-        <Card variant="elevated" padding="lg">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">
-            Features
-          </h3>
-          <FeaturesList isMobile={isMobile} />
-        </Card>
-      </div>
+      {/* Features Card */}
+      <Card variant="elevated" padding="lg">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">
+          Features
+        </h3>
+        <FeaturesList isMobile={isMobile} />
+      </Card>
     </div>
   );
 }
