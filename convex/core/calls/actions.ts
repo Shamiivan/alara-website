@@ -29,14 +29,12 @@ export const initiateCalendarCall = action({
         return Err(config.error);
       }
 
-      // 2. Get today's date range
       const today = new Date();
       const startOfDay = new Date(today);
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date(today);
       endOfDay.setHours(23, 59, 59, 999);
 
-      // 3. Fetch calendar events using core layer
       const eventsResult = await ctx.runAction(api.core.calendars.actions.getCalendarEvents, {
         userId: userId,
         calendarId: calendarId,
@@ -49,7 +47,6 @@ export const initiateCalendarCall = action({
         return Err("Failed to fetch calendar events");
       }
 
-      // 4. Get availability using core layer
       const availabilityResult = await ctx.runAction(api.core.calendars.actions.getAvailability, {
         events: eventsResult.data.events,
         timeMin: startOfDay.toISOString(),
@@ -61,7 +58,6 @@ export const initiateCalendarCall = action({
         return Err("Failed to calculate availability");
       }
 
-      // 5. Build calendar context
       const contextResult = buildCalendarContext(
         availabilityResult.data.freeSlots,
         availabilityResult.data.busyPeriods
@@ -80,12 +76,10 @@ export const initiateCalendarCall = action({
         context
       );
 
-      console.log("context", timezone);
-
-      console.log(`[initiateCalendarCall] Calendar context: ${context.freeSlots.length} free, ${context.busyPeriods.length} busy`);
+      console.log("context", dynamicVariables);
 
 
-      // 7. Make the call through integration layer
+
       const callResult = await initiateCall({
         agentId: config.data.agentId,
         agentPhoneNumberId: config.data.agentPhoneNumberId,
@@ -97,23 +91,25 @@ export const initiateCalendarCall = action({
         return Err("Failed to initiate calendar call");
       }
 
-      // 7.1. Validate required fields from ElevenLabs response
-      if (!callResult.data.callId) {
+      if (!callResult.data.callSid) {
+        console.error("Error validating the call result", callResult.data);
         return Err("ElevenLabs did not return a call ID");
       }
       if (!callResult.data.conversationId) {
+        console.error("Error Validation the conversation ID", callResult.data);
         return Err("ElevenLabs did not return a conversation ID");
       }
 
-      // 8. Create call record using core layer
       const dbCallId = await ctx.runMutation(api.core.calls.mutations.createCallRecord, {
         userId: userId,
         toNumber: toNumber,
         purpose: "planning",
         agentId: config.data.agentId,
-        elevenLabsCallId: callResult.data.callId,
+        elevenLabsCallId: callResult.data.callSid,
         conversationId: callResult.data.conversationId,
       });
+
+      console.log("Initated Call", dbCallId);
 
       const message = `Calendar call initiated - ${context.freeSlots.length} free slots, ${context.busyPeriods.length} busy periods`;
 
@@ -121,7 +117,7 @@ export const initiateCalendarCall = action({
 
       return Ok({
         callId: dbCallId,
-        elevenLabsCallId: callResult.data.callId,
+        elevenLabsCallId: callResult.data.callSid,
         conversationId: callResult.data.conversationId,
         message,
       });
@@ -194,11 +190,11 @@ export const initiateReminderCall = action({
       }
 
       // Validate required fields from ElevenLabs response
-      if (!callResult.data.callId) {
+      if (!callResult.data.callSid) {
         return Err("ElevenLabs did not return a call ID");
       }
 
-      const elevenLabsCallId = callResult.data.callId;
+      const elevenLabsCallId = callResult.data.callSid;
       const conversationId = callResult.data.conversationId!;
 
       // Create call record using the proper mutation

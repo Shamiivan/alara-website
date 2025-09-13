@@ -64,7 +64,6 @@ export const processWebhook = action({
           };
         });
 
-      // Create conversation record (matches schema structure)
       const conversationId = await ctx.runMutation(api.core.conversations.mutations.create, {
         callId: call._id,
         elevenLabsCallId: args.callSid,
@@ -73,7 +72,6 @@ export const processWebhook = action({
         transcript: processedTranscript,
       });
 
-      // Update call with conversation data (only fields that exist in schema)
       await ctx.runMutation(api.core.calls.mutations.updateCallStatus, {
         callId: call._id,
         status: args.callStatus === "completed" ? "completed" : "failed",

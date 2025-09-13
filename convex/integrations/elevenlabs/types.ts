@@ -1,5 +1,5 @@
 export interface CallResult {
-  callId?: string;
+  callSid?: string;
   conversationId?: string;
 }
 
