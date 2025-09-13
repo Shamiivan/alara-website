@@ -108,7 +108,7 @@ const YesterdayCardComponent: React.FC<CardProps> = ({ date, events, isLoading }
 
   return (
     <div className="rounded-xl bg-muted/20 p-3 w-full md:w-[260px] min-h-[220px]
-                    transition-transform duration-300 hover:scale-105">
+                    transition-transform duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-medium text-foreground">
           {date.toLocaleDateString('en-US', { weekday: 'long' })}
@@ -197,37 +197,19 @@ const TodayCardComponent: React.FC<CardProps> = ({ date, events, isLoading }) =>
 // ========================================
 
 const FutureCardComponent: React.FC<FutureCardProps> = ({ date, events, dayOffset, isLoading }) => {
-  const messages = [
-    "Tomorrow's uncharted — what will you explore?",
-    "A blank map — mark your path.",
-    "A day wide open — where will it take you?",
-    "Nothing set — launch something bold?"
-  ];
-  const emojis = ["🌌", "🗺", "🏞", "🚀", "⭐"];
-  const emoji = emojis[dayOffset % emojis.length];
-  const message = messages[dayOffset % messages.length];
 
   if (isLoading) {
     return <LoadingCard width="w-full md:w-[260px]" height="min-h-[220px]" />;
   }
 
   return (
-    <div className="rounded-xl bg-muted/10 p-3 w-full md:w-[260px] min-h-[220px]
-                    transition-transform duration-300 hover:scale-105">
+    <div className="rounded-xl bg-muted/10 w-full md:w-[260px] min-h-[220px]
+                    transition-transform duration-300">
       <div className="flex items-center justify-between mb-1">
-        <div className="text-base">{emoji}</div>
         <div className="text-xs font-medium text-foreground">
           {formatShortDate(date)}
         </div>
       </div>
-
-      {events.length === 0 ? (
-        <div className="text-xs italic text-muted-foreground p-1 rounded-md mb-2">
-          {message}
-        </div>
-      ) : (
-        <div className="text-xs font-medium text-foreground mb-2">Planned</div>
-      )}
 
       <div className="space-y-2">
         {events.slice(0, 4).map(e => (
@@ -419,7 +401,7 @@ const WeekSectionComponent: React.FC = () => {
 
   if (user === null) {
     return (
-      <div className="w-full p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="w-full bg-blue-50 border border-blue-200 rounded-lg">
         <div className="text-sm text-blue-700 mb-2">Sign in required</div>
         <div className="text-xs text-blue-600 mb-3">Please sign in to see your calendar events</div>
         <SignInWithGoogle />
@@ -429,7 +411,7 @@ const WeekSectionComponent: React.FC = () => {
 
   if (error) {
     return (
-      <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg">
+      <div className="w-full bg-red-50 border border-red-200 rounded-lg">
         <div className="text-sm text-red-700 mb-2">Unable to load calendar events</div>
         <div className="text-xs text-red-600 mb-3">{error}</div>
         <button

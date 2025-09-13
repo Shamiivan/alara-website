@@ -14,7 +14,7 @@ const cardVariants = {
 };
 
 const paddingClasses = {
-  sm: 'p-4',
+  sm: 'p-2',
   md: 'p-6',
   lg: 'p-8'
 };
