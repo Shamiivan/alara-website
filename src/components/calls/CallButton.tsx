@@ -37,7 +37,7 @@ export function CallButton({
   const [canVibrate, setCanVibrate] = useState(false);
 
   // Convex action
-  const initiateCall = useAction(api.calls_node.initiateCall);
+  const initiateCall = useAction(api.core.calls.actions.initiateCalendarCall);
   const currentUser = useQuery(api.user.getCurrentUser);
 
   // Check for vibration support on mount
@@ -62,7 +62,7 @@ export function CallButton({
       setStatus("calling");
 
       if (!currentUser) throw new Error("Not authenticated");
-      const result = await initiateCall({ userId: currentUser!._id, toNumber: phoneNumber, userName });
+      const result = await initiateCall({ userId: currentUser!._id });
 
       if (result && result.success) {
         setStatus("success");
