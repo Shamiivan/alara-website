@@ -77,11 +77,11 @@ export default function CallsPage() {
   // Data
   const user = useQuery(api.user.getCurrentUser);
 
-  const callsRaw = useQuery(api.calls.getUserCalls, {});
+  const callsRaw = useQuery(api.core.calls.queries.getUserCalls, {});
   const calls = useMemo(() => (callsRaw ?? []) as CallType[], [callsRaw]);
 
   const selectedConversation = useQuery(
-    api.conversation.getConversationByCallId,
+    api.core.conversations.queries.getByCallId,
     selectedCallId ? { callId: selectedCallId } : "skip"
   ) as ConversationType | null;
 
@@ -104,7 +104,7 @@ export default function CallsPage() {
 
   // Keyboard shortcut: r to refresh selected conversation
   useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
+    const onKey = (e: KeyboardEvent) => {
       if ((e.key === "r" || e.key === "R") && selectedCallId) {
         e.preventDefault();
         // void handleFetchConversation(selectedCallId);
@@ -405,8 +405,6 @@ export default function CallsPage() {
                   <Fragment>
                     <div className="mb-3 rounded-[10px] border p-3" style={{ borderColor: TOKENS.border, background: TOKENS.bg }}>
                       <div className="flex flex-wrap items-center gap-3 text-sm" style={{ color: TOKENS.subtext }}>
-                        <span>Started: {fmt(selectedConversation.metadata.startTimeUnixSecs * 1000)}</span>
-                        <span>· Duration: {selectedConversation.metadata.callDurationSecs}s</span>
                       </div>
                     </div>
 

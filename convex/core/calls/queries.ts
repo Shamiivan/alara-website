@@ -1,5 +1,7 @@
+import { api } from "../../_generated/api";
 import { query } from "../../_generated/server";
 import { v } from "convex/values";
+import { Id } from "../../_generated/dataModel";
 
 export const getCallById = query({
   args: { callId: v.id("calls") },
@@ -17,6 +19,7 @@ export const getCallByElevenLabsId = query({
   },
 });
 
+// Public query for admin/debugging
 export const getUsersForDailyCalls = query({
   args: {},
   returns: v.array(v.object({
@@ -29,10 +32,38 @@ export const getUsersForDailyCalls = query({
     phone: v.optional(v.string()),
   })),
   handler: async (ctx) => {
-    // Public query for admin/debugging
     return await ctx.db
       .query("users")
       .filter(q => q.eq(q.field("wantsClarityCalls"), true))
+      .collect();
+  },
+});
+
+export type Call = {
+  _id: Id<"calls">;
+  _creationTime: number;
+  userId: Id<"users">;
+  purpose?: string;
+  status: "initiated" | "in_progress" | "completed" | "failed" | "no_answer";
+  elevenLabsCallId?: string;
+  initiatedAt: number;
+  errorMessage?: string;
+  agentId?: string;
+  conversationId?: string;
+};
+
+export const getUserCalls = query({
+  args: {},
+  handler: async (ctx): Promise<Call[] | null> => {
+    const user = await ctx.runQuery(api.core.users.queries.getCurrentUser);
+    if (!user) {
+      return null;
+    }
+
+    return await ctx.db
+      .query("calls")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .order("desc") // Most recent first
       .collect();
   },
 });
