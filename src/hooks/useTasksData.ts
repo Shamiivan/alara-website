@@ -10,7 +10,7 @@ import { Task, CreateTaskData, UpdateTaskData, ConvexTask, Priority } from "../t
  */
 export function useTasksData() {
   // Data fetching
-  const tasksQuery = useQuery(api.core.tasks.queries.getTaskForUser) || null;
+  const tasksQuery = useQuery(api.core.tasks.queries.getTaskForUser);
   const user = useQuery(api.user.getCurrentUser);
 
   // Mutations
@@ -35,6 +35,10 @@ export function useTasksData() {
 
   // Transform Convex tasks to our Task interface
   const tasks: Task[] = useMemo(() => {
+
+    if (!tasksQuery || !Array.isArray(tasksQuery)) {
+      return [];
+    }
     const list = (tasksQuery as ConvexTask[]).map(t => ({
       _id: t._id,
       _creationTime: t._creationTime,
