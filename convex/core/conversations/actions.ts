@@ -39,7 +39,7 @@ export const processWebhook = action({
   handler: async (ctx, args) => {
     try {
       // Find the call by ElevenLabs call ID
-      const call = await ctx.runQuery(internal.calls.getCallByElevenLabsCallId, {
+      const call = await ctx.runQuery(api.core.calls.queries.getCallByElevenLabsId, {
         elevenLabsCallId: args.callSid
       });
 

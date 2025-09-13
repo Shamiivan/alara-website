@@ -1,4 +1,4 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation, internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import { isAuthenticated } from "./auth";
 import { Id } from "./_generated/dataModel";
@@ -7,6 +7,19 @@ import { api } from "./_generated/api";
 import { getUserByCtx } from "./utils/getUser";
 
 export const getCurrentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    try {
+      // Get the authenticated user ID directly
+      return await getUserByCtx(ctx);
+    } catch (error) {
+      console.error("[getCurrentUser] Error:", error);
+      return null;
+    }
+  },
+})
+
+export const getCurrentUserInternal = internalQuery({
   args: {},
   handler: async (ctx) => {
     try {

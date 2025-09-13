@@ -2,6 +2,7 @@ import { query } from "../../_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { getUserByCtx } from "../../utils/getUser";
+import { Doc } from "../../_generated/dataModel";
 
 export const getCurrentUser = query({
   args: {},

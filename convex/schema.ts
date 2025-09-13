@@ -107,6 +107,7 @@ const schema = defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   })
+    .index("by_user", ["userId"])
     .index("by_call_due", ["callId", "due"])
     .index("by_status_due", ["status", "due"]),
 
