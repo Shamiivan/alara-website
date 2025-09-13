@@ -10,7 +10,7 @@ import { Task, CreateTaskData, UpdateTaskData, ConvexTask, Priority } from "../t
  */
 export function useTasksData() {
   // Data fetching
-  const tasksQuery = useQuery(api.tasks.get_tasks) || [];
+  const tasksQuery = useQuery(api.core.tasks.queries.getTaskForUser) || null;
   const user = useQuery(api.user.getCurrentUser);
 
   // Mutations
