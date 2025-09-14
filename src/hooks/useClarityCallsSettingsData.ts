@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { localFieldsToUtcISO } from "@/lib/utils";
 
 /**
  * Custom hook for clarity calls settings data management
@@ -51,16 +52,22 @@ export function useClarityCallsSettingsData() {
 
     setIsUpdating(true);
     try {
-      // Create UTC time string for today at the specified local time
-      const now = new Date();
-      const [hours, minutes] = localCallTime.split(':').map(Number);
-      const localDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
-      const utcTimeString = localDate.toISOString();
+      // Build an ISO UTC timestamp for "today at HH:MM" in the user's IANA timezone
+      const tz = user.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(new Date());
+      const get = (t: Intl.DateTimeFormatPartTypes) => parts.find(p => p.type === t)?.value || "";
+      const dateStr = `${get("year")}-${get("month")}-${get("day")}`;
+      const utcISO = localFieldsToUtcISO(dateStr, localCallTime, tz);
 
       await updateCallTime({
         callTime: localCallTime,
-        callTimeUtc: utcTimeString,
-        timezone: user.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        callTimeUtc: utcISO,
+        timezone: tz,
       });
 
       return true;

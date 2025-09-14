@@ -8,6 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { api } from "../../../convex/_generated/api";
+import { localFieldsToUtcISO } from "@/lib/utils";
 
 const ClarityCallsSettingsCard = () => {
   const user = useQuery(api.core.users.queries.getCurrentUser, {});
@@ -55,16 +56,22 @@ const ClarityCallsSettingsCard = () => {
     setError(null);
 
     try {
-      // Create UTC time string for today at the specified local time
-      const now = new Date();
-      const [hours, minutes] = localCallTime.split(':').map(Number);
-      const localDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
-      const utcTimeString = localDate.toISOString();
+      // Compute UTC ISO for today@HH:MM in user's TZ
+      const tz = user.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: tz,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(new Date());
+      const get = (t: Intl.DateTimeFormatPartTypes) => parts.find(p => p.type === t)?.value || "";
+      const dateStr = `${get("year")}-${get("month")}-${get("day")}`;
+      const utcISO = localFieldsToUtcISO(dateStr, localCallTime, tz);
 
       await updateCallTime({
         callTime: localCallTime,
-        callTimeUtc: utcTimeString,
-        timezone: user.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+        callTimeUtc: utcISO,
+        timezone: tz,
       });
 
       setIsEditing(false);

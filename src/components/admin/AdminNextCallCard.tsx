@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api"; // ⟵ Adjust the path if your api export differs
+import { utcToLocalFields, localFieldsToUtcISO } from "@/lib/utils";
 
 /**
  * AdminNextCallCard — schedule a user's next call by EMAIL
@@ -95,67 +96,7 @@ export default function AdminNextCallCard({
     return /.+@.+\..+/.test(email);
   }, [email]);
 
-  /* ---------- Formatting helpers (no libs) ---------- */
-  function utcToLocalFields(utcISO: string, tz: string) {
-    const d = new Date(utcISO);
-    if (isNaN(d.getTime())) return { date: "", time: "" };
-
-    const parts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: tz,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).formatToParts(d);
-
-    const get = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value || "";
-
-    const yyyy = get("year");
-    const mm = get("month");
-    const dd = get("day");
-    const hh = get("hour");
-    const mi = get("minute");
-
-    return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mi}` };
-  }
-
-  function localFieldsToUtcISO(dateYYYYMMDD: string, timeHHMM: string, tz: string) {
-    if (!dateYYYYMMDD || !timeHHMM) return "";
-
-    const [y, m, d] = dateYYYYMMDD.split("-").map((v) => parseInt(v, 10));
-    const [hh, mm] = timeHHMM.split(":").map((v) => parseInt(v, 10));
-
-    const naiveUtcMs = Date.UTC(y, (m || 1) - 1, d || 1, hh || 0, mm || 0, 0, 0);
-    const naiveUtcDate = new Date(naiveUtcMs);
-
-    const tzParts = new Intl.DateTimeFormat("en-CA", {
-      timeZone: tz,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).formatToParts(naiveUtcDate);
-
-    const get = (type: Intl.DateTimeFormatPartTypes) => tzParts.find((p) => p.type === type)?.value || "00";
-
-    const tzYear = parseInt(get("year"), 10);
-    const tzMonth = parseInt(get("month"), 10);
-    const tzDay = parseInt(get("day"), 10);
-    const tzHour = parseInt(get("hour"), 10);
-    const tzMin = parseInt(get("minute"), 10);
-    const tzSec = parseInt(get("second"), 10);
-
-    const pretendUtcMs = Date.UTC(tzYear, tzMonth - 1, tzDay, tzHour, tzMin, tzSec, 0);
-    const offsetMs = pretendUtcMs - naiveUtcMs;
-    const trueUtcMs = naiveUtcMs - offsetMs;
-
-    return new Date(trueUtcMs).toISOString();
-  }
+  /* ---------- Formatting helpers (from utils) ---------- */
 
   /* ---------- Initialize date/time fields ---------- */
   useEffect(() => {

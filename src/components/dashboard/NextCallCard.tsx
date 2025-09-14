@@ -207,7 +207,8 @@ export default function NextCallCard({
     if (!utcISO) return;
     setSaving(true);
     try {
-      await updateCallTime({ callTime: utcISO });
+      // Backend expects local HH:MM in callTime, optional UTC ISO and timezone
+      await updateCallTime({ callTime: timeStr, callTimeUtc: utcISO, timezone: timeZone });
       onSave?.({ utcISO, timeZone, local: { date: dateStr, time: timeStr } });
     } finally {
       setSaving(false);
