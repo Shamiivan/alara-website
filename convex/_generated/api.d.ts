@@ -40,7 +40,6 @@ import type * as core_users_mutations from "../core/users/mutations.js";
 import type * as core_users_queries from "../core/users/queries.js";
 import type * as crons from "../crons.js";
 import type * as events from "../events.js";
-import type * as feature_flags from "../feature/flags.js";
 import type * as google from "../google.js";
 import type * as http from "../http.js";
 import type * as integrations_elevenlabs_calls from "../integrations/elevenlabs/calls.js";
@@ -108,7 +107,6 @@ declare const fullApi: ApiFromModules<{
   "core/users/queries": typeof core_users_queries;
   crons: typeof crons;
   events: typeof events;
-  "feature/flags": typeof feature_flags;
   google: typeof google;
   http: typeof http;
   "integrations/elevenlabs/calls": typeof integrations_elevenlabs_calls;

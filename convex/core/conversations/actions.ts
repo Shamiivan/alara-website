@@ -107,14 +107,14 @@ export const processWebhook = action({
         // Create tasks from tool calls
         for (const toolCall of toolCalls) {
           try {
-            await ctx.runMutation(api.tasks.create_task, {
+            await ctx.runAction(api.core.tasks.actions.createTask, {
               title: toolCall.parsedParams.title,
               due: toolCall.parsedParams.due,
               timezone: defaultTz,
+              callId: call._id,
               source: "call",
               userId: call.userId,
               reminderMinutesBefore: 5, // Use default since schema has this as optional
-              callId: call._id,
             });
             tasksCreated++;
           } catch (error) {
