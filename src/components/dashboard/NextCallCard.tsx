@@ -33,7 +33,7 @@ export default function NextCallCard({
   compact = false,
 }: Props) {
   const user = useQuery(api.user.getCurrentUser);
-  const updateCallTime = useMutation(api.user.updateCallTime);
+  const updateCallTime = useMutation(api.core.users.mutations.updateCallTime);
   const callNow = useAction(api.core.calls.actions.initiateCalendarCall)
 
   const defaultTZ = useMemo(() => getDefaultTimeZone(), []);
