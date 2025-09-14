@@ -4,6 +4,7 @@ import "./globals.css";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import ClientLayout from "@/components/ClientLayout";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,8 @@ export default function RootLayout({
       >
         <ConvexAuthNextjsServerProvider>
           <ConvexClientProvider>
+            {/* Global toaster for app-wide feedback */}
+            <Toaster richColors position="top-center" closeButton />
             <ClientLayout>{children}</ClientLayout>
           </ConvexClientProvider>
         </ConvexAuthNextjsServerProvider>

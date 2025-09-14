@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useId, useMemo } from "react";
 import { Plus, Calendar, Clock, Sparkles } from "lucide-react";
 import { CreateTaskData } from "@/hooks/useTasksData";
+import { toast } from "sonner";
 
 interface TaskFormProps {
   onSubmit: (data: CreateTaskData) => Promise<boolean>;
@@ -16,7 +17,6 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
   const [dueTime, setDueTime] = useState("");
   const [reminderMinutes, setReminderMinutes] = useState(10);
   const [errors, setErrors] = useState<{ title?: string; date?: string }>({});
-  const [success, setSuccess] = useState(false);
 
   // IDs for accessibility
   const titleId = useId();
@@ -78,36 +78,25 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
       });
 
       if (success) {
-        setSuccess(true);
+        toast.success("Task created");
         setTitle("");
-        setTimeout(() => setSuccess(false), 1000);
       }
     } catch (error) {
-      setErrors({ title: "Failed to create task" });
+      toast.error("Failed to create task");
     }
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+    <div className="rounded-xl p-6 shadow-sm border bg-[hsl(var(--card))]">
       <div className="flex items-center gap-2 mb-4">
-        <Sparkles size={18} className="text-blue-600" />
-        <h3 className="font-semibold text-gray-900">Add New Task</h3>
+        <Sparkles size={18} className="text-[hsl(var(--primary))]" />
+        <h3 className="font-semibold text-[hsl(var(--foreground))]">Add New Task</h3>
       </div>
-
-      {Object.keys(errors).length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-          <div className="text-sm text-red-700">
-            {Object.values(errors).map((error, i) => (
-              <div key={i}>{error}</div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Title */}
         <div>
-          <label htmlFor={titleId} className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor={titleId} className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">
             Task *
           </label>
           <input
@@ -115,25 +104,28 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-1 border-[hsl(var(--border))]"
             placeholder="What needs to be done?"
             maxLength={200}
             autoFocus
           />
           <div className="flex justify-between mt-1">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">
               Start with a verb for clarity
             </span>
-            <span className={`text-xs ${titleTooLong ? 'text-red-500' : 'text-gray-500'}`}>
+            <span className={`text-xs ${titleTooLong ? 'text-[hsl(var(--destructive))]' : 'text-[hsl(var(--muted-foreground))]'}`}>
               {title.length}/140
             </span>
           </div>
+          {errors.title && (
+            <div className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.title}</div>
+          )}
         </div>
 
         {/* Date and Time */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor={dateId} className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor={dateId} className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">
               <Calendar size={14} className="inline mr-1" />
               Due Date *
             </label>
@@ -142,35 +134,38 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
               type="date"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-1 border-[hsl(var(--border))]"
             />
             <div className="flex gap-2 mt-2">
               <button
                 type="button"
                 onClick={() => setQuickDate("today")}
-                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                className="text-xs px-2 py-1 rounded transition-colors bg-[hsl(var(--muted))] hover:opacity-80"
               >
                 Today
               </button>
               <button
                 type="button"
                 onClick={() => setQuickDate("tomorrow")}
-                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                className="text-xs px-2 py-1 rounded transition-colors bg-[hsl(var(--muted))] hover:opacity-80"
               >
                 Tomorrow
               </button>
               <button
                 type="button"
                 onClick={() => setQuickDate("monday")}
-                className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded transition-colors"
+                className="text-xs px-2 py-1 rounded transition-colors bg-[hsl(var(--muted))] hover:opacity-80"
               >
                 Next Mon
               </button>
             </div>
+            {errors.date && (
+              <div className="mt-1 text-xs text-[hsl(var(--destructive))]">{errors.date}</div>
+            )}
           </div>
 
           <div>
-            <label htmlFor={timeId} className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor={timeId} className="block text-sm font-medium text-[hsl(var(--foreground))] mb-1">
               <Clock size={14} className="inline mr-1" />
               Time
             </label>
@@ -179,9 +174,9 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
               type="time"
               value={dueTime}
               onChange={(e) => setDueTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-1 border-[hsl(var(--border))]"
             />
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
               Timezone: {timezone}
             </div>
           </div>
@@ -189,20 +184,20 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
 
         {/* Reminder */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-2">
             Reminder
           </label>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm text-gray-600">Notify me</span>
+            <span className="text-sm text-[hsl(var(--muted-foreground))]">Notify me</span>
             <input
               type="number"
               min={1}
               max={1440}
               value={reminderMinutes}
               onChange={(e) => setReminderMinutes(parseInt(e.target.value) || 10)}
-              className="w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+              className="w-20 px-2 py-1 border rounded text-center text-sm border-[hsl(var(--border))]"
             />
-            <span className="text-sm text-gray-600">minutes before</span>
+            <span className="text-sm text-[hsl(var(--muted-foreground))]">minutes before</span>
           </div>
           <div className="flex gap-2">
             {[5, 10, 30, 60].map((minutes) => (
@@ -210,9 +205,9 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
                 key={minutes}
                 type="button"
                 onClick={() => setReminderMinutes(minutes)}
-                className={`text-xs px-3 py-1 rounded transition-colors ${reminderMinutes === minutes
-                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                    : 'bg-gray-100 hover:bg-gray-200 border border-gray-300'
+                className={`text-xs px-3 py-1 rounded border transition-colors ${reminderMinutes === minutes
+                    ? 'bg-[hsl(var(--primary-light))] text-[hsl(var(--primary-dark))] border-[hsl(var(--primary-light))]'
+                    : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))] hover:opacity-80'
                   }`}
               >
                 {minutes}m
@@ -225,7 +220,7 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
         <button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-dark))] disabled:opacity-60"
         >
           {isSubmitting ? (
             <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -236,12 +231,6 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
             </>
           )}
         </button>
-
-        {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-            <div className="text-sm text-green-700">Task created successfully!</div>
-          </div>
-        )}
       </form>
     </div>
   );
