@@ -72,7 +72,7 @@ const schema = defineSchema({
 
     agentId: v.optional(v.string()),
     conversationId: v.optional(v.string()),
-  })
+  }).index("by_user_and_purpose", ["userId", "purpose"])
     .index("by_user", ["userId"])
     .index("by_status", ["status"]) // TODO: Remove the stat
     .index("by_eleven_labs_call_id", ["elevenLabsCallId"]),

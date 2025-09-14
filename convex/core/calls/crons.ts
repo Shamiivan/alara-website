@@ -2,57 +2,110 @@ import { internalAction, internalQuery } from "../../_generated/server";
 import { v } from "convex/values";
 import { api, internal } from "../../_generated/api";
 
+const CALL_WINDOW = 5; // 5 min 
+
 export const processDailyCalls = internalAction({
   args: {},
   returns: v.null(),
   handler: async (ctx) => {
     try {
       const now = new Date();
+      console.log(`[processDailyCalls] Running at ${now.toISOString()}`);
 
-      // Get users who want clarity calls and have all required fields
       const users = await ctx.runQuery(internal.core.calls.crons.getUsersForClarityCalls, {});
-
       let callsInitiated = 0;
 
       for (const user of users) {
-        if (shouldCallUser(user, now)) {
+        try {
+          console.log(`[processDailyCalls] Processing user ${user.name} (${user._id})`);
 
-          try {
-            const result = await ctx.runAction(api.core.calls.actions.initiateCalendarCall, {
-              userId: user._id
-            });
-
-            if (result.success) {
-              callsInitiated++;
-              // console.log(`[processDailyCalls] Successfully initiated call for ${user.name}`);
-            } else {
-              console.error(`[processDailyCalls] Failed to call ${user.name}: ${result.error}`);
-            }
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            console.error(`[processDailyCalls] Exception calling ${user.name}: ${errorMessage}`);
-
-            await ctx.runMutation(api.events.logErrorInternal, {
-              category: "calls",
-              message: `Daily clarity call exception for user ${user._id}: ${errorMessage}`,
-              details: {
-                userId: user._id,
-                userName: user.name,
-                error: errorMessage
-              },
-              source: "convex",
-            });
+          // Skip if missing required fields (already filtered in query, but double-check)
+          if (!user.callTime || !user.timezone || !user.mainCalendarId || !user.phone) {
+            console.log(`[processDailyCalls] Skipping ${user.name} - missing required fields`);
+            continue;
           }
+
+          // Check if it's time to call this user
+          let userLocalTime;
+          try {
+            userLocalTime = new Date(now.toLocaleString("en-US", {
+              timeZone: user.timezone
+            }));
+          } catch (error) {
+            console.error(`[processDailyCalls] Invalid timezone ${user.timezone} for user ${user._id}`);
+            continue;
+          }
+          // Skip if already called today
+          const alreadyCalledToday = await ctx.runQuery(internal.core.calls.crons.getLastClarityCall, {
+            userId: user._id
+          });
+
+          if (alreadyCalledToday) {
+            console.log(`[processDailyCalls] Skipping ${user.name} - already called today`);
+            continue;
+          }
+
+
+          const [hours, minutes] = user.callTime.split(':').map(Number);
+
+          // Skip if invalid time format
+          if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+            console.error(`[processDailyCalls] Invalid time format ${user.callTime} for user ${user._id}`);
+            continue;
+          }
+
+          // Debug time comparison
+          console.log(`[processDailyCalls] User ${user.name}: callTime=${user.callTime}, timezone=${user.timezone}`);
+          console.log(`[processDailyCalls] User local time: ${userLocalTime.toLocaleString()} (${userLocalTime.getHours()}:${userLocalTime.getMinutes()})`);
+          console.log(`[processDailyCalls] Target time: ${hours}:${minutes}, Window: ${CALL_WINDOW} minutes`);
+
+          // Skip if not in call window
+          const isCallTime = userLocalTime.getHours() === hours && userLocalTime.getMinutes() < CALL_WINDOW;
+          console.log(`[processDailyCalls] Is call time? ${isCallTime} (hour match: ${userLocalTime.getHours() === hours}, minute check: ${userLocalTime.getMinutes()} < ${CALL_WINDOW})`);
+
+          if (!isCallTime) {
+            console.log(`[processDailyCalls] Skipping ${user.name} - not in call window`);
+            continue;
+          }
+
+          // All checks passed - initiate call
+          console.log(`[processDailyCalls] Calling ${user.name} (${user._id}) at ${userLocalTime.toLocaleString()}`);
+
+          const result = await ctx.runAction(api.core.calls.actions.initiateCalendarCall, {
+            userId: user._id
+          });
+
+          if (result.success) {
+            callsInitiated++;
+            console.log(`[processDailyCalls] Successfully initiated call for ${user.name}`);
+          } else {
+            console.error(`[processDailyCalls] Failed to call ${user.name}: ${result.error}`);
+          }
+
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error(`[processDailyCalls] Exception calling ${user.name}: ${errorMessage}`);
+
+          await ctx.runMutation(api.events.logErrorInternal, {
+            category: "calls",
+            message: `Daily clarity call exception for user ${user._id}: ${errorMessage}`,
+            details: {
+              userId: user._id,
+              userName: user.name,
+              error: errorMessage
+            },
+            source: "convex",
+          });
         }
       }
 
-      // console.log(`[processDailyCalls] Completed. Initiated ${callsInitiated} calls out of ${users.length} eligible users`);
+      console.log(`[processDailyCalls] Completed. Initiated ${callsInitiated} calls out of ${users.length} eligible users`);
       return null;
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error(`[processDailyCalls] Critical error: ${errorMessage}`);
 
-      // Log critical cron failure
       await ctx.runMutation(api.events.logErrorInternal, {
         category: "system",
         message: `Daily clarity calls cron failed: ${errorMessage}`,
@@ -62,6 +115,34 @@ export const processDailyCalls = internalAction({
 
       return null;
     }
+  },
+});
+
+// New query to check if user was called today for clarity calls
+export const getLastClarityCall = internalQuery({
+  args: {
+    userId: v.id("users")
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+
+    const todayCall = await ctx.db
+      .query("calls")
+      .withIndex("by_user_and_purpose", q =>
+        q.eq("userId", args.userId).eq("purpose", "planning")
+      )
+      .filter(q =>
+        q.and(
+          q.gte(q.field("initiatedAt"), startOfDay),
+          q.lte(q.field("initiatedAt"), endOfDay)
+        )
+      )
+      .first();
+    console.log("Running today call", todayCall);
+    return todayCall !== null;
   },
 });
 
@@ -100,32 +181,3 @@ export const getUsersForClarityCalls = internalQuery({
       .collect();
   },
 });
-
-// Helper function to determine if we should call a user right now
-function shouldCallUser(user: any, now: Date): boolean {
-  if (!user.callTime || !user.timezone || !user.mainCalendarId || !user.phone) {
-    return false;
-  }
-
-  try {
-    // Get current time in user's timezone
-    const userLocalTime = new Date(now.toLocaleString("en-US", {
-      timeZone: user.timezone
-    }));
-
-    // Parse 24-hour format: "21:00" -> hour=21, minute=0
-    const [hours, minutes] = user.callTime.split(':').map(Number);
-
-    // Validate parsed time
-    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-      console.error(`[shouldCallUser] Invalid time format ${user.callTime} for user ${user._id}`);
-      return false;
-    }
-
-    // Call if it's the right hour and within first 5 minutes
-    return userLocalTime.getHours() === hours && userLocalTime.getMinutes() < 5;
-  } catch (error) {
-    console.error(`[shouldCallUser] Error processing user ${user._id} timezone ${user.timezone}: ${error}`);
-    return false;
-  }
-}

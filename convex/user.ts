@@ -321,38 +321,3 @@ export const getUserByEmail = query({
   },
 });
 
-
-export const updateCallTime = mutation({
-  args: {
-    callTime: v.string(),
-  },
-  handler: async (ctx, args) => {
-    try {
-
-      const userId = await getAuthUserId(ctx);
-      if (!userId) {
-        throw new Error("Not authenticated");
-      }
-      // check if the call time is changed
-      const user = await ctx.db.get(userId);
-      if (!user) throw new Error("User not found");
-      if (user.callTimeUtc === args.callTime) throw new Error("Call time is the same");
-      // Update the user's call time and time zone
-      const newRow = await ctx.db.patch(userId, {
-        callTimeUtc: args.callTime,
-      });
-
-      // run mutation to create scheduled call
-      await ctx.runMutation(api.scheduledCall.create, {
-        userId,
-        scheduledAtUtc: Date.parse(args.callTime),
-        retryCount: 0,
-      });
-      console.log("[updateCallTime] Updated call time for user:", userId);
-      return newRow;
-    } catch (error) {
-      console.error("[updateCallTime] Error:", error);
-      return null;
-    }
-  }
-});
