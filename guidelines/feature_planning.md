@@ -223,3 +223,32 @@ Slice 4: Learning and improvement based on real usage
 - Learn from real usage, not planning sessions
 - Users will tell you what to build next
 - Momentum matters more than perfect architecture
+
+
+
+# guidelines
+
+1. Understand the problem before picking tools
+
+Is this a known time or unknown condition?
+One-time event or recurring pattern?
+
+2. Use what already works
+
+How does this codebase solve similar problems?
+Extend existing patterns instead of inventing new ones
+
+3. Match complexity to the problem
+
+Simple problems need simple solutions
+Don't over-engineer
+
+4. Choose the direct path
+
+Calculate exact answers instead of polling/checking
+Fewer steps = fewer bugs
+
+5. State your assumptions out loud
+
+"I'm treating this as [X] because [Y]"
+Then check if that's actually true
