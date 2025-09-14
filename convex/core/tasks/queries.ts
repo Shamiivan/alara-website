@@ -73,3 +73,11 @@ export const getUpcomingTasks = query({
     });
   },
 });
+
+
+export const getTaskById = query({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx, { taskId }) => {
+    return await ctx.db.get(taskId);
+  },
+});

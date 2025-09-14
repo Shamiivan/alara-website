@@ -158,7 +158,7 @@ export const initiateReminderCall = action({
   handler: async (ctx, args): Promise<Result<ReminderCallData>> => {
     try {
       // Validate task exists
-      const task = await ctx.runQuery(api.tasks.getTaskById, { taskId: args.taskId });
+      const task = await ctx.runQuery(api.core.tasks.queries.getTaskById, { taskId: args.taskId });
       if (!task) {
         return Err(`Task with ID ${args.taskId} not found`);
       }
