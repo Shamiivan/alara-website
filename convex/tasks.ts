@@ -445,18 +445,18 @@ export const runScheduledReminder = internalMutation({
     });
 
     // call the action to send the reminder using eleven labs
-    // await ctx.scheduler.runAfter(
-    //   0, // 0 is for now
-    //   // api.calls_node.initiateReminderCall,
-    //   // {
-    //   //   userId: userId,
-    //   //   toNumber: user.phone,
-    //   //   userName: user.name,
-    //   //   taskName: task.title,
-    //   //   taskTime: task.due,
-    //   //   taskID: task._id,
-    //   // }
-    // );
+    await ctx.scheduler.runAfter(
+      0, // 0 is for now
+      api.core.calls.actions.initiateReminderCall,
+      {
+        userId: userId,
+        toNumber: user.phone,
+        userName: user.name,
+        taskName: task.title,
+        taskTime: task.due,
+        taskId: task._id,
+      }
+    );
 
     return { success: true };
   },

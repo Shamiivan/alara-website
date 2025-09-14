@@ -34,3 +34,42 @@ export const getTaskForUser = query({
     return tasks;
   },
 });
+
+export const getAllTasks = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("tasks").collect();
+  },
+});
+
+export const getTasksByStatus = query({
+  args: { status: v.string() },
+  handler: async (ctx, { status }) => {
+    return await ctx.db
+      .query("tasks")
+      .withIndex("by_status_due", (q) => q.eq("status", status))
+      .collect();
+  },
+});
+
+export const getUpcomingTasks = query({
+  args: {
+    userId: v.id("users"),
+    hoursAhead: v.optional(v.number())
+  },
+  handler: async (ctx, { userId, hoursAhead = 24 }) => {
+    const now = new Date();
+    const futureTime = new Date(now.getTime() + hoursAhead * 60 * 60 * 1000);
+
+    const allUserTasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    // Filter by due date in memory since we need to parse ISO strings
+    return allUserTasks.filter(task => {
+      const dueDate = new Date(task.due);
+      return dueDate >= now && dueDate <= futureTime && task.status === "scheduled";
+    });
+  },
+});

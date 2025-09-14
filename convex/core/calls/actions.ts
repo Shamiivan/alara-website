@@ -143,7 +143,7 @@ export const initiateReminderCall = action({
     taskName: v.optional(v.string()),
     taskTime: v.optional(v.string()),
     timezone: v.optional(v.string()),
-    taskID: v.id("tasks")
+    taskId: v.id("tasks")
   },
   returns: v.union(
     v.object({
@@ -158,9 +158,9 @@ export const initiateReminderCall = action({
   handler: async (ctx, args): Promise<Result<ReminderCallData>> => {
     try {
       // Validate task exists
-      const task = await ctx.runQuery(api.tasks.getTaskById, { taskId: args.taskID });
+      const task = await ctx.runQuery(api.tasks.getTaskById, { taskId: args.taskId });
       if (!task) {
-        return Err(`Task with ID ${args.taskID} not found`);
+        return Err(`Task with ID ${args.taskId} not found`);
       }
 
       // Get environment configuration

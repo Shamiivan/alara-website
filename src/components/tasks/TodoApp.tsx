@@ -5,9 +5,8 @@ import { useTasksData } from "@/hooks/useTasksData";
 import { TasksView } from "./TasksView";
 
 /**
- * TodoApp - Simple wrapper that coordinates data and UI
- * Data logic is now handled by useTasksData hook
- * UI is handled by pure TasksView component
+ * TodoApp - Clean wrapper that coordinates data and UI
+ * Follows the architecture: Page coordinates data, View handles UI
  */
 export default function TodoApp() {
   const {
