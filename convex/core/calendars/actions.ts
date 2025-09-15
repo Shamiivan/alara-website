@@ -2,8 +2,8 @@
 import { v } from "convex/values";
 import { action } from "./../../_generated/server";
 import { api, internal } from "./../../_generated/api";
-import { CalendarEventsResponse, GoogleCalendarEvent } from "../../integrations/google/types";
-import { fetchCalendars, fetchCalendarEvents } from "../../integrations/google/calendar";
+import { CalendarEventsResponse, CreateCalendarEventRequest, GoogleCalendarEvent } from "../../integrations/google/types";
+import { createEvent, fetchCalendars, fetchCalendarEvents } from "../../integrations/google/calendar";
 import { Result, Ok, Err } from "../../shared/result";
 
 // Calendar item type
@@ -274,3 +274,38 @@ export const checkSlotAvailability = action({
 });
 
 
+export const createCalendarEvent = action({
+  args: {
+    title: v.string(),
+    startTime: v.string(), // ISO string from task.due
+    duration: v.optional(v.number()), // minutes
+    userId: v.id("users"),
+    taskId: v.optional(v.id("tasks"))
+  },
+  returns: v.union(
+    v.object({ success: v.literal(true), data: v.string() }),
+    v.object({ success: v.literal(false), error: v.string() })
+  ),
+  handler: async (ctx, args): Promise<Result<string>> => {
+    try {
+      const duration = !args.duration ? 30 : args.duration; // default duration is 30min 
+      const endTime = new Date(new Date(args.startTime).getTime() + duration * 60000).toISOString();
+      const accessToken = await ctx.runAction(internal.core.tokens.actions.ensureValidToken, { userId: args.userId });
+      const mainCalendarId = await ctx.runQuery(api.core.users.queries.getMainCalendarId, { userId: args.userId });
+      if (!mainCalendarId) return Err("Could not get the calendar connected to this account");
+      const request = {
+        accessToken: accessToken,
+        calendarId: mainCalendarId,
+        title: args.title,
+        startTime: args.startTime,
+        endTime: endTime,
+      } as CreateCalendarEventRequest;
+
+      const response = await createEvent(request);
+      return Ok("Calendar event succesfully created. Nice!")
+    } catch (error) {
+      console.log("[CreateCalendarEvent]: Error", error);
+      return Err("It seems like something went wrong. Could not create a calendar Events");
+    }
+  }
+});

@@ -121,3 +121,18 @@ export const getUsersForDailyCalls = query({
       .collect();
   },
 });
+
+export const getMainCalendarId = query({
+  args: {
+    userId: v.id("users"),
+  },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      return null;
+    }
+    return user.mainCalendarId || null;
+  },
+});

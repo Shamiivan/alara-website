@@ -47,6 +47,7 @@ export const insertTask = mutation({
     source: v.string(),
     userId: v.id("users"),
     callId: v.optional(v.id("calls")),
+    duration: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   },

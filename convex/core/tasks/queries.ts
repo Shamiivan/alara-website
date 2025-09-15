@@ -15,6 +15,7 @@ interface Task {
   userId?: Id<"users">;
   status?: string;
   source?: string;
+  duration?: number;
   createdAt: number;
   updatedAt: number;
 }

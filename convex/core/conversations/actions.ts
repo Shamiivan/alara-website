@@ -115,6 +115,7 @@ export const processWebhook = action({
               source: "call",
               userId: call.userId,
               reminderMinutesBefore: 5, // Use default since schema has this as optional
+              duration: toolCall.parsedParams.duration.toNumber()
             });
             tasksCreated++;
           } catch (error) {

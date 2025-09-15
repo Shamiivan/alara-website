@@ -98,6 +98,7 @@ const schema = defineSchema({
   tasks: defineTable({
     title: v.string(),
     due: v.string(), // ISO string with offset
+    duration: v.optional(v.number()), // in min
     reminderMinutesBefore: v.optional(v.number()),
     timezone: v.string(),
     callId: v.optional(v.id("calls")),

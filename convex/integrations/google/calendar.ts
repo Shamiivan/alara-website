@@ -1,5 +1,11 @@
 // integrations/google/calendar.ts
-import { CalendarListResponse, CalendarEventsResponse, CalendarEventsOptions } from "./types";
+import {
+  CreateCalendarEventRequest,
+  CalendarEventResponse,
+  CalendarListResponse,
+  CalendarEventsResponse,
+  CalendarEventsOptions
+} from "./types";
 
 export async function fetchCalendars(accessToken: string): Promise<CalendarListResponse> {
   try {
@@ -64,5 +70,36 @@ export async function fetchCalendarEvents(
     return await response.json() as CalendarEventsResponse;
   } catch (error) {
     throw new Error(`Failed to fetch calendar events for ${calendarId}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+export async function createEvent(
+  eventRequest: CreateCalendarEventRequest
+): Promise<CalendarEventResponse> {
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(eventRequest.calendarId)}/events`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${eventRequest.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          summary: eventRequest.title,
+          start: { dateTime: eventRequest.startTime },
+          end: { dateTime: eventRequest.endTime }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Google Calendar Events API error: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json() as CalendarEventResponse;
+  } catch (error) {
+    throw new Error(`Failed to create calendar event "${eventRequest.title}": ${error instanceof Error ? error.message : String(error)}`);
   }
 }

@@ -16,6 +16,7 @@ export const createTask = action({
     source: v.optional(v.string()),
     userId: v.id("users"),
     reminderMinutesBefore: v.optional(v.number()),
+    duration: v.optional(v.number())
   },
   returns: v.union(
     v.object({ success: v.literal(true), data: v.id("tasks") }),
@@ -46,10 +47,12 @@ export const createTask = action({
       const reminderTime = dueDate.getTime() - (minutesBefore * 60 * 1000);
 
       // Create task
+
       const now = Date.now();
       const taskId = await ctx.runMutation(api.core.tasks.mutations.insertTask, {
         title: title.trim(),
         due,
+        duration: args.duration,
         timezone,
         status: status || "scheduled",
         source: source || "manual",
@@ -66,6 +69,15 @@ export const createTask = action({
       });
 
       console.log(`Scheduled reminder for task ${taskId} at ${new Date(reminderTime).toISOString()}`);
+
+      // create a corresponding calendar event
+      await ctx.runAction(api.core.calendars.actions.createCalendarEvent, {
+        title: title.trim(),
+        startTime: due,
+        duration: args.duration,
+        userId: userId,
+        taskId: taskId,
+      });
 
       return Ok(taskId);
     } catch (error) {
@@ -84,6 +96,7 @@ export const createTaskFromWeb = action({
     source: v.optional(v.string()),
     userId: v.id("users"),
     reminderMinutesBefore: v.optional(v.number()),
+    duration: v.optional(v.number())
   },
   returns: v.union(
     v.object({ success: v.literal(true), data: v.id("tasks") }),

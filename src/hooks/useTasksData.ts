@@ -12,6 +12,7 @@ export interface Task {
   timezone: string;
   priority: "low" | "medium" | "high";
   status?: string;
+  duration?: number;
 }
 
 export interface CreateTaskData {
@@ -19,6 +20,7 @@ export interface CreateTaskData {
   due: string;
   timezone: string;
   reminderMinutesBefore?: number;
+  duration?: number; // Add duration to create data
 }
 
 export interface UpdateTaskData {
@@ -26,6 +28,7 @@ export interface UpdateTaskData {
   title?: string;
   due?: string;
   timezone?: string;
+  duration?: number; // Add duration to update data
 }
 
 /**
@@ -38,7 +41,7 @@ export function useTasksData() {
   const user = useQuery(api.user.getCurrentUser);
 
   // Actions and mutations
-  const createTaskAction = useAction(api.core.tasks.actions.createTask);
+  const createTaskAction = useAction(api.core.tasks.actions.createTaskFromWeb);
   const updateTaskMutation = useMutation(api.core.tasks.mutations.updateTask);
   const deleteTaskMutation = useMutation(api.core.tasks.mutations.deleteTask);
 
@@ -72,6 +75,7 @@ export function useTasksData() {
       timezone: t.timezone,
       priority: determinePriority(t.title),
       status: t.status,
+      duration: t.duration
     }));
 
     return transformedTasks.sort((a, b) => {
@@ -109,9 +113,10 @@ export function useTasksData() {
         due: data.due,
         timezone: data.timezone,
         status: "scheduled",
-        source: "manual",
+        source: "web",
         userId: user._id as Id<"users">,
         reminderMinutesBefore: data.reminderMinutesBefore,
+        duration: data.duration, // Pass duration to the action
       });
 
       if (result.success) {

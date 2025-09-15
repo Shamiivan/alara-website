@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Plus, Clock, CheckCircle2, Circle, Trash2, CheckSquare } from "lucide-react";
+import { Plus, Clock, CheckCircle2, Circle, Trash2, CheckSquare, Timer } from "lucide-react";
 import { Task, CreateTaskData } from "@/hooks/useTasksData";
 import { TaskForm } from "./TaskForm";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -166,8 +165,8 @@ export function TasksView({
             <div
               key={task._id}
               className={`rounded-lg p-4 transition-all duration-200 bg-[hsl(var(--card))] shadow-sm hover:shadow-md overflow-hidden ${task.completed
-                  ? 'opacity-85'
-                  : 'hover:translate-y-[-1px]'
+                ? 'opacity-85'
+                : 'hover:translate-y-[-1px]'
                 }`}
             >
               <div className="flex items-start gap-3">
@@ -186,8 +185,8 @@ export function TasksView({
                 {/* Task content (row-based layout) */}
                 <div className="flex-1 min-w-0 flex flex-col gap-2">
                   <h3 className={`font-medium break-words ${task.completed
-                      ? 'text-[hsl(var(--muted-foreground))] line-through'
-                      : 'text-[hsl(var(--foreground))]'
+                    ? 'text-[hsl(var(--muted-foreground))] line-through'
+                    : 'text-[hsl(var(--foreground))]'
                     }`}>
                     {task.title}
                   </h3>
@@ -195,13 +194,21 @@ export function TasksView({
                   <div className="flex flex-wrap items-center gap-3">
                     {/* Priority badge */}
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${task.priority === 'high'
-                        ? 'bg-red-50 text-[hsl(var(--destructive))] border-red-200'
-                        : task.priority === 'low'
-                          ? 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))]'
-                          : 'bg-[hsl(var(--primary-light))] text-[hsl(var(--primary-dark))] border-[hsl(var(--primary-light))]'
+                      ? 'bg-red-50 text-[hsl(var(--destructive))] border-red-200'
+                      : task.priority === 'low'
+                        ? 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))]'
+                        : 'bg-[hsl(var(--primary-light))] text-[hsl(var(--primary-dark))] border-[hsl(var(--primary-light))]'
                       }`}>
                       {task.priority}
                     </span>
+
+                    {/* Duration - Only show if exists */}
+                    {task.duration && (
+                      <div className="flex items-center gap-1 text-sm text-[hsl(var(--muted-foreground))]">
+                        <Timer size={14} />
+                        {formatDuration(task.duration)}
+                      </div>
+                    )}
 
                     {/* Due date */}
                     {task.due && (
@@ -241,6 +248,14 @@ export function TasksView({
 // Helper functions
 function truncateTitle(title: string, maxLength = 30): string {
   return title.length > maxLength ? title.slice(0, maxLength) + '...' : title;
+}
+
+function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) return `${hours}h`;
+  return `${hours}h ${remainingMinutes}m`;
 }
 
 function formatDueDate(isoString: string): string {

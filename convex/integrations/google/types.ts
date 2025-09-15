@@ -164,3 +164,30 @@ export interface CalendarEventsResponse {
   nextSyncToken?: string; // For incremental sync
   items: GoogleCalendarEvent[]; // Array of events
 }
+
+
+export interface CreateCalendarEventRequest {
+  accessToken: string;
+  calendarId: string;
+  title: string;
+  startTime: string; // ISO timestamp
+  endTime: string;
+}
+
+export interface CalendarEventResponse {
+  id: string;
+  summary: string;
+  start: {
+    dateTime: string;
+    timeZone?: string;
+  };
+  end: {
+    dateTime: string;
+    timeZone?: string;
+  };
+  status: string;
+  htmlLink: string;
+  created: string;
+  updated: string;
+}
+

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useId, useMemo } from "react";
-import { Plus, Calendar, Clock, Sparkles } from "lucide-react";
+import { Plus, Calendar, Clock, Sparkles, Timer } from "lucide-react";
 import { CreateTaskData } from "@/hooks/useTasksData";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
   const [title, setTitle] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
+  const [duration, setDuration] = useState(30); // Duration in minutes
   const [reminderMinutes, setReminderMinutes] = useState(10);
   const [errors, setErrors] = useState<{ title?: string; date?: string }>({});
 
@@ -22,6 +23,7 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
   const titleId = useId();
   const dateId = useId();
   const timeId = useId();
+  const durationId = useId();
 
   // Get user's timezone
   const timezone = useMemo(() =>
@@ -53,6 +55,20 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
     setDueDate(date.toISOString().split("T")[0]);
   };
 
+  // Quick duration setters
+  const setQuickDuration = (minutes: number) => {
+    setDuration(minutes);
+  };
+
+  // Format duration for display
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) return `${hours}h`;
+    return `${hours}h ${remainingMinutes}m`;
+  };
+
   // Validation
   const validate = () => {
     const newErrors: { title?: string; date?: string } = {};
@@ -75,6 +91,7 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
         due: dateTime.toISOString(),
         timezone,
         reminderMinutesBefore: reminderMinutes,
+        duration: duration, // Add duration to the submission
       });
 
       if (success) {
@@ -182,6 +199,47 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
           </div>
         </div>
 
+        {/* Duration */}
+        <div>
+          <label htmlFor={durationId} className="block text-sm font-medium text-[hsl(var(--foreground))] mb-2">
+            <Timer size={14} className="inline mr-1" />
+            Duration
+          </label>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              id={durationId}
+              type="number"
+              min={5}
+              max={480}
+              step={5}
+              value={duration}
+              onChange={(e) => setDuration(parseInt(e.target.value) || 30)}
+              className="w-20 px-2 py-1 border rounded text-center text-sm border-[hsl(var(--border))]"
+            />
+            <span className="text-sm text-[hsl(var(--muted-foreground))]">
+              minutes ({formatDuration(duration)})
+            </span>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {[15, 30, 60, 90, 120, 240].map((minutes) => (
+              <button
+                key={minutes}
+                type="button"
+                onClick={() => setQuickDuration(minutes)}
+                className={`text-xs px-3 py-1 rounded border transition-colors ${duration === minutes
+                  ? 'bg-[hsl(var(--primary-light))] text-[hsl(var(--primary-dark))] border-[hsl(var(--primary-light))]'
+                  : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))] hover:opacity-80'
+                  }`}
+              >
+                {formatDuration(minutes)}
+              </button>
+            ))}
+          </div>
+          <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+            How long do you expect this task to take?
+          </div>
+        </div>
+
         {/* Reminder */}
         <div>
           <label className="block text-sm font-medium text-[hsl(var(--foreground))] mb-2">
@@ -206,8 +264,8 @@ export function TaskForm({ onSubmit, isSubmitting }: TaskFormProps) {
                 type="button"
                 onClick={() => setReminderMinutes(minutes)}
                 className={`text-xs px-3 py-1 rounded border transition-colors ${reminderMinutes === minutes
-                    ? 'bg-[hsl(var(--primary-light))] text-[hsl(var(--primary-dark))] border-[hsl(var(--primary-light))]'
-                    : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))] hover:opacity-80'
+                  ? 'bg-[hsl(var(--primary-light))] text-[hsl(var(--primary-dark))] border-[hsl(var(--primary-light))]'
+                  : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))] hover:opacity-80'
                   }`}
               >
                 {minutes}m
