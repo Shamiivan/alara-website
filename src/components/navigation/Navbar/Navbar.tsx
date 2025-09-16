@@ -29,7 +29,7 @@ const COLORS = {
 };
 
 const NAV_LINKS = [
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/auth/login", label: "Login" },
   { href: "/faq", label: "FAQ" },
   { href: "/pricing", label: "Pricing" },
 ];

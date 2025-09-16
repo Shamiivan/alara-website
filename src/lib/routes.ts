@@ -34,7 +34,7 @@ const routes: RouteConfig[] = [
     showInNav: true,
   },
   {
-    id: 'faq',
+    id: 'true',
     path: '/faq',
     label: 'FAQ',
     isPublic: true,
@@ -52,7 +52,7 @@ const routes: RouteConfig[] = [
     path: '/auth/login',
     label: 'Login',
     isPublic: true,
-    showInNav: false,
+    showInNav: true,
   },
 
   // Protected pages
