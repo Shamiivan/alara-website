@@ -79,13 +79,12 @@ sequenceDiagram
 - Google Calendar integration also uses `CONVEX_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (separate from sign-in).
 
 ## File References
-[](/home/galileo/workspaces/alara-website/convex/auth.ts:1)
-- src/app/layout.tsx:1
-- src/app/ConvexClientProvider.tsx:1
-- src/app/auth/login/page.tsx:1
-- src/app/auth/login/SignInWithGoogle.tsx:1
-- src/middleware.ts:1
-- src/lib/routes.ts:1
-- convex/core/users/queries.ts:1
-- src/components/auth/LogoutButton.tsx:1
-
+- `convex/auth.ts`
+- `src/app/layout.tsx`
+- `src/app/ConvexClientProvider.tsx`
+- `src/app/auth/login/page.tsx`
+- `src/app/auth/login/SignInWithGoogle.tsx`
+- `src/middleware.ts`
+- `src/lib/routes.ts`
+- `convex/core/users/queries.ts`
+- `src/components/auth/LogoutButton.tsx`

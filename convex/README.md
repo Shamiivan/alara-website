@@ -1,90 +1,64 @@
-# Welcome to your Convex functions directory!
+# Convex Backend
 
-Write your Convex functions here.
-See https://docs.convex.dev/functions for more.
+This directory contains Alara's Convex backend: schema definitions, auth setup, application functions, scheduled jobs, integrations, and generated Convex client types.
 
-A query function that takes two arguments looks like:
+## Responsibilities
 
-```ts
-// convex/myFunctions.ts
-import { query } from "./_generated/server";
-import { v } from "convex/values";
+- Store users, calls, conversations, tasks, payments, telemetry, feature flags, and Google OAuth tokens.
+- Gate authenticated app flows through Convex Auth and user status queries.
+- Run clarity-call workflows and scheduled reminders.
+- Integrate with ElevenLabs, Google Calendar, and Stripe.
+- Expose Convex HTTP routes for external callbacks and webhooks.
 
-export const myQueryFunction = query({
-  // Validators for arguments.
-  args: {
-    first: v.number(),
-    second: v.string(),
-  },
+## Directory Guide
 
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Read the database as many times as you need here.
-    // See https://docs.convex.dev/database/reading-data.
-    const documents = await ctx.db.query("tablename").collect();
-
-    // Arguments passed from the client are properties of the args object.
-    console.log(args.first, args.second);
-
-    // Write arbitrary JavaScript here: filter, aggregate, build derived data,
-    // remove non-public properties, or create new objects.
-    return documents;
-  },
-});
+```text
+auth.ts / auth.config.ts        Convex Auth provider configuration
+schema.ts                       Database tables and indexes
+http.ts                         Convex HTTP routing
+crons.ts                        Scheduled job registration
+core/                           Product-domain functions
+integrations/                   External service adapters
+admin/                          Admin-only helpers
+system/telemetry/               Telemetry storage
+utils/                          Shared backend utilities
+_generated/                     Generated Convex API and type files
 ```
 
-Using this query function in a React component looks like:
+## Local Development
 
-```ts
-const data = useQuery(api.myFunctions.myQueryFunction, {
-  first: 10,
-  second: "hello",
-});
+Run Convex locally while developing:
+
+```bash
+npx convex dev
 ```
 
-A mutation function looks like:
+Regenerate Convex types after schema or function changes:
 
-```ts
-// convex/myFunctions.ts
-import { mutation } from "./_generated/server";
-import { v } from "convex/values";
-
-export const myMutationFunction = mutation({
-  // Validators for arguments.
-  args: {
-    first: v.string(),
-    second: v.string(),
-  },
-
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Insert or modify documents in the database here.
-    // Mutations can also read from the database like queries.
-    // See https://docs.convex.dev/database/writing-data.
-    const message = { body: args.first, author: args.second };
-    const id = await ctx.db.insert("messages", message);
-
-    // Optionally, return a value from your mutation.
-    return await ctx.db.get(id);
-  },
-});
+```bash
+npx convex codegen
 ```
 
-Using this mutation function in a React component looks like:
+Deploy backend changes:
 
-```ts
-const mutation = useMutation(api.myFunctions.myMutationFunction);
-function handleButtonPress() {
-  // fire and forget, the most common way to use mutations
-  mutation({ first: "Hello!", second: "me" });
-  // OR
-  // use the result once the mutation has completed
-  mutation({ first: "Hello!", second: "me" }).then((result) =>
-    console.log(result),
-  );
-}
+```bash
+npx convex deploy
 ```
 
-Use the Convex CLI to push your functions to a deployment. See everything
-the Convex CLI can do by running `npx convex -h` in your project root
-directory. To learn more, launch the docs with `npx convex docs`.
+## Environment
+
+Convex functions read secrets from Convex environment variables. Keep real values out of source control and set them with:
+
+```bash
+npx convex env set VARIABLE_NAME value
+```
+
+Common variables include Google OAuth credentials, Stripe secrets, ElevenLabs credentials, `SITE_URL`, `CONVEX_URL`, and webhook secrets. See the root `.env.example` for the full list of expected names.
+
+## Conventions
+
+- Keep product-domain logic under `core/`.
+- Keep third-party API calls under `integrations/`.
+- Validate public function arguments with `convex/values`.
+- Prefer small query, mutation, and action files grouped by feature.
+- Update generated types when backend contracts change.

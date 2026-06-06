@@ -2,25 +2,50 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { apiLogger, callLogger } from '@/lib/serverLogger';
 
-const elevenLabs = new ElevenLabsClient({
-  apiKey: process.env.ELEVEN_LABS_API_KEY!
-});
+type CallRequestBody = {
+  toNumber?: unknown;
+  userName?: unknown;
+};
+
+const getRequiredEnv = (name: string) => {
+  const value = process.env[name];
+  return value && value.trim().length > 0 ? value : undefined;
+};
+
+const getString = (value: unknown) => typeof value === "string" ? value.trim() : "";
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Hardcoded values - no database interaction
-    const toNumber = "+15146909416";
-    const userName = "Ivan";
+    const apiKey = getRequiredEnv("ELEVEN_LABS_API_KEY");
+    const agentId = getRequiredEnv("ELEVEN_LABS_AGENT_ID");
+    const agentPhoneNumberId = getRequiredEnv("ELEVEN_LABS_PHONE_NUMBER_ID");
+
+    if (!apiKey || !agentId || !agentPhoneNumberId) {
+      return NextResponse.json({
+        error: "Voice calling is not configured for this environment."
+      }, { status: 503 });
+    }
+
+    const body = await request.json().catch((): CallRequestBody => ({}));
+    const toNumber = getString(body.toNumber);
+    const userName = getString(body.userName) || "User";
+
+    if (!toNumber) {
+      return NextResponse.json({
+        error: "Missing required field: toNumber"
+      }, { status: 400 });
+    }
+
+    const elevenLabs = new ElevenLabsClient({ apiKey });
 
     callLogger.info('Initiating voice call', { toNumber, userName });
 
-    // Make the Eleven Labs call
     const result = await elevenLabs.conversationalAi.twilio.outboundCall({
-      agentId: process.env.ELEVEN_LABS_AGENT_ID!,
-      agentPhoneNumberId: process.env.ELEVEN_LABS_PHONE_NUMBER_ID!,
-      toNumber: toNumber
+      agentId,
+      agentPhoneNumberId,
+      toNumber
     });
 
     const duration = Date.now() - startTime;
